@@ -8,7 +8,6 @@ Requires: binaries remote-viewer, Xorg, netstat
 import logging
 import socket
 from virttest.aexpect import ShellStatusError
-from virttest.aexpect import ShellCmdError
 from virttest.aexpect import ShellProcessTerminatedError
 from virttest import utils_net, utils_spice, remote, utils_misc
 from autotest.client.shared import error
@@ -47,6 +46,40 @@ def print_rv_version(client_session, rv_binary):
                  client_session.cmd(rv_binary + " --spice-gtk-version"))
 
 
+def check_usb_policy(vm, params):
+    """
+    Check USB policy in polkit file
+    returns status of grep command. If pattern is found 0 is returned. 0 in
+    python is False so negative of grep is returned
+    """
+    logging.info("Checking USB policy")
+    file_name = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
+    cmd = "grep \"<allow_any>yes\" " + file_name
+    client_root_session = vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+    usb_policy = client_root_session.cmd_status(cmd)
+
+    logging.info("Policy %s" % usb_policy)
+
+    if usb_policy:
+        return False
+    else:
+        return True
+
+def add_usb_policy(vm):
+    """
+    Add USB policy to policykit file
+    """
+    logging.info("Adding USB policy")
+    remote_file_path = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
+
+    file_to_upload = "deps/org.spice-space.lowlevelusbaccess.policy"
+    file_to_upload_path = os.path.join("deps", file_to_upload)
+    logging.debug("Sending %s" % file_to_upload_path)
+    vm.copy_files_to(file_to_upload_path, remote_file_path, username="root",
+                     password="123456")
+
 def launch_rv(client_vm, guest_vm, params):
     """
     Launches rv_binary with args based on spice configuration
@@ -62,12 +95,6 @@ def launch_rv(client_vm, guest_vm, params):
     display = params.get("display")
 
     proxy = params.get("spice_proxy", None)
-    if proxy:
-        try:
-            socket.inet_aton(params.get("proxy_ip", None))
-        except socket.error:
-            raise error.TestNAError('Parameter proxy_ip not changed from default values')
-
     host_ip = utils_net.get_host_ip_address(params)
     host_port = None
     if guest_vm.get_spice_var("listening_addr") == "ipv6":
@@ -79,7 +106,7 @@ def launch_rv(client_vm, guest_vm, params):
     full_screen = params.get("full_screen")
 
     check_spice_info = params.get("spice_info")
-    ssltype = params.get("ssltype")
+    ssltype = params.get("ssltype", "")
     test_type = params.get("test_type")
 
     # cmd var keeps final remote-viewer command line
@@ -102,14 +129,15 @@ def launch_rv(client_vm, guest_vm, params):
     certdb = params.get("certdb")
     smartcard = params.get("smartcard")
     host_subj = None
-    cacert = None
+    cacert_host = None
+    cacert_client = None
 
     rv_parameters_from = params.get("rv_parameters_from", "cmd")
     if rv_parameters_from == 'file':
-        cmd += " ~/rv_file.vv"
+        cmd += " " + params.get("rv_file")
 
     client_session = client_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
+           timeout=int(params.get("login_timeout", 360)))
 
     if display == "spice":
 
@@ -117,24 +145,24 @@ def launch_rv(client_vm, guest_vm, params):
 
         if guest_vm.get_spice_var("spice_ssl") == "yes":
 
-            # client needs cacert file
-            cacert = "%s/%s" % (guest_vm.get_spice_var("spice_x509_prefix"),
-                                guest_vm.get_spice_var("spice_x509_cacert_file"))
-            client_session.cmd("rm -rf %s && mkdir -p %s" % (
-                               guest_vm.get_spice_var("spice_x509_prefix"),
-                               guest_vm.get_spice_var("spice_x509_prefix")))
-            remote.copy_files_to(client_vm.get_address(), 'scp',
-                                 params.get("username"),
-                                 params.get("password"),
-                                 params.get("shell_port"),
-                                 cacert, cacert)
+            #client needs cacert file
+            cacert_host = "%s/%s" % (params.get("spice_x509_prefix"),
+                               params.get("spice_x509_cacert_file"))
+            cacert_client = cacert_host
+            if client_vm.params.get("os_type") == "linux":
+                client_session.cmd("rm -rf %s && mkdir -p %s" % (
+                               params.get("spice_x509_prefix"),
+                               params.get("spice_x509_prefix")))
+            if client_vm.params.get("os_type") == "windows":
+                cacert_client = "C:\\%s" % params.get("spice_x509_cacert_file")
+            client_vm.copy_files_to(cacert_host, cacert_client)
 
             host_tls_port = guest_vm.get_spice_var("spice_tls_port")
             host_port = guest_vm.get_spice_var("spice_port")
 
-            # cacert subj is in format for create certificate(with '/' delimiter)
-            # remote-viewer needs ',' delimiter. And also is needed to remove
-            # first character (it's '/')
+            #cacert subj is in format for create certificate(with '/' delimiter)
+            #remote-viewer needs ',' delimiter. And also is needed to remove
+            #first character (it's '/')
             host_subj = guest_vm.get_spice_var("spice_x509_server_subj")
             host_subj = host_subj.replace('/', ',')[1:]
             if ssltype == "invalid_explicit_hs":
@@ -146,14 +174,17 @@ def launch_rv(client_vm, guest_vm, params):
             # will be attempted with the hostname, since ssl certs were
             # generated with the ip address
             hostname = socket.gethostname()
-            if ssltype == "invalid_implicit_hs":
-                spice_url = " spice://%s?tls-port=%s\&port=%s" % (hostname,
-                                                                  host_tls_port,
-                                                                  host_port)
+            escape_char = client_vm.params.get("shell_escape_char",'\\')
+            if ssltype == "invalid_implicit_hs" or "explicit" in ssltype:
+                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (hostname,
+                                                                 host_tls_port,
+                                                                 escape_char,
+                                                                 host_port)
             else:
-                spice_url = " spice://%s?tls-port=%s\&port=%s" % (host_ip,
-                                                                  host_tls_port,
-                                                                  host_port)
+                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (host_ip,
+                                                                 host_tls_port,
+                                                                 escape_char,
+                                                                 host_port)
 
             if rv_parameters_from == "menu":
                 line = spice_url
@@ -163,17 +194,17 @@ def launch_rv(client_vm, guest_vm, params):
                 cmd += spice_url
 
             if not rv_parameters_from == "file":
-                cmd += " --spice-ca-file=%s" % cacert
+                cmd += " --spice-ca-file=%s" % cacert_client
 
-            if (params.get("spice_client_host_subject") == "yes" and not
-                    rv_parameters_from == "file"):
+            if ( params.get("spice_client_host_subject") == "yes" and not
+                 rv_parameters_from == "file" ):
                 cmd += " --spice-host-subject=\"%s\"" % host_subj
 
         else:
             host_port = guest_vm.get_spice_var("spice_port")
             if rv_parameters_from == "menu":
-                # line to be sent through monitor once r-v is started
-                # without spice url
+                #line to be sent through monitor once r-v is started
+                #without spice url
                 line = "spice://%s?port=%s" % (host_ip, host_port)
             elif rv_parameters_from == "file":
                 pass
@@ -186,8 +217,28 @@ def launch_rv(client_vm, guest_vm, params):
     else:
         raise Exception("Unsupported display value")
 
+    #usbredirection support
+    if params.get("usb_redirection_add_device_vm2") == "yes":
+        logging.info("USB redirection set auto redirect on connect for device \
+class 0x08")
+        cmd += " --spice-usbredir-redirect-on-connect=\"0x08,-1,-1,-1,1\""
+        client_root_session = client_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+        usb_mount_path = params.get("file_path")
+        #USB was created by qemu (root). This prevents right issue.
+        client_root_session.cmd("chown test:test %s" % usb_mount_path)
+        if not check_usb_policy(client_vm, params):
+            logging.info("No USB policy.")
+            add_usb_policy(client_vm)
+            utils_spice.wait_timeout(3)
+        else:
+            logging.info("USB policy OK")
+    else:
+        logging.info("No USB redirection")
+
     # Check to see if the test is using the full screen option.
-    if full_screen == "yes" and not rv_parameters_from == "file":
+    if full_screen == "yes" and not rv_parameters_from == "file" :
         logging.info("Remote Viewer Set to use Full Screen")
         cmd += " --full-screen"
 
@@ -212,24 +263,25 @@ def launch_rv(client_vm, guest_vm, params):
             cmd += " --spice-smartcard-certificates " + gencerts
 
     if client_vm.params.get("os_type") == "linux":
-        cmd = "nohup " + cmd + " &> /dev/null &"  # Launch it on background
+        cmd = "nohup " + cmd + " &> ~/rv.log &"  # Launch it on background
         if rv_ld_library_path:
             cmd = "export LD_LIBRARY_PATH=" + rv_ld_library_path + ";" + cmd
 
     if rv_parameters_from == "file":
         print "Generating file"
-        utils_spice.gen_rv_file(params, guest_vm, host_subj, cacert)
+        utils_spice.gen_rv_file(params, guest_vm, host_subj, cacert_host)
         print "Uploading file to client"
-        client_vm.copy_files_to("rv_file.vv", "~/rv_file.vv")
+        client_vm.copy_files_to("rv_file.vv", params.get("rv_file"))
 
     # Launching the actual set of commands
     try:
         if rv_ld_library_path:
-            print_rv_version(client_session, "LD_LIBRARY_PATH=/usr/local/lib " + rv_binary)
+            print_rv_version(client_session, "LD_LIBRARY_PATH=/usr/local/lib " +
+                             rv_binary)
         else:
             print_rv_version(client_session, rv_binary)
 
-    except (ShellStatusError, ShellProcessTerminatedError):
+    except ShellStatusError, ShellProcessTerminatedError:
         # Sometimes It fails with Status error, ingore it and continue.
         # It's not that important to have printed versions in the log.
         logging.debug("Ignoring a Status Exception that occurs from calling "
@@ -248,16 +300,20 @@ def launch_rv(client_vm, guest_vm, params):
         else:
             host_port = "3128"
         if rv_parameters_from != "file":
-            client_session.cmd("export SPICE_PROXY=%s" % proxy)
+            if client_vm.params.get("os_type") == "linux":
+                client_session.cmd("export SPICE_PROXY=%s" % proxy)
+            elif client_vm.params.get("os_type") == "windows":
+                client_session.cmd_output("SET SPICE_PROXY=%s" % proxy)
+
 
     if not params.get("rv_verify") == "only":
         try:
-            client_session.cmd(cmd)
+            logging.info("spice,connection: %s", client_session.cmd(cmd))
         except ShellStatusError:
             logging.debug("Ignoring a status exception, will check connection"
-                          "of remote-viewer later")
+                      "of remote-viewer later")
 
-        # Send command line through monitor since url was not provided
+        #Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
             utils_spice.wait_timeout(1)
             str_input(client_vm, line)
@@ -284,7 +340,7 @@ def launch_rv(client_vm, guest_vm, params):
                                        host_port, rv_binary,
                                        host_tls_port,
                                        params.get("spice_secure_channels",
-                                                  None))
+                                       None))
     except utils_spice.RVConnectError:
         if test_type == "negative":
             logging.info("remote-viewer connection failed as expected")
@@ -324,13 +380,13 @@ def launch_rv(client_vm, guest_vm, params):
         logging.info("Not checking the value of 'info spice'"
                      " from the qemu monitor")
 
-    # prevent from kill remote-viewer after test finish
+    #prevent from kill remote-viewer after test finish
     if client_vm.params.get("os_type") == "linux":
         cmd = "disown -ar"
-    client_session.cmd_output(cmd)
+        client_session.cmd_output(cmd)
 
 
-def run(test, params, env):
+def run_rv_connect(test, params, env):
     """
     Simple test for Remote Desktop connection
     Tests expectes that Remote Desktop client (spice/vnc) will be executed
@@ -353,28 +409,19 @@ def run(test, params, env):
     client_session = client_vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)))
 
-    if (client_vm.params.get("os_type") == "windows" and
-            client_vm.params.get("rv_installer", None)):
-        utils_spice.install_rv_win(client_vm, params.get("rv_installer"))
-        return
-
     if params.get("clear_interface", "yes") == "yes":
+        isRHEL7 = False
         for vm in params.get("vms").split():
-            try:
+            utils_spice.clear_interface(env.get_vm(vm),
+                                       int(params.get("login_timeout", "360")))
+            if env.get_vm(vm).params.get("os_type") == "linux":
                 session = env.get_vm(vm).wait_for_login(timeout=360)
                 output = session.cmd('cat /etc/redhat-release')
-                logging.info(output)
-            except ShellCmdError:
-                raise error.TestNAError("Test is only currently supported on "
-                                        "RHEL and Fedora operating systems")
-            if "release 6." in output:
-                waittime = 15
-            else:
-                waittime = 60
-            utils_spice.clear_interface(env.get_vm(vm),
-                                        int(params.get("login_timeout", "360")))
-
-        utils_spice.wait_timeout(waittime)
+                isRHEL7 = ("release 7." in output) or isRHEL7
+        if isRHEL7:
+            utils_spice.wait_timeout(60)
+        else:
+            utils_spice.wait_timeout(15)
 
     launch_rv(client_vm, guest_vm, params)
 

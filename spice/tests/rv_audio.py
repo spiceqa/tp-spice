@@ -67,7 +67,7 @@ def verify_recording(recording, params):
     return True
 
 
-def run(test, params, env):
+def run_rv_audio(test, params, env):
 
     guest_vm = env.get_vm(params["guest_vm"])
     guest_vm.verify_alive()
@@ -80,8 +80,7 @@ def run(test, params, env):
         timeout=int(params.get("login_timeout", 360)))
 
     if(guest_session.cmd_status("ls %s" % params.get("audio_tgt"))):
-        print params.get("audio_src")
-        print params.get("audio_tgt")
+        logging.info("Copying %s to guest." % params.get("audio_src"))
         guest_vm.copy_files_to(
             params.get("audio_src"),
             params.get("audio_tgt"))

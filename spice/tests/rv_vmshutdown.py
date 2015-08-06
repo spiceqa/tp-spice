@@ -13,7 +13,7 @@ from virttest import utils_misc
 from virttest import utils_net
 
 
-def run(test, params, env):
+def run_rv_vmshutdown(test, params, env):
     """
     Tests clean exit after shutting down the VM.
     Covers two cases:
@@ -34,21 +34,29 @@ def run(test, params, env):
     rv_binary = params.get("rv_binary", "remote-viewer")
     host_ip = utils_net.get_host_ip_address(params)
     shutdownfrom = params.get("shutdownfrom")
-    cmd_cli_shutdown = params.get("cmd_cli_shutdown")
     cmd_qemu_shutdown = params.get("cmd_qemu_shutdown")
     host_port = None
 
     guest_vm = env.get_vm(params["guest_vm"])
+    cmd_cli_shutdown = guest_vm.params.get("shutdown_command")
     guest_vm.verify_alive()
-    guest_session = guest_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)),
-        username="root", password="123456")
+    if guest_vm.params.get("os_type") == "linux":
+        guest_session = guest_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+    else:
+        guest_session = guest_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)))
 
     client_vm = env.get_vm(params["client_vm"])
     client_vm.verify_alive()
-    client_session = client_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)),
-        username="root", password="123456")
+    if client_vm.params.get("os_type") == "linux":
+        client_session = client_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+    else:
+        client_session = client_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)))
 
     if guest_vm.get_spice_var("spice_ssl") == "yes":
         host_port = guest_vm.get_spice_var("spice_tls_port")
@@ -98,8 +106,18 @@ def run(test, params, env):
     # Verify the remote-viewer process is not running
     logging.info("Checking to see if remote-viewer process is still running on"
                  " client after VM has been shutdown")
-    try:
-        pidoutput = str(client_session.cmd("pgrep remote-viewer"))
-        raise error.TestFail("Remote-viewer is still running on the client.")
-    except ShellCmdError:
-        logging.info("Remote-viewer process is not running as expected.")
+    if client_vm.params.get("os_type") == "linux":
+        try:
+            pidoutput = str(client_session.cmd("pgrep remote-viewer"))
+            raise error.TestFail("Remote-viewer is still running on the client.")
+        except ShellCmdError:
+            logging.info("Remote-viewer process is not running as expected.")
+    elif client_vm.params.get("os_type") == "windows":
+            output = client_session.cmd_output(
+                    'tasklist /FI "IMAGENAME eq remote-viewer.exe"')
+            if "remote-viewer" in output:
+                raise error.TestFail(
+                    "Remote-viewer is still running on the client.")
+            else:
+                logging.info(
+                    "Remote-viewer process is not running as expected.")

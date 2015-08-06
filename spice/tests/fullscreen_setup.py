@@ -10,7 +10,7 @@ import logging
 from virttest import utils_spice
 
 
-def run(test, params, env):
+def run_fullscreen_setup(test, params, env):
     """
     Simple test for Remote Desktop connection
     Tests expectes that Remote Desktop client (spice/vnc) will be executed
@@ -36,7 +36,7 @@ def run(test, params, env):
     guest_vm = env.get_vm(params["guest_vm"])
     guest_vm.verify_alive()
     guest_session = guest_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
+            timeout=int(params.get("login_timeout", 360)))
     guest_root_session = guest_vm.wait_for_login(username="root",
                                                  password="123456")
 
@@ -70,7 +70,7 @@ def run(test, params, env):
                  current + " to: " + resolution)
 
     # Start vdagent daemon
-    utils_spice.start_vdagent(guest_root_session, test_timeout)
+    utils_spice.start_vdagent(guest_root_session, "linux", test_timeout)
 
     client_vm = env.get_vm(params["client_vm"])
     client_vm.verify_alive()

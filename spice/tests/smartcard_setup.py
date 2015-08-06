@@ -13,7 +13,7 @@ from virttest import utils_misc, utils_spice, aexpect
 from autotest.client.shared import error
 
 
-def run(test, params, env):
+def run_smartcard_setup(test, params, env):
     """
     Simple setup test to create certs on the client to be passed to VM's
     smartcard.
@@ -44,7 +44,7 @@ def run(test, params, env):
 
     for vm in params.get("vms").split():
         utils_spice.clear_interface(env.get_vm(vm),
-                                    int(params.get("login_timeout", "360")))
+                                   int(params.get("login_timeout", "360")))
 
     # generate a random string, used to create a random key for the certs
     randomstring = utils_misc.generate_random_string(2048)
