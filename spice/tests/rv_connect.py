@@ -7,9 +7,10 @@ Requires: binaries remote-viewer, Xorg, netstat
 """
 import logging
 import socket
-from virttest.aexpect import ShellStatusError
-from virttest.aexpect import ShellProcessTerminatedError
-from virttest import utils_net, utils_spice, remote, utils_misc
+from aexpect.exceptions import ShellStatusError
+from aexpect.exceptions import ShellProcessTerminatedError
+from spice.tests import utils_spice
+from virttest import utils_net, remote, utils_misc
 from autotest.client.shared import error
 
 
