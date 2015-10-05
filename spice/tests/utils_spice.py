@@ -4,11 +4,16 @@ Common spice test utility functions.
 """
 import os
 import logging
+import socket
 import time
 import sys
-from autotest.client.shared import error
-from aexpect import ShellCmdError, ShellStatusError
-from virttest import utils_net, utils_misc
+import subprocess
+import re
+#from autotest.client.shared import error
+#from aexpect import ShellCmdError, ShellStatusError
+#from virttest import utils_net, utils_misc
+
+# TODO: Rework migration, add migration as a option of the session, but that can wait
 
 
 class RVConnectError(Exception):
@@ -260,7 +265,7 @@ def verify_vdagent(guest_session, os_type, test_timeout):
             output = guest_session.cmd(cmd, print_func=logging.info,
                                        timeout=test_timeout)
             if "Spice" in output:
-                print "Guest vdagent is running"
+                logging.info("Guest vdagent is running")
         finally:
             logging.debug("-----End of guest check to see if vdagent is running"
                           " ----")
@@ -291,7 +296,7 @@ def get_vdagent_status(vm_session, os_type, test_timeout):
             # ShellCmdError
             return("stopped")
         except:
-            print "Unexpected error:", sys.exc_info()[0]
+            logging.info("Unexpected error:", sys.exc_info()[0])
             raise error.TestFail(
                "Failed attempting to get status of spice-vdagentd")
         wait_timeout(3)
@@ -304,7 +309,7 @@ def get_vdagent_status(vm_session, os_type, test_timeout):
         except ShellCmdError:
             return("stopped")
         except:
-            print "Unexpected error:", sys.exc_info()[0]
+            logging.info("Unexpected error:", sys.exc_info()[0])
             raise error.TestFail(
                "Failed attempting to get status of spice-vdagentd")
         wait_timeout(3)
@@ -336,7 +341,7 @@ def verify_virtio(guest_session, os_type, test_timeout):
             output = guest_session.cmd(cmd, print_func=logging.info,
                                        timeout=test_timeout)
             if "System devices" in output:
-                print "Virtio Serial driver is installed"
+                logging.info("Virtio Serial driver is installed")
         finally:
             logging.debug("----------End of guest check of Virtio-Serial driver"
                           " ------------")
@@ -377,7 +382,9 @@ def install_usbclerk_win(client, host_path, client_path="C:\\usbclerk.msi"):
     except:
         pass
 
-def clear_interface(vm, login_timeout = 360, timeout = 5):
+
+
+def clear_interface(vm, login_timeout = 360, timeout = None):
     """
     Clears user interface of a vm without restart
 
@@ -387,11 +394,11 @@ def clear_interface(vm, login_timeout = 360, timeout = 5):
 
     """
     if vm.params.get("os_type") == "windows":
-        clear_interface_windows(vm, login_timeout, timeout)
+        clear_interface_windows(vm, timeout)
     else:
         clear_interface_linux(vm, login_timeout, timeout)
 
-def clear_interface_linux(vm, login_timeout, timeout):
+def clear_interface_linux(vm, login_timeout, timeout = None):
     """
     Clears user interface of a vm without restart
 
@@ -407,9 +414,13 @@ def clear_interface_linux(vm, login_timeout, timeout):
     if isRHEL7:
         command = "gdm"
         pgrep_process = "'^gdm$'"
+        if not timeout:
+            timeout = 60
     else:
         command = "Xorg"
         pgrep_process = "Xorg"
+        if not timeout:
+            timeout = 15
 
     try:
         pid = session.cmd("pgrep %s" % pgrep_process)
@@ -423,13 +434,16 @@ def clear_interface_linux(vm, login_timeout, timeout):
     except:
         raise error.TestFail("X/gdm not running")
         #logging.info("X or gdm is not running; might cause failures")
+    time.sleep(timeout)
 
-def clear_interface_windows(vm, login_timeout, timeout):
+def clear_interface_windows(vm, timeout = None):
     session = vm.wait_for_login()
     try:
         session.cmd("taskkill /F /IM remote-viewer.exe")
     except:
         logging.info("Remote-viewer not running")
+    if timeout:
+        time.sleep(timeout)
 
 def deploy_epel_repo(guest_session, params):
     """
@@ -465,62 +479,84 @@ def deploy_epel_repo(guest_session, params):
         else:
             raise Exception("Unsupported RHEL guest")
 
-def gen_rv_file(params, guest_vm, host_subj = None, cacert = None):
+
+def set_resolution(session, res, display='qxl-0'):
+    """Sets resolution of qxl device on a VM
+
+    :param session: Active session (connection) to the VM
+    :param res: Target resolution WidthxSize
+    :param display: Which device, default qxl-0
+    :return:
     """
-    Generates vv file for remote-viewer
+    logging.info("Seeting resolution to %s" % res)
+    session.cmd("xrandr --output %s --mode %s " %(display, res))
 
-    :param params:          all parameters of the test
-    :param guest_vm:        object of a guest VM
-    :param host_subj:    subject of the host
-    :param cacert:          location of certificate of host
+def get_connected_displays(session):
+    """ Returns list of video devices on a VM
+    :param session: Active connection to the VM
+    :return: List of active displays on the VM
     """
-    full_screen = params.get("full_screen")
-    proxy = params.get("spice_proxy")
+    raw = session.cmd_output("xrandr | grep \ connected")
+    displays = [a.split()[0] for a in raw.split('n') if a is not '']
+    return displays
 
-    rv_file = open('rv_file.vv', 'w')
-    rv_file.write("[virt-viewer]\n" +
-                  "type=%s\n" % params.get("display") +
-                  "host=%s\n" % utils_net.get_host_ip_address(params) +
-                  "port=%s\n" % guest_vm.get_spice_var("spice_port"))
+#TODO: Maybe a dict instead of a list...?
+def get_display_resolution(session):
+    """ Returns list of resolutions on all displays of a VM
+    :param session: Active connection to the VM
+    :return: List of resolutions
+    """
+    raw = session.cmd_output("xrandr | grep \*")
+    res = [a.split()[0] for a in raw.split('\n') if a is not '']
+    return res
 
-    ticket = params.get("spice_password", None)
-    ticket_send = params.get("spice_password_send", None)
-    qemu_ticket = params.get("qemu_password", None)
-    if ticket_send:
-        ticket = ticket_send
-    if qemu_ticket:
-        ticket = qemu_ticket
-    if ticket:
-        rv_file.write("password=%s\n" % ticket)
+def get_open_window_ids(session, filter):
+    """ Get X server window ids of active windows matching filter
 
-    if guest_vm.get_spice_var("spice_ssl") == "yes":
-        rv_file.write("tls-port=%s\n" %
-                      guest_vm.get_spice_var("spice_tls_port"))
-        rv_file.write("tls-ciphers=DEFAULT\n")
-    if host_subj:
-        rv_file.write("host-subject=%s\n" % host_subj)
-    if cacert:
-        cert = open(cacert)
-        ca = cert.read()
-        ca = ca.replace('\n', r'\n')
-        rv_file.write("ca=%s\n" % ca)
-    if full_screen == "yes":
-        rv_file.write("fullscreen=1\n")
-    if proxy:
-        rv_file.write("proxy=%s\n" % proxy)
+    :param session: Active connection to a VM
+    :param filter: String; name of binary/title
+    :return: List of active windows matching filter
+    """
+    if not filter:
+        logging.error("Filter can't be None/''")
+        return
+    xwininfo = session.cmd_output("xwininfo -tree -root")
+    ids = [a.split()[0] for a in xwininfo.split('\n') if filter in a]
+    windows = []
+    for window in ids:
+        out = subprocess.check_output('xprop -id %s' %window, shell = True)
+        for line in out.split('\n'):
+            if ( 'NET_WM_WINDOW_TYPE' in line and
+                 'ET_WM_WINDOW_TYPE_NORMAL' in line ):
+                windows.append(window)
+    return windows
 
-    #Other properties:
-    #username
-    #version
-    #title
-    #toggle-fullscreen (key combo)
-    #release-cursor (key combo)
-    #smartcard-insert
-    #smartcard-remove
-    #enable-smartcard
-    #enable-usbredir
-    #color-depth
-    #disable-effects
-    #usb-filter
-    #secure-channels
-    #delete-this-file (0,1)
+def get_window_props(session, id):
+    """ Get full properties of a window with speficied ID
+
+    :param session: Active connection to a VM
+    :param id: X server id of a window
+    :return: Returns output of xprop -id
+    """
+    return session.cmd_output("xprop -id %s" % id)
+
+def get_wininfo(session, id):
+    """ Get xwininfo for windows of a specified ID
+    :param session: Active connection to a VM
+    :param id: ID of the window
+    :return: Output xwininfo -id %id on the session
+    """
+    return session.cmd_output("xwininfo -id %s" % id)
+
+def get_window_geometry(session, id):
+    """ Get resolution of a window
+
+    :param session: Active connection to a VM
+    :param id: ID of the window of interest
+    :return: WidthxHeight of the selected window
+    """
+    xwininfo = get_wininfo(session, id)
+    for line in xwininfo:
+        if '-geometry' in line:
+            return filter(re.split('[\+\-\W]'))[1]
+
