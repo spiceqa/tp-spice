@@ -21,6 +21,40 @@ class RVConnectError(Exception):
     """Exception raised in case that remote-viewer fails to connect"""
     pass
 
+def check_usb_policy(vm, params):
+    """
+    Check USB policy in polkit file
+    returns status of grep command. If pattern is found 0 is returned. 0 in
+    python is False so negative of grep is returned
+    """
+    logging.info("Checking USB policy")
+    file_name = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
+    cmd = "grep \"<allow_any>yes\" " + file_name
+    client_root_session = vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+    usb_policy = client_root_session.cmd_status(cmd)
+
+    logging.info("Policy %s" % usb_policy)
+
+    if usb_policy:
+        return False
+    else:
+        return True
+
+def add_usb_policy(vm):
+    """
+    Add USB policy to policykit file
+    """
+    logging.info("Adding USB policy")
+    remote_file_path = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
+
+    file_to_upload = "deps/org.spice-space.lowlevelusbaccess.policy"
+    file_to_upload_path = os.path.join("deps", file_to_upload)
+    logging.debug("Sending %s" % file_to_upload_path)
+    vm.copy_files_to(file_to_upload_path, remote_file_path, username="root",
+                     password="123456")
+
 def _is_pid_alive(session, pid):
     """
     verify the process is still alive
@@ -36,11 +70,33 @@ def _is_pid_alive(session, pid):
 
     return True
 
+def kill_by_name(self, name):
+    """
+    Kill selected app on selected VM
+
+    :params vm_name - VM name in parameters
+    :params app_name - name of application
+    """
+
+    logging.info("About to kill %s", name)
+    if self.client_vm.params.get("os_type") == "linux":
+        try:
+            output = self.client_session.cmd_output("pkill %s" % name
+                                    .split(os.path.sep)[-1])
+        except:
+            if output == 1:
+                pass
+            else:
+                raise
+    elif self.client_vm.params.get("os_type") == "windows":
+        self.client_session.cmd_output("taskkill /F /IM %s" % name
+                        .split('\\')[-1])
+
 def load_kernel_module(session, module):
     try:
         session.cmd_status("modprobe %s" % module)
     except ShellCmdError:
-        logging.info("Failed to load kernel module: %s" %s)
+        logging.info("Failed to load kernel module: %s" % module)
         return False
 
 def wait_timeout(timeout=10):
@@ -52,89 +108,37 @@ def wait_timeout(timeout=10):
     logging.debug("Waiting (timeout=%ss)", timeout)
     time.sleep(timeout)
 
-
-def kill_app(vm_name, app_name, params, env):
+def str_input(client_vm, ticket):
     """
-    Kill selected app on selected VM
-
-    :params vm_name - VM name in parameters
-    :params app_name - name of application
+    sends spice_password trough vm.send_key()
+    :param client_session - vm() object
+    :param ticket - use params.get("spice_password")
     """
-    vm = env.get_vm(vm_name)
+    logging.info("Passing ticket '%s' to the remote-viewer.", ticket)
+    char_mapping = {":": "shift-semicolon",
+                    ",": "comma",
+                    ".": "dot",
+                    "/": "slash",
+                    "?": "shift-slash",
+                    "=": "equal"}
+    for character in ticket:
+        if character in char_mapping:
+            character = char_mapping[character]
+        client_vm.send_key(character)
 
-    vm.verify_alive()
-    vm_session = vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
-
-    logging.info("Try to kill %s", app_name)
-    if vm.params.get("os_type") == "linux":
-        try:
-            output = vm_session.cmd_output("pkill %s" % app_name
-                                    .split(os.path.sep)[-1])
-        except:
-            if output == 1:
-                pass
-            else:
-                raise
-    elif vm.params.get("os_type") == "windows":
-        vm_session.cmd_output("taskkill /F /IM %s" % app_name
-                        .split('\\')[-1])
-    vm.verify_alive()
-    vm_session.close()
+    client_vm.send_key("kp_enter")  # send enter
 
 
-def verify_established(client_vm, host, port, rv_binary,
-                       tls_port = None, secure_channels = None):
+def print_rv_version(client_session, rv_binary):
     """
-    Parses netstat output for established connection on host:port
-    :param client_vm: vm.wait_for_login()
-    :param host: host ip addr
-    :param port: port for client to connect
-    :param rv_binary:  remote-viewer binary
-    :param tls_port: value of the secure port if doing an secure connection
-    :param secure_channels: channels to secure if having a secure connection
+    prints remote-viewer and spice-gtk version available inside client_session
+    :param client_session - vm.wait_for_login()
+    :param rv_binary - remote-viewer binary
     """
-    rv_binary = rv_binary.split(os.path.sep)[-1]
-    print "Verification in progress"
-
-    client_session = client_vm.wait_for_login(timeout=60)
-    tls_count = 0
-
-    # !!! -n means do not resolve port names
-    if ".exe" in rv_binary:
-        cmd = "netstat -n"
-
-    else:
-        cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % \
-            (host, rv_binary)
-    netstat_out = client_session.cmd_output(cmd)
-    logging.info("netstat output: %s", netstat_out)
-
-    if tls_port:
-        tls_count = netstat_out.count(tls_port)
-    else:
-        tls_port = port
-
-    if (netstat_out.count(port)+tls_count) < 4:
-        logging.error("Not enough channels were open")
-        raise RVConnectError()
-    if secure_channels:
-        if tls_count < len(secure_channels.split(',')):
-            logging.error("Not enough secure channels open")
-            raise RVConnectError()
-    for line in netstat_out.split('\n'):
-        if ((port in line and "ESTABLISHED" not in line) or
-            (tls_port in line and "ESTABLISHED" not in line)):
-            logging.error("Failed to get established connection from netstat")
-            raise RVConnectError()
-    if "ESTABLISHED" not in netstat_out:
-        logging.error("Failed to get established connection from netstat")
-        raise RVConnectError()
-    logging.info("%s connection to %s:%s successful.",
-                     rv_binary, host, port)
-
-    client_session.close()
-
+    logging.info("remote-viewer version: %s",
+                 client_session.cmd(rv_binary + " -V"))
+    logging.info("spice-gtk version: %s",
+                 client_session.cmd(rv_binary + " --spice-gtk-version"))
 
 def start_vdagent(guest_session, os_type, test_timeout):
     """
