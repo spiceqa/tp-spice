@@ -3,7 +3,7 @@ KVM_TEST_MEDIUM
 text
 lang en_US.UTF-8
 keyboard us
-key --skip
+# key --skip
 network --bootproto dhcp
 rootpw --plaintext 123456
 user --name=test --password=123456 --plaintext
