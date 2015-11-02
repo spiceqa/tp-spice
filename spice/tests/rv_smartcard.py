@@ -8,7 +8,7 @@ options to handle smartcards.
 
 """
 import logging
-from virttest import aexpect
+import aexpect
 from autotest.client.shared import error
 
 

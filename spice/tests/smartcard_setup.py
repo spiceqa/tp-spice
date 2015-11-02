@@ -9,7 +9,8 @@ to be generated.
 
 """
 import logging
-from virttest import utils_misc, utils_spice, aexpect
+import aexpect
+from virttest import utils_misc, utils_spice
 from autotest.client.shared import error
 
 

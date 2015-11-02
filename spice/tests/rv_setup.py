@@ -11,8 +11,9 @@ Requires: the client and guest VMs to be setup.
 """
 
 import logging, os
+import aexpect
 from os import system, getcwd, chdir
-from virttest import utils_misc, utils_spice, aexpect
+from virttest import utils_misc, utils_spice
 
 def install_rpm(session, name, rpm):
     """
