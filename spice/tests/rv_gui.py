@@ -10,7 +10,7 @@ and have to have both client & remote viewer window available.
 from virttest.virt_vm import VMDeadError
 import os, logging
 from autotest.client.shared import error
-from virttest.aexpect import ShellCmdError
+from aexpect import ShellCmdError
 from virttest import utils_net, utils_spice
 from time import sleep
 

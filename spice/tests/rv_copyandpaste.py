@@ -8,8 +8,9 @@ Requires: rv_setup for windows guest tests
 
 """
 import logging, os, time
+import aexpect
 from autotest.client.shared import error
-from virttest import utils_misc, utils_spice, aexpect
+from virttest import utils_misc, utils_spice
 
 
 def wait_timeout(timeout=10):
