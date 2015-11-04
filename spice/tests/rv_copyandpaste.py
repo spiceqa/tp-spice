@@ -12,6 +12,8 @@ import aexpect
 from autotest.client.shared import error
 from virttest import utils_misc, utils_spice
 
+#TODO: needs rework for rv_session
+
 
 def wait_timeout(timeout=10):
     """
@@ -493,7 +495,7 @@ def copy_and_paste_pos(session_to_copy_from, session_to_paste_to,
         pasteto_script_call = script_call_guest
     elif(dirparam == "guest_to_client"):
         copyfrom_script_call = script_call_guest
-        pasteto_script_call = script_call_client 
+        pasteto_script_call = script_call_client
 
 
     # Before doing the copy and paste, verify vdagent is

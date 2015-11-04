@@ -12,13 +12,16 @@ from autotest.client.shared import error
 from virttest import utils_misc, utils_spice
 
 
+#TODO: needs rewrite
+
+
 def run_rv_logging(test, params, env):
     """
     Tests the logging of remote-viewer
 
-    :param test: QEMU test object.
-    :param params: Dictionary with the test parameters.
-    :param env: Dictionary with test environment.
+    @param test: QEMU test object.
+    @param params: Dictionary with the test parameters.
+    @param env: Dictionary with test environment.
     """
 
     # Get the necessary parameters to run the tests

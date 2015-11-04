@@ -59,8 +59,8 @@ def _is_pid_alive(session, pid):
     """
     verify the process is still alive
 
-    :param session:- established session
-    :param pid: - process that is to be checked
+    @param session:- established ssh session
+    @param pid: - process that is to be checked
     """
 
     try:
@@ -74,8 +74,7 @@ def kill_by_name(self, name):
     """
     Kill selected app on selected VM
 
-    :params vm_name - VM name in parameters
-    :params app_name - name of application
+    @params name - Name of the binary
     """
 
     logging.info("About to kill %s", name)
@@ -103,7 +102,7 @@ def wait_timeout(timeout=10):
     """
     time.sleep(timeout) + logging.debug(timeout)
 
-    :param timeout: default timeout = 10
+    @param timeout: default timeout = 10
     """
     logging.debug("Waiting (timeout=%ss)", timeout)
     time.sleep(timeout)
@@ -111,8 +110,8 @@ def wait_timeout(timeout=10):
 def str_input(client_vm, ticket):
     """
     sends spice_password trough vm.send_key()
-    :param client_session - vm() object
-    :param ticket - use params.get("spice_password")
+    @param client_session - vm() object
+    @param ticket - use params.get("spice_password")
     """
     logging.info("Passing ticket '%s' to the remote-viewer.", ticket)
     char_mapping = {":": "shift-semicolon",
@@ -132,8 +131,8 @@ def str_input(client_vm, ticket):
 def print_rv_version(client_session, rv_binary):
     """
     prints remote-viewer and spice-gtk version available inside client_session
-    :param client_session - vm.wait_for_login()
-    :param rv_binary - remote-viewer binary
+    @param client_session - vm.wait_for_login()
+    @param rv_binary - remote-viewer binary
     """
     logging.info("remote-viewer version: %s",
                  client_session.cmd(rv_binary + " -V"))
@@ -144,9 +143,9 @@ def start_vdagent(guest_session, os_type, test_timeout):
     """
     Sending commands to start the spice-vdagentd service
 
-    :param guest_session: ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmds
+    @param guest_session: ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmds
     """
     if os_type == "linux":
         cmd = "service spice-vdagentd start"
@@ -173,9 +172,9 @@ def start_vdagent(guest_session, os_type, test_timeout):
 def restart_vdagent(guest_session, os_type, test_timeout):
     """
     Sending commands to restart the spice-vdagentd service
-    :param guest_session: ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmds
+    @param guest_session: ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmds
 
     """
     if os_type == "linux":
@@ -215,9 +214,9 @@ def stop_vdagent(guest_session, os_type, test_timeout):
     """
     Sending commands to stop the spice-vdagentd service
 
-    :param guest_session: ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmds
+    @param guest_session: ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmds
     """
     if os_type == "linux":
         cmd = "service spice-vdagentd stop"
@@ -249,9 +248,9 @@ def verify_vdagent(guest_session, os_type, test_timeout):
     """
     Verifying vdagent is installed on a VM
 
-    :param guest_session: ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmds
+    @param guest_session: ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmds
     """
     if os_type == "linux":
         cmd = "rpm -qa | grep spice-vdagent"
@@ -282,9 +281,9 @@ def verify_vdagent(guest_session, os_type, test_timeout):
 def get_vdagent_status(vm_session, os_type, test_timeout):
     """
     Return the status of vdagent
-    :param vm_session:  ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmd
+    @param vm_session:  ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmd
     """
     output = ""
 
@@ -325,9 +324,9 @@ def verify_virtio(guest_session, os_type, test_timeout):
     """
     Verify Virtio linux driver is properly loaded.
 
-    :param guest_session: ssh session of the VM
-    :param os_type: os the command is to be run on (windows or linux)
-    :param test_timeout: timeout time for the cmds
+    @param guest_session: ssh session of the VM
+    @param os_type: os the command is to be run on (windows or linux)
+    @param test_timeout: timeout time for the cmds
     """
     if os_type == "linux":
         #cmd = "lsmod | grep virtio_console"
@@ -358,9 +357,9 @@ def install_rv_win(client, host_path, client_path='C:\\virt-viewer.msi'):
     """
     Install remote-viewer on a windows client
 
-    :param client:      VM object
-    :param host_path:   Location of installer on host
-    :param client_path: Location of installer after copying
+    @param client:      VM object
+    @param host_path:   Location of installer on host
+    @param client_path: Location of installer after copying
     """
     session = client.wait_for_login(
             timeout=int(client.params.get("login_timeout", 360)))
@@ -392,9 +391,9 @@ def clear_interface(vm, login_timeout = 360, timeout = None):
     """
     Clears user interface of a vm without restart
 
-    :param vm:      VM where cleaning is required
-    :param login_timeout: timeout time for logging on
-    :param timeout: wait time after clearing the interface
+    @param vm:      VM where cleaning is required
+    @param login_timeout: timeout time for logging on
+    @param timeout: wait time after clearing the interface
 
     """
     if vm.params.get("os_type") == "windows":
@@ -453,8 +452,8 @@ def deploy_epel_repo(guest_session, params):
     """
     Deploy epel repository to RHEL VM If It's RHEL6 or 5.
 
-    :param guest_session: - ssh session to guest VM
-    :param params: env params
+    @param guest_session: - ssh session to guest VM
+    @param params: env params
     """
 
     # Check existence of epel repository
@@ -564,3 +563,22 @@ def get_window_geometry(session, id):
         if '-geometry' in line:
             return filter(re.split('[\+\-\W]'))[1]
 
+
+
+#TODO: REMOVE THIS ONE!!! (just a tmp method to test locally)
+def temp_windows(filter):
+    xwininfo = subprocess.check_output("xwininfo -tree -root", shell = True)
+    #for line in xwininfo.split('\n'):
+    #    if filter in line:
+    if not filter:
+        logging.error("Filter can't be None/''")
+        return
+    ids = [a.split()[0] for a in xwininfo.split('\n') if filter in a]
+    windows = []
+    for window in ids:
+        out = subprocess.check_output('xprop -id %s' % window, shell = True)
+        for line in out.split('\n'):
+            if ( 'NET_WM_WINDOW_TYPE' in line and
+                 'ET_WM_WINDOW_TYPE_NORMAL' in line ):
+                windows.append(window)
+    return windows

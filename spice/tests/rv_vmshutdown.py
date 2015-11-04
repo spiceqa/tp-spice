@@ -12,6 +12,7 @@ from virttest import utils_spice
 from virttest import utils_misc
 from virttest import utils_net
 
+#TODO: needs rewrite
 
 def run_rv_vmshutdown(test, params, env):
     """
@@ -25,9 +26,9 @@ def run_rv_vmshutdown(test, params, env):
     (2)Verify the spice connection to the guest is no longer established
     (3)Verify the remote-viewer process is not running
 
-    :param test: QEMU test object.
-    :param params: Dictionary with the test parameters.
-    :param env: Dictionary with test environment.
+    @param test: QEMU test object.
+    @param params: Dictionary with the test parameters.
+    @param env: Dictionary with test environment.
     """
 
     # Get the required variables
@@ -93,7 +94,7 @@ def run_rv_vmshutdown(test, params, env):
         logging.info("Guest VM is verified to be shutdown")
 
     try:
-        utils_spice.verify_established(
+        utils_spice.rv_connected(
             client_vm, host_ip, host_port, rv_binary)
         raise error.TestFail("Remote-Viewer connection to guest"
                              "is still established.")
