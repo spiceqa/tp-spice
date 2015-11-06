@@ -5,9 +5,9 @@ Requires: connected binaries remote-viewer, Xorg, gnome session
 
 """
 import logging
+from aexpect import ShellCmdError
 from virttest.virt_vm import VMDeadError
 from autotest.client.shared import error
-from virttest.aexpect import ShellCmdError
 from virttest import utils_spice
 from virttest import utils_misc
 from virttest import utils_net
