@@ -7,6 +7,14 @@ subtest types:
 
 * SPICE
 
+Howto start
+-----------
+Before start, update **run.cfg** file and add something like this to the end:
+
+    only RHEL.7.1.x86_64..role-guest, RHEL.6.7.i386..role-client
+
+This is done automatically for Beaker task **spice-qe-tests**
+
 General info
 ------------
 
