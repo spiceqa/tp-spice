@@ -23,3 +23,10 @@ This tests depends on another test provider: tp-qemu
 This is tests provider from SPICE QE
 
 http://virt-test.readthedocs.org/en/latest/basic/TestProviders.html
+
+virtio-win
+----------
+Windows should be provided with virtio-drivers to use: virtio_blk, virtio_scsi,
+virtio_net. You can find virtio-win package at brewweb.
+    # rpm -qf /usr/share/virtio-win/virtio-win-1.7.4.iso
+      virtio-win-1.7.4-1.el6_6.noarch
