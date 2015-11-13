@@ -1,5 +1,3 @@
-# Copy this file to tests-shared.cfg and edit it.
-#
 # This file contains the base test set definitions, shared among single host
 # and multi host jobs.
 
@@ -10,52 +8,23 @@ vm_type = qemu
 connect_uri = default
 
 # Include the base config files.
+include top.cfg
 include base.cfg
 include machines.cfg
-# include guest-os.cfg
+include guest-os.cfg
 include guest-hw.cfg
-# include cdkeys.cfg
-# include virtio-win.cfg
 
-# This files shuld stay here, as they are subjects to add suffixes
-include assignments-hardware-os.cfg
-include assignments.cfg
+include assignments.cfg-w-sfx
 
-# astepano@: `join' is real hell to understand it!
-# Do not touch next blocks.
-# Notice: next 3 blocks do not have any assigments.
+# ^^^ subjects to add suffixes to all vars ^^^
+# acts as a filter: only sfx-g sfx-c
+join sfx-g sfx-c
+# \/\/\/ below stays withouf suffixes \/\/\/
 
-variants:
-    - role-none:
-        # Reserved
-    - role-guest:
-        # Reserved
-    - role-client:
-        # Reserved
+include spice-tests.cfg
+include tests-variants.cfg
 
-# Add suffix to dics
-variants:
-    - sfx-none:
-        # Reserved, no suffixes
-    - sfx-g:
-        only role-guest
-        suffix _guest
-    - sfx-c:
-        only role-client
-        suffix _client
-
-variants:
-    - 1vm:
-        # One VM
-        only sfx-none
-    - 2vm:
-        # Two VMs
-        join sfx-g sfx-c
-
-include tests-providers.cfg
-
-include assignments.cfg
-include assignments-tests.cfg
+include assignments.cfg-wo-sfx
 
 # Additional directory for find virt type tests. Relative to client/tests
 other_tests_dirs = ""

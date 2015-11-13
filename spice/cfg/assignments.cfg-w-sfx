@@ -28,7 +28,31 @@ role-client:
     display = vnc
     vnc_port = 5901
 
-2vm..rv:
+Linux:
+    # Use non-root user for Spice tests rather than root
+    # since User gnome session is needed.
+    username = test
+    rootuser = root
+    password = 123456
+    rootpassword = 123456
+    shutdown_command = shutdown -h now
+
+
+RHEL.7:
+    inactivity_treshold = 3600
+    shutdown_command = systemctl poweroff
+    reboot_command = systemctl reboot
+
+
+Windows:
+    username = Administrator
+    password = 1q2w3eP
+    rootuser = Administrator
+    shutdown_command = shutdown /s /f /t 0
+    image_size = 51G
+    os_type = windows
+
+rv:
     # tp-qemu tests
     spice_seamless_migration = on
     # XXX
@@ -91,3 +115,4 @@ role-client:
 
         RHEL.6..i386:
             wmctrl_32rpm = 'http://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686.rpm'
+

@@ -59,11 +59,19 @@ stage-deploy.use-template:
     not_preprocess = yes
     images_good = 10.34.73.3:/nfs/iso/avocado/templates
 
-1vm..role-client:
+role-client:
     vms = client
 
-1vm..role-guest:
+role-guest:
     vms = guest
 
-2vm:
+role-guest..role-client:
     vms = client guest
+
+#guest..client:
+#    # XXX: does not work : cartesian_config.py bug ;)
+#    vms = client guest
+spice_proxy = 10.34.130.181
+# Next strings were added by runtest.sh:
+pre_command = /mnt/tests/spice/qe-tests/beaker_phase_notify.sh -d --begin
+post_command = /mnt/tests/spice/qe-tests/beaker_phase_notify.sh -d --end
