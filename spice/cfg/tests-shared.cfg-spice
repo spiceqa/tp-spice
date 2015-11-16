@@ -16,9 +16,22 @@ include guest-hw.cfg
 
 include assignments.cfg-w-sfx
 
+# Add suffix to dics
+variants:
+    - sfx-none:
+        # Reserved, no suffixes
+    - sfx-g:
+        only role-guest
+        suffix _guest
+    - sfx-c:
+        only role-client
+        suffix _client
+
 # ^^^ subjects to add suffixes to all vars ^^^
 # acts as a filter: only sfx-g sfx-c
-join sfx-g sfx-c
+variants:
+     - 2vm:
+        join sfx-g sfx-c
 # \/\/\/ below stays withouf suffixes \/\/\/
 
 include spice-tests.cfg

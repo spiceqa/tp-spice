@@ -65,13 +65,9 @@ role-client:
 role-guest:
     vms = guest
 
-role-guest..role-client:
+2vm:
     vms = client guest
 
 #guest..client:
 #    # XXX: does not work : cartesian_config.py bug ;)
 #    vms = client guest
-spice_proxy = 10.34.130.181
-# Next strings were added by runtest.sh:
-pre_command = /mnt/tests/spice/qe-tests/beaker_phase_notify.sh -d --begin
-post_command = /mnt/tests/spice/qe-tests/beaker_phase_notify.sh -d --end
