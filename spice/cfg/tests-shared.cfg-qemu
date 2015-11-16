@@ -9,8 +9,6 @@ connect_uri = default
 
 # Include the base config files.
 include top.cfg
-only sfx-none
-
 include base.cfg
 include machines.cfg
 include subtests.cfg
