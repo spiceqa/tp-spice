@@ -10,9 +10,7 @@ import logging
 import os
 from autotest.client.shared import error
 from virttest import utils_misc, utils_spice
-
-
-#TODO: needs rewrite
+from spice.tests.rv_session import *
 
 
 def run_rv_logging(test, params, env):
@@ -35,13 +33,29 @@ def run_rv_logging(test, params, env):
     script_call = os.path.join(dst_path, script)
     testing_text = params.get("text_to_test")
 
-    guest_vm = env.get_vm(params["guest_vm"])
-    guest_vm.verify_alive()
+
+
+    session = RvSession(params, env)
+    session.clear_interface_all()
+
+    guest_vm = session.guest_vm
     guest_session = guest_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
-    guest_root_session = guest_vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)),
         username="root", password="123456")
+    guest_root_session = guest_vm.wait_for_login(
+            timeout=int(params.get("login_timeout", 360)),
+            username="root", password="123456")
+
+    client_vm = session.client_vm
+
+    client_session = client_vm.wait_for_login(
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
+    # Verify remote-viewer is running
+    try:
+        session.is_connected()
+    except:
+        raise error.TestFail("Failed to establish connection")
 
     scriptdir = os.path.join("scripts", script)
     script_path = utils_misc.get_path(test.virtdir, scriptdir)

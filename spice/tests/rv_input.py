@@ -13,8 +13,7 @@ import os
 from aexpect import ShellCmdError
 from autotest.client.shared import error
 from virttest import utils_misc, utils_spice
-
-#TODO: needs rewrite
+from spice.tests.rv_session import *
 
 def install_pygtk(guest_session, params):
     """
@@ -263,21 +262,26 @@ def analyze_results(file_path, test_type):
 def run_rv_input(test, params, env):
     """
     Test for testing keyboard inputs through spice.
-    Test depends on rv_connect test.
 
     @param test: QEMU test object.
     @param params: Dictionary with the test parameters.
     @param env: Dictionary with test environment.
     """
 
-    guest_vm = env.get_vm(params["guest_vm"])
-    guest_vm.verify_alive()
+    session = RvSession(params, env)
+    session.clear_interface_all()
 
-    client_vm = env.get_vm(params["client_vm"])
-    client_vm.verify_alive()
-
+    guest_vm = session.guest_vm
     guest_session = guest_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
+
+    client_vm = session.client_vm
+
+    client_session = client_vm.wait_for_login(
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
+
     guest_root_session = guest_vm.wait_for_login(
               timeout=int(params.get("login_timeout", 360)),
               username="root", password="123456")
@@ -312,6 +316,14 @@ def run_rv_input(test, params, env):
     except:
         raise error.TestFail("Unknown type of test")
 
+    session.connect()
+
+    try:
+        session.is_connected()
+    except:
+        logging.info("FAIL")
+        raise error.TestFail("Failed to establish connection")
+
     func(*args)
 
     # Get file with caught keycodes from guest
@@ -323,4 +335,3 @@ def run_rv_input(test, params, env):
         raise error.TestFail("Testing of sending keys failed:"
                              "  Expected keycode = %s" % result)
 
-    guest_session.close()

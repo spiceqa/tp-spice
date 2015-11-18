@@ -10,6 +10,7 @@ options to handle smartcards.
 import logging
 import aexpect
 from autotest.client.shared import error
+from spice.tests.rv_session import *
 
 
 def run_rv_smartcard(test, params, env):
@@ -31,24 +32,24 @@ def run_rv_smartcard(test, params, env):
     certcheck1 = params.get("certcheck3")
     certcheck2 = params.get("certcheck4")
 
-    guest_vm = env.get_vm(params["guest_vm"])
-    guest_vm.verify_alive()
+    session = RvSession(params, env)
+    session.clear_interface_all()
+
+    guest_vm = session.guest_vm
     guest_session = guest_vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)),
         username="root", password="123456")
 
-    client_vm = env.get_vm(params["client_vm"])
-    client_vm.verify_alive()
+    client_vm = session.client_vm
 
     client_session = client_vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)),
         username="root", password="123456")
     # Verify remote-viewer is running
     try:
-        pid = client_session.cmd("pgrep remote-viewer")
-        logging.info("remote-viewer is running as PID %s", pid.strip())
+        session.is_connected()
     except:
-        raise error.TestFail("remote-viewer is not running")
+        raise error.TestFail("Failed to establish connection")
 
     # verify the smart card reader can be seen
     output = guest_session.cmd("lsusb")

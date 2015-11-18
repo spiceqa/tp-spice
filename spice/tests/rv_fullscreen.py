@@ -158,8 +158,11 @@ def run_rv_fullscreen(test, params, env):
         session.set_guest_resolution("640x480")
 
     session.connect()
-    #Throws exception if connection fails
-    session.is_connected()
+    try:
+        session.is_connected()
+    except:
+        logging.info("FAIL")
+        raise error.TestFail("Failed to establish connection")
 
     guest_res = session.get_guest_resolution()
 

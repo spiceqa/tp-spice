@@ -69,15 +69,24 @@ def verify_recording(recording, params):
 
 def run_rv_audio(test, params, env):
 
-    guest_vm = env.get_vm(params["guest_vm"])
-    guest_vm.verify_alive()
-    guest_session = guest_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
+    session = RvSession(params, env)
+    session.clear_interface_all()
 
-    client_vm = env.get_vm(params["client_vm"])
-    client_vm.verify_alive()
+    guest_vm = session.guest_vm
+    guest_session = guest_vm.wait_for_login(
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
+
+    client_vm = session.client_vm
+
     client_session = client_vm.wait_for_login(
-        timeout=int(params.get("login_timeout", 360)))
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
+    # Verify remote-viewer is running
+    try:
+        session.is_connected()
+    except:
+        raise error.TestFail("Failed to establish connection")
 
     if(guest_session.cmd_status("ls %s" % params.get("audio_tgt"))):
         logging.info("Copying %s to guest." % params.get("audio_src"))
