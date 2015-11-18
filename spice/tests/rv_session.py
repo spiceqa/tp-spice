@@ -356,14 +356,13 @@ class RvSession:
 
     def clear_guest(self):
         """ Clears interface on guest """
-            clear_interface(self.guest_vm,
-                                        int(self.params.get("login_timeout", "360")))
+        clear_interface(self.guest_vm,
+                        int(self.params.get("login_timeout", "360")))
 
     def clear_client(self):
         """ Clears interface on client """
-            clear_interface(self.client_vm,
-                                        int(self.params.get("login_timeout", "360")))
-
+        clear_interface(self.client_vm,
+                        int(self.params.get("login_timeout", "360")))
 
     def clear_interface_all(self):
         """
@@ -379,7 +378,6 @@ class RvSession:
         for vm in self.params.get("vms").split():
             clear_interface(self.env.get_vm(vm),
                                         int(self.params.get("login_timeout", "360")))
-
 
     def generate_vv_file(self):
         """
