@@ -11,6 +11,11 @@ import logging, os, time
 import aexpect
 from autotest.client.shared import error
 from virttest import utils_misc, utils_spice
+from spice.tests.rv_session import *
+
+#TODO: needs rework for rv_session
+
+#TODO: needs rework for rv_session
 
 
 def wait_timeout(timeout=10):
@@ -493,7 +498,7 @@ def copy_and_paste_pos(session_to_copy_from, session_to_paste_to,
         pasteto_script_call = script_call_guest
     elif(dirparam == "guest_to_client"):
         copyfrom_script_call = script_call_guest
-        pasteto_script_call = script_call_client 
+        pasteto_script_call = script_call_client
 
 
     # Before doing the copy and paste, verify vdagent is
@@ -1080,17 +1085,28 @@ def run_rv_copyandpaste(test, params, env):
     image_name = params.get("image_tocopy_name")
     image_name_bmp = params.get("image_tocopy_name_bmp")
     testing_text = params.get("text_to_test")
-    client_vm = env.get_vm(params["client_vm"])
-    client_vm.verify_alive()
+
+    session = RvSession(params, env)
+    session.clear_interface_all()
+
+    client_vm = session.client_vm
     client_session = client_vm.wait_for_login(
             timeout=int(params.get("login_timeout", 360)))
 
-    guest_vm = env.get_vm(params["guest_vm"])
+    guest_vm = session.guest_vm
     guest_session = guest_vm.wait_for_login(
             timeout=int(params.get("login_timeout", 360)))
     guest_root_session = guest_vm.wait_for_login(
             timeout=int(params.get("login_timeout", 360)),
             username="root", password="123456")
+
+    session.connect()
+
+    try:
+        session.is_connected()
+    except:
+        logging.info("FAIL")
+        raise error.TestFail("Failed to establish connection")
 
     #get the type of OS for client and guest
     guest_vmparams = guest_vm.get_params()

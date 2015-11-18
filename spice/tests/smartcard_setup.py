@@ -13,15 +13,16 @@ import aexpect
 from virttest import utils_misc, utils_spice
 from autotest.client.shared import error
 
+#TODO: needs rewrite.... ?
 
 def run_smartcard_setup(test, params, env):
     """
     Simple setup test to create certs on the client to be passed to VM's
     smartcard.
 
-    :param test: QEMU test object.
-    :param params: Dictionary with the test parameters.
-    :param env: Dictionary with test environment.
+    @param test: QEMU test object.
+    @param params: Dictionary with the test parameters.
+    @param env: Dictionary with test environment.
     """
     # Get necessary params
     cert_list = params.get("gencerts").split(",")

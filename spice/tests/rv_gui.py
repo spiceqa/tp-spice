@@ -14,6 +14,8 @@ from aexpect import ShellCmdError
 from virttest import utils_net, utils_spice
 from time import sleep
 
+#TODO: needs rewrite
+
 window_title = "'vm1 (1) - Remote Viewer'"
 
 def getres(vm_session):
@@ -272,7 +274,7 @@ Tests GUI automation of remote-viewer
         #Run the test
         client_session_dt = client_vm.wait_for_login(
                                  timeout=int(params.get("login_timeout", 360)))
-        client_session_dt.cmd("export DISPLAY=:0.0") 
+        client_session_dt.cmd("export DISPLAY=:0.0")
         client_session_dt.cmd('. /home/test/.dbus/session-bus/`cat ' + \
                               '/var/lib/dbus/machine-id`-0')
         client_session_dt.cmd('export DBUS_SESSION_BUS_ADDRESS ' + \
@@ -454,7 +456,7 @@ Tests GUI automation of remote-viewer
         #Verify a connection is established
         if i == "connect":
             try:
-                utils_spice.verify_established(client_vm, host_ip, \
+                utils_spice.rv_connected(client_vm, host_ip, \
                                                host_port, rv_binary)
             except utils_spice.RVConnectError:
                 raise error.TestFail("remote-viewer connection failed")
