@@ -48,15 +48,15 @@ class RvSession:
             self.cacert_host = "%s/%s" % (self.params.get("spice_x509_prefix"),
                                self.params.get("spice_x509_cacert_file"))
 
-        #cacert subj is in format for create certificate(with '/' delimiter)
-        #remote-viewer needs ',' delimiter. And also is needed to remove
-        #first character (it's '/')
-        self.host_subj = self.guest_vm.get_spice_var("spice_x509_server_subj")
-        self.host_subj = self.host_subj.replace('/', ',')[1:]
-        if self.ssltype == "invalid_explicit_hs":
-            self.host_subj = "Invalid Explicit HS"
-        else:
-            self.host_subj += self.host
+            #cacert subj is in format for create certificate(with '/' delimiter)
+            #remote-viewer needs ',' delimiter. And also is needed to remove
+            #first character (it's '/')
+            self.host_subj = self.guest_vm.get_spice_var("spice_x509_server_subj")
+            self.host_subj = self.host_subj.replace('/', ',')[1:]
+            if self.ssltype == "invalid_explicit_hs":
+                self.host_subj = "Invalid Explicit HS"
+            else:
+                self.host_subj += self.host
 
 
     def connect(self):
