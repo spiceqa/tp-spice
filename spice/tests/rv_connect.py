@@ -15,7 +15,7 @@ from virttest import utils_net, remote, utils_misc
 from autotest.client.shared import error
 
 
-def run_rv_connect(test, params, env):
+def run(test, params, env):
     """
     Simple test for Remote Desktop connection
     Tests expects that Remote Desktop client (spice/vnc) will be executed
