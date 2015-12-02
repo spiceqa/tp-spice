@@ -214,7 +214,7 @@ class RvSession:
 
         if rv_parameters_from == "file":
             logging.info("Generating file")
-            self.gen_rv_file()
+            self.generate_vv_file()
             logging.info("Uploading file to client")
             self.client_vm.copy_files_to("rv_file.vv", self.params.get("rv_file"))
 
