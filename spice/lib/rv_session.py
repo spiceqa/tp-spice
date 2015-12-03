@@ -3,10 +3,16 @@ import logging
 import socket
 import time
 import sys
+
 from autotest.client.shared import error
 from aexpect import ShellCmdError, ShellStatusError
 from virttest import utils_net, utils_misc
-from spice.tests.utils_spice import *
+
+from . import utils_spice
+from . import conf
+
+class RVConnectError(Exception):
+    pass
 
 class RvSession:
     """
@@ -60,8 +66,10 @@ class RvSession:
 
 
     def connect(self):
-        """Attempts to establish connection between client and guest based on
+        """
+        Attempts to establish connection between client and guest based on
         test parameters supplied at initialization.
+
         :return None; throws exceptions in case of failure:
         """
         rv_binary = self.params.get("rv_binary", "remote-viewer")
@@ -70,17 +78,17 @@ class RvSession:
         disable_audio = self.params.get("disable_audio", "no")
         full_screen = self.params.get("full_screen")
         check_spice_info = self.params.get("spice_info")
-        # cmd var keeps final remote-viewer command line
-        # to be executed on client
+        # cmd var keeps final remote-viewer command line to be executed on
+        # client
         cmd = rv_binary
         if self.client_vm.params.get("os_type") != "windows":
             cmd = cmd + " --display=:0.0"
 
-        # If qemu_ticket is set, set the password
-        #  of the VM using the qemu-monitor
+        # If qemu_ticket is set, set the password of the VM using the
+        # qemu-monitor
         ticket = None
         ticket_send = self.params.get("spice_password_send")
-        qemu_ticket                                     = self.params.get("qemu_password")
+        qemu_ticket = self.params.get("qemu_password")
         if qemu_ticket:
             self.guest_vm.monitor.cmd("set_password spice %s" % qemu_ticket)
             logging.info("Sending to qemu monitor: set_password spice %s"
@@ -118,11 +126,9 @@ class RvSession:
             self.tls_port = self.guest_vm.get_spice_var("spice_tls_port")
             self.port = self.guest_vm.get_spice_var("spice_port")
 
-
-
-            # If it's invalid implicit, a remote-viewer connection
-            # will be attempted with the hostname, since ssl certs were
-            # generated with the ip address
+            # If it's invalid implicit, a remote-viewer connection will be
+            # attempted with the hostname, since ssl certs were generated with
+            # the ip address
             self.hostname = socket.gethostname()
             escape_char = self.client_vm.params.get("shell_escape_char",'\\')
             if self.ssltype == "invalid_implicit_hs" or "explicit" in self.ssltype:
@@ -176,7 +182,7 @@ class RvSession:
             if not check_usb_policy(self.client_vm, self.params):
                 logging.info("No USB policy.")
                 add_usb_policy(self.client_vm)
-                wait_timeout(3)
+                utils_spice.wait_timeout(3)
             else:
                 logging.info("USB policy OK")
         else:
@@ -221,17 +227,19 @@ class RvSession:
         # Launching the actual set of commands
         try:
             if rv_ld_library_path:
-                print_rv_version(self.client_session,
-                                 "LD_LIBRARY_PATH=/usr/local/lib "
-                                 "%s" %rv_binary)
+                utils_spice.print_rv_version(self.client_session,
+                                             "LD_LIBRARY_PATH=/usr/local/lib "
+                                             "%s" %rv_binary)
             else:
-                print_rv_version(self.client_session, rv_binary)
+                utils_spice.print_rv_version(self.client_session, rv_binary)
 
         except ShellStatusError as ShellProcessTerminatedError:
             # Sometimes It fails with Status error, ingore it and continue.
             # It's not that important to have printed versions in the log.
-            logging.debug("Ignoring a Status Exception that occurs from calling "
-                          "print versions of remote-viewer or spice-gtk")
+            logging.debug(
+                "Ignoring a Status Exception that occurs from calling print"
+                "versions of remote-viewer or spice-gtk"
+            )
 
         logging.info("Launching %s on the client (virtual)", cmd)
 
@@ -260,23 +268,23 @@ class RvSession:
 
         #Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
-            wait_timeout(1)
+            utils_spice.wait_timeout(1)
             str_input(self.client_vm, line)
 
         # client waits for user entry (authentication) if spice_password is set
         # use qemu monitor password if set, else, if set, try normal password.
         if qemu_ticket:
             # Wait for remote-viewer to launch
-            wait_timeout(5)
+            utils_spice.wait_timeout(5)
             str_input(self.client_vm, qemu_ticket)
         elif ticket:
             if ticket_send:
                 ticket = ticket_send
 
-            wait_timeout(5)  # Wait for remote-viewer to launch
+            utils_spice.wait_timeout(5)  # Wait for remote-viewer to launch
             str_input(self.client_vm, ticket)
 
-        wait_timeout(5)  # Wait for conncetion to establish
+        utils_spice.wait_timeout(5)  # Wait for conncetion to establish
 
 
 # @TODO: This probably needs moving back to rv_connect or to a new file
@@ -356,13 +364,15 @@ class RvSession:
 
     def clear_guest(self):
         """ Clears interface on guest """
-        clear_interface(self.guest_vm,
-                        int(self.params.get("login_timeout", "360")))
+        utils_spice.clear_interface(self.guest_vm,
+                                    int(self.params.get("login_timeout",
+                                                        "360")))
 
     def clear_client(self):
         """ Clears interface on client """
-        clear_interface(self.client_vm,
-                        int(self.params.get("login_timeout", "360")))
+        utils_spice.clear_interface(self.client_vm,
+                                    int(self.params.get("login_timeout",
+                                                        "360")))
 
     def clear_interface_all(self):
         """
@@ -376,8 +386,9 @@ class RvSession:
         #if params.get("clear_interface", "yes") == "yes":
 
         for vm in self.params.get("vms").split():
-            clear_interface(self.env.get_vm(vm),
-                                        int(self.params.get("login_timeout", "360")))
+            utils_spice.clear_interface(self.env.get_vm(vm),
+                                        int(self.params.get("login_timeout",
+                                                            "360")))
 
     def generate_vv_file(self):
         """
@@ -503,5 +514,3 @@ class RvSession:
 
 
     # TODO: Will need to install xdotool on client VM (or dogtail, or both)
-
-
