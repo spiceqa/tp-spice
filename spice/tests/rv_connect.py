@@ -1,8 +1,13 @@
-"""
-rv_connect.py - connect with remote-viewer to remote target
+#!/usr/bin/env python
 
-Requires: binaries remote-viewer, Xorg, netstat
-          Use example kickstart RHEL-6-spice.ks
+"""
+rv_connect.py - connect with remote-viewer from client VM to guest VM
+
+Requires
+--------
+    - remote-viewer
+    - Xorg
+    - netstat
 """
 
 import logging
@@ -11,11 +16,9 @@ from spice.lib import rv_session
 
 def run(test, params, env):
     """
-    Simple test for Remote Desktop connection
-    Tests expects that Remote Desktop client (spice/vnc) will be executed
-    from within a second guest so we won't be limited to Linux only clients
-
-    The plan is to support remote-viewer at first place
+    Simple tests for Remote Desktop connection. Tests expect that remote-viewer
+    will be executed from guest VM. Thus we support clients running on
+    different OSes.
 
     Parameters
     ----------
