@@ -1,15 +1,17 @@
+#!/usr/bin/env python
+
 import os
 import logging
 import socket
 import time
 import sys
-
-from autotest.client.shared import error
-from aexpect import ShellCmdError, ShellStatusError
-from virttest import utils_net, utils_misc
-
-from . import utils_spice
-from . import conf
+from avocado.core import exceptions
+from aexpect import ShellCmdError
+from aexpect import ShellStatusError
+from virttest import utils_net
+from virttest import utils_misc
+from spice.lib import utils_spice
+from spice.lib import conf
 
 class RVConnectError(Exception):
     pass
@@ -37,12 +39,14 @@ class RvSession:
             self.client_session.cmd("export DISPLAY=:0.0")
         self.host = utils_net.get_host_ip_address(self.params)
         if self.guest_vm.get_spice_var("listening_addr") == "ipv6":
-            self.host = ("[" + utils_misc.convert_ipv4_to_ipv6(self.host) +
-                       "]")
+            self.host = ("[" + utils_misc.convert_ipv4_to_ipv6(self.host) + "]")
         self.port = None
         self.tls_port = None
         self.rv_binary = self.params.get("rv_binary", "remote-viewer")
         self.secure_channels = self.params.get("spice_secure_channels")
+        self.secure_channels_num = 0
+        if self.secure_channels:
+            self.secure_channels_num = len(self.secure_channels.split(','))
         self.proxy = params.get("spice_proxy", None)
         self.ssltype = params.get("ssltype", "")
         self.test_type = params.get("test_type")
@@ -310,48 +314,56 @@ class RvSession:
                      #~ " from the qemu monitor")
 
     def is_connected(self):
-        """Tests whether or not is connection active
+        """
+        Tests whether or not is connection active.
 
-        :return: Bool; True if connected
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
         """
         rv_binary = self.params.get("rv_binary")
-        rv_binary = rv_binary.split(os.path.sep)[-1]
-        logging.info("Verification in progress")
-        tls_count = 0
-
-        # !!! -n means do not resolve port names
+        rv_binary = os.path.basename(rv_binary)
         if ".exe" in rv_binary:
             cmd = "netstat -n"
-
         else:
-            cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % \
+            cmd = (
+                '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' %
                 (self.host, rv_binary)
+            )
         netstat_out = self.client_session.cmd_output(cmd)
-        logging.info("netstat output: %s", netstat_out)
-
-        tls_port = self.tls_port
-        if tls_port:
-            tls_count = netstat_out.count(tls_port)
-        else:
-            tls_port = self.port
-
-        if (netstat_out.count(self.port)+tls_count) < 4:
-            logging.error("Not enough channels were open")
-            raise RVConnectError()
-        if self.secure_channels:
-            if tls_count < len(self.secure_channels.split(',')):
-                logging.error("Not enough secure channels open")
-                raise RVConnectError()
-        for line in netstat_out.split('\n'):
-            if ((self.port in line and "ESTABLISHED" not in line) or
-                (tls_port in line and "ESTABLISHED" not in line)):
-                logging.error("Failed to get established connection from netstat")
-                raise RVConnectError()
         if "ESTABLISHED" not in netstat_out:
-            logging.error("Failed to get established connection from netstat")
-            raise RVConnectError()
-        logging.info("%s connection to %s:%s successful.",
-                         rv_binary, self.host, self.port)
+            logging.error("netstat reports no established connection")
+            return False
+        port = self.port
+        tls_port = self.tls_port
+        port_count = netstat_out.count(port)
+        tls_port_count = 0
+        if tls_port:
+            tls_port_count = netstat_out.count(tls_port)
+        #logging.info("netstat output: %s", netstat_out)
+        if (port_count + tls_port_count) < 4:
+            logging.error("Not enough channels were open")
+            return False
+        if self.secure_channels and tls_port_count < self.secure_channels_num:
+            logging.error("Not enough secure channels open")
+            return False
+        for line in netstat_out.split('\n'):
+            if (
+                    (port
+                     and port in line
+                     and "ESTABLISHED" not in line)
+                    or
+                    (tls_port
+                     and tls_port in line
+                     and "ESTABLISHED" not in line)
+            ):
+                logging.error(
+                    "Failed to get established connection from netstat"
+                )
+                return False
+        logging.info("Connection checking pass")
+        return True
 
     def disconnect(self):
         """

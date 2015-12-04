@@ -3,9 +3,12 @@
 """
 rv_connect.py - connect with remote-viewer from client VM to guest VM
 
-Requires
---------
+Client requires
+---------------
     - remote-viewer
+
+Guest requires
+--------------
     - Xorg
     - netstat
 """
@@ -13,6 +16,7 @@ Requires
 import logging
 from avocado.core import exceptions
 from spice.lib import rv_session
+from spice.lib import conf
 
 def run(test, params, env):
     """
@@ -29,49 +33,36 @@ def run(test, params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
 
+    Raises
+    ------
+    TestFail
+        Test fails for expected behaviour.
+
     """
-
     logging.info("Start test %s", test.name)
-
-    # test_type - known variants:
-    # * negative
     test_type = params.get("test_type")
-
-    # ssltype - known variants:
-    # * explicit_hs
-    # * implicit_hs
-    # * invalid_explicit_hs
-    # * invalid_implicit_hs
     ssltype = params.get("ssltype", "")
-
-    # Gets guest vm object
     guest_vm = env.get_vm(params["guest_vm"])
-
     session = rv_session.RvSession(params, env)
     session.clear_interface_all()
     session.connect()
-
-    try:
-        session.is_connected()
-    except rv_session.RVConnectError:
-        if test_type == "negative":
-            logging.info("remote-viewer connection failed as expected")
-            if ssltype in ("invalid_implicit_hs", "invalid_explicit_hs"):
-                # Check the qemu process output to verify what is expected
+    if session.is_connected():
+        if test_type == conf.TEST_TYPE_NEGATIVE:
+            raise exceptions.TestFail(
+                "Remote viewer connection was established when it was"
+                "supposed to be unsuccessful."
+            )
+    else:
+        if test_type == conf.TEST_TYPE_NEGATIVE:
+            logging.info("Remote viewer connection failed as expected")
+            if ssltype in (conf.SSL_TYPE_IMPLICIT_INVALID,
+                           conf.SSL_TYPE_EXPLICIT_INVALID):
                 qemulog = guest_vm.process.get_output()
-                if "SSL_accept failed" in qemulog:
-                    return
-                else:
+                if conf.PTRN_QEMU_SSL_ACCEPT_FAILED not in qemulog:
                     raise exceptions.TestFail(
-                        "SSL_accept failed not shown in qemu process as"
-                        "expected."
+                        "Failed to find pattern `${0}` in qemu log."
+                        .format(conf.PTRN_QEMU_SSL_ACCEPT_FAILED)
                     )
-            is_rv_connected = False
         else:
-            raise exceptions.TestFail("remote-viewer connection failed")
-
-    if test_type == "negative" and is_rv_connected:
-        raise exceptions.TestFail(
-            "remote-viewer connection was established when it was supposed to"
-            "be unsuccessful"
-        )
+            raise exceptions.TestFail("Connection is not established.")
+    # Test pass.

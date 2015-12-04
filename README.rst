@@ -50,3 +50,26 @@ pnputil -i -a .inf
 /driver:e:\virtio\amd64\win2008\viostor.inf
 
 # NETCFG -WINPE to install the WinPE network stack
+
+================
+Know dict values
+================
+
+#. **ssltype**
+
+   * explicit_hs
+   * implicit_hs
+   * invalid_explicit_hs
+   * invalid_implicit_hs
+
+#. **test_type**
+
+   * test_type
+
+#. **rv_binary** - path to remote viewer
+
+   * /usr/bin/remote-viewer (default)
+
+#. **spice_secure_channels** - format is 'one, two, three'
+
+   * main, inputs
