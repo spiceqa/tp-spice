@@ -273,20 +273,20 @@ class RvSession:
         #Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
             utils_spice.wait_timeout(1)
-            str_input(self.client_vm, line)
+            utils_spice.str_input(self.client_vm, line)
 
         # client waits for user entry (authentication) if spice_password is set
         # use qemu monitor password if set, else, if set, try normal password.
         if qemu_ticket:
             # Wait for remote-viewer to launch
             utils_spice.wait_timeout(5)
-            str_input(self.client_vm, qemu_ticket)
+            utils_spice.str_input(self.client_vm, qemu_ticket)
         elif ticket:
             if ticket_send:
                 ticket = ticket_send
 
             utils_spice.wait_timeout(5)  # Wait for remote-viewer to launch
-            str_input(self.client_vm, ticket)
+            utils_spice.str_input(self.client_vm, ticket)
 
         utils_spice.wait_timeout(5)  # Wait for conncetion to establish
 
