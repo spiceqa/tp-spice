@@ -8,9 +8,10 @@ Requires: connected binaries remote-viewer, Xorg, gnome session
 
 """
 import logging
-from autotest.client.shared import error
-from virttest.aexpect import ShellCmdError
-from spice.tests.rv_session import *
+from avocado.core import exceptions
+from spice.lib import rv_session
+from spice.lib import conf
+import aexpect
 
 
 #TODO: This can probably be removed, replaced by rv_session, utils_spice and the
@@ -99,7 +100,7 @@ def run_rv_fullscreen_old(test, params, env):
     try:
         guest_res_raw = vm_session.cmd_output("xrandr -d :0 | grep '*'")
         guest_res = guest_res_raw.split()[0]
-    except ShellCmdError:
+    except aexpect.ShellCmdError:
         raise error.TestFail("Could not get guest resolution, xrandr output:" +
                              " %s" % client_res_raw)
     except IndexError:
@@ -112,7 +113,7 @@ def run_rv_fullscreen_old(test, params, env):
     try:
         guest_res_raw = vm_session.cmd_output("xrandr -d :0 | grep '*'")
         guest_res = guest_res_raw.split()[0]
-    except ShellCmdError:
+    except aexpect.ShellCmdError:
         raise error.TestFail("Could not get guest resolution, xrandr output:" +
                              " %s" % guest_res_raw)
     except IndexError:
@@ -146,7 +147,7 @@ def run_rv_fullscreen_old(test, params, env):
 #      -- has more issues though, maybe allow more parameters (although a
 # completely new test "resolution sync" could be more useful, eventually
 #      -- Also, more displays will most likely need a change in config file
-def run_rv_fullscreen(test, params, env):
+def run(test, params, env):
 
     session = RvSession(params, env)
     session.clear_interface_all()
