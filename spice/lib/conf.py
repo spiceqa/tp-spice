@@ -30,3 +30,5 @@ SSL_TYPE_EXPLICIT_INVALID = "invalid_explicit_hs"
 PTRN_QEMU_SSL_ACCEPT_FAILED = "SSL_accept failed"
 """ Pattern for qemu log - failed to accept SSL """
 
+AUDIO_REC_FILE = "./recorded.wav"
+""" Recorded audio """
