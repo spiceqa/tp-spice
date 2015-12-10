@@ -8,12 +8,15 @@ Requires: connected binaries remote-viewer, Xorg, gnome session
 """
 import logging
 import os
-from autotest.client.shared import error
-from virttest import utils_misc, utils_spice
-from spice.tests.rv_session import *
+import aexpect
+from avocado.core import exceptions
+from virttest import utils_misc
+from spice.lib import utils_spice
+from spice.lib import rv_session
+from spice.lib import conf
 
 
-def run_rv_logging(test, params, env):
+def run(test, params, env):
     """
     Tests the logging of remote-viewer
 
@@ -32,12 +35,8 @@ def run_rv_logging(test, params, env):
     dst_path = params.get("dst_dir", "guest_script")
     script_call = os.path.join(dst_path, script)
     testing_text = params.get("text_to_test")
-
-
-
-    session = RvSession(params, env)
+    session = rv_session.RvSession(params, env)
     session.clear_interface_all()
-
     guest_vm = session.guest_vm
     guest_session = guest_vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)),
@@ -55,7 +54,7 @@ def run_rv_logging(test, params, env):
     try:
         session.is_connected()
     except:
-        raise error.TestFail("Failed to establish connection")
+        raise exceptions.TestFail("Failed to establish connection")
 
     scriptdir = os.path.join("scripts", script)
     script_path = utils_misc.get_path(test.virtdir, scriptdir)
@@ -112,10 +111,10 @@ def run_rv_logging(test, params, env):
             if "The text has been placed into the clipboard." in output:
                 logging.info("Copying of text was successful")
             else:
-                raise error.TestFail("Copying to the clipboard failed ELSE",
+                raise exceptions.TestFail("Copying to the clipboard failed ELSE",
                                      output)
         except:
-            raise error.TestFail("Copying to the clipboard failed try" +
+            raise exceptions.TestFail("Copying to the clipboard failed try" +
                                  " block failed")
 
         logging.debug("------------ End of script output of the Copying"
@@ -128,6 +127,6 @@ def run_rv_logging(test, params, env):
         # Couldn't find the right test to run
         guest_session.close()
         guest_root_session.close()
-        raise error.TestFail("Couldn't find the right test to run,"
+        raise exceptions.TestFail("Couldn't find the right test to run,"
                              + " check cfg files.")
     guest_session.close()
