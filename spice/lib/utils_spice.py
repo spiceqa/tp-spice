@@ -582,3 +582,15 @@ def temp_windows(filter):
                  'ET_WM_WINDOW_TYPE_NORMAL' in line ):
                 windows.append(window)
     return windows
+
+def wait_timeout(timeout=10):
+    """
+    time.sleep(timeout) + logging.debug(timeout)
+
+    Parameters
+    ----------
+    timeout : int
+        Suspend execution of the current thread for the given number of seconds.
+    """
+    logging.debug("Waiting (timeout=%s secs)", timeout)
+    time.sleep(timeout)
