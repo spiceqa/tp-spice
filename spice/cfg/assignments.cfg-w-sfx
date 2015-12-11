@@ -8,6 +8,19 @@ image_size = 30G
 drive_cache = none
 workaround_qemu_qmp_crash = always
 
+rv:
+    Linux:
+        RHEL.7:
+            dogtail_rpm = 'http://kojipkgs.fedoraproject.org//packages/dogtail/0.8.2/2.fc20/noarch/dogtail-0.8.2-2.fc20.noarch.rpm'
+            wmctrl_64rpm = 'http://kojipkgs.fedoraproject.org/packages/wmctrl/1.07/15.fc20/x86_64/wmctrl-1.07-15.fc20.x86_64.rpm'
+
+        RHEL.6..x86_64:
+            dogtail_rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/dogtail-0.7.1.1-1.el6.noarch.rpm'
+            wmctrl_64rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/wmctrl-1.07-12.el6.x86_64.rpm'
+
+        RHEL.6..i386:
+            wmctrl_32rpm = 'http://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686.rpm'
+
 role-guest:
     main_vm = guest
     image_name += _guest
@@ -51,67 +64,4 @@ Windows:
     shutdown_command = shutdown /s /f /t 0
     image_size = 51G
     os_type = windows
-
-rv:
-    # tp-qemu tests
-    spice_seamless_migration = on
-    # XXX
-    guest_vm = guest
-    client_vm = client
-    full_screen = no
-        Linux:
-            fedoraurl = 'http://dl.fedoraproject.org/pub/epel/6'
-            rv_binary = /usr/bin/remote-viewer
-            spice_info = None
-            listening_addr = None
-            certdb = None
-            gencerts = None
-            test_dir = /mnt/tests/spice/gui-tests
-            test_script_tgt = /home/test/
-            file_transfer_client = scp
-            shell_prompt = ^\[.*\][\#\$]\s*$
-            shell_client = ssh
-            shell_port = 22
-            file_transfer_port = 22
-            status_test_command = echo $?
-            rv_file = ~/rv_file.vv
-            client_script = "cb.py"
-            dst_dir_client = "/tmp/"
-            dst_dir_guest = "/tmp/"
-        Windows:
-            guest_script = "cbwin.py"
-            guest_script_req = "pyperclip.py"
-            shell_port = 10022
-            shell_client = nc
-            shell_linesep = \r\n
-            file_transfer_port = 10023
-            file_transfer_client = rss
-            client_script = "cbwin.py"
-            client_script_req = "pyperclip.py"
-            os_type = windows
-            shell_linesep = \r\n
-            shell_prompt = >$
-            shell_escape_char = ^
-            file_transfer_port = 10023
-            rv_file = C:\rv_file.vv
-            pnputil = 'C:\\Windows\\winsxs\\amd64_microsoft-windows-pnputil_31bf3856ad364e35_6.1.7600.16385_none_5958b438d6388d15\\PnPutil.exe'
-            md5sumwin = fciv.exe
-            winqxl = wqxl.zip
-            winvdagent = wvdagent.zip
-            winp7zip = 7z920-x64.msi
-            vioserial = vioserial.zip
-            wqxlinf = qxl.inf
-            vioserialinf = vioser.inf
-            kill_on_vms = "client_vm"
-
-        RHEL.7:
-            dogtail_rpm = 'http://kojipkgs.fedoraproject.org//packages/dogtail/0.8.2/2.fc20/noarch/dogtail-0.8.2-2.fc20.noarch.rpm'
-            wmctrl_64rpm = 'http://kojipkgs.fedoraproject.org/packages/wmctrl/1.07/15.fc20/x86_64/wmctrl-1.07-15.fc20.x86_64.rpm'
-
-        RHEL.6..x86_64:
-            dogtail_rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/dogtail-0.7.1.1-1.el6.noarch.rpm'
-            wmctrl_64rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/wmctrl-1.07-12.el6.x86_64.rpm'
-
-        RHEL.6..i386:
-            wmctrl_32rpm = 'http://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686.rpm'
 
