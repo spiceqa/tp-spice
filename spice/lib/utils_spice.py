@@ -9,12 +9,9 @@ import time
 import sys
 import subprocess
 import re
-#from autotest.client.shared import error
-#from aexpect import ShellCmdError, ShellStatusError
-#from virttest import utils_net, utils_misc
+from spice.lib import conf
 
 # TODO: Rework migration, add migration as a option of the session, but that can wait
-
 
 class RVConnectError(Exception):
 
@@ -30,9 +27,10 @@ def check_usb_policy(vm, params):
     logging.info("Checking USB policy")
     file_name = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
     cmd = "grep \"<allow_any>yes\" " + file_name
-    client_root_session = vm.wait_for_login(
-            timeout=int(params.get("login_timeout", 360)),
-            username="root", password="123456")
+    timeout = int(params.get("login_timeout", 360))
+    client_root_session = vm.wait_for_login(timeout=timeout,
+                                            username=conf.USERNAME,
+                                            password=conf.PASSWORD)
     usb_policy = client_root_session.cmd_status(cmd)
 
     logging.info("Policy %s" % usb_policy)
@@ -48,12 +46,13 @@ def add_usb_policy(vm):
     """
     logging.info("Adding USB policy")
     remote_file_path = "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
-
     file_to_upload = "deps/org.spice-space.lowlevelusbaccess.policy"
     file_to_upload_path = os.path.join("deps", file_to_upload)
     logging.debug("Sending %s" % file_to_upload_path)
-    vm.copy_files_to(file_to_upload_path, remote_file_path, username="root",
-                     password="123456")
+    vm.copy_files_to(file_to_upload_path,
+                     remote_file_path,
+                     username=conf.USERNAME,
+                     password=conf.PASSWORD)
 
 def _is_pid_alive(session, pid):
     """
@@ -401,20 +400,22 @@ def clear_interface(vm, login_timeout = 360, timeout = None):
     else:
         clear_interface_linux(vm, login_timeout, timeout)
 
+
 def clear_interface_linux(vm, login_timeout, timeout = None):
     """
-    Clears user interface of a vm without restart
+    Clears user interface of a vm without restart.
 
-    @param vm:      VM where cleaning is required
+    Parameters
+    ----------
+    vm : virttest.qemu_vm.VM
+        VM where cleaning is required.
+    login_timeout : int
+        Seconds. Timeout to establish ssh connection to vm.
+    timeout : Optional[int]
+        Seconds. Whait until process gets be killed.
     """
-    logging.info("restarting X on: %s", vm.name)
-    session = vm.wait_for_login(username = "root", password = "123456",
-                timeout = login_timeout)
-
-    output = session.cmd('cat /etc/redhat-release')
-    isRHEL7 = "release 7." in output
-
-    if isRHEL7:
+    os_variant = vm.params.get("os_variant")
+    if os_variant == "rhel7":
         command = "gdm"
         pgrep_process = "'^gdm$'"
         if not timeout:
@@ -424,19 +425,20 @@ def clear_interface_linux(vm, login_timeout, timeout = None):
         pgrep_process = "Xorg"
         if not timeout:
             timeout = 15
-
+    session = vm.wait_for_login(username = conf.USERNAME,
+                                password = conf.PASSWORD,
+                                timeout = login_timeout)
     try:
+        logging.info("Restarting X on: %s", vm.name)
         pid = session.cmd("pgrep %s" % pgrep_process)
         session.cmd("killall %s" % command)
         utils_misc.wait_for(lambda: _is_pid_alive(session, pid), 10, timeout, 0.2)
     except:
         pass
-
     try:
         session.cmd("ps -C %s" % command)
     except:
         raise error.TestFail("X/gdm not running")
-        #logging.info("X or gdm is not running; might cause failures")
     time.sleep(timeout)
 
 def clear_interface_windows(vm, timeout = None):
