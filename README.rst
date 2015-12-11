@@ -73,3 +73,17 @@ Know dict values
 #. **spice_secure_channels** - format is 'one, two, three'
 
    * main, inputs
+
+
+Code notes
+==========
+
+ ```
+ print "1:" + str(params.get("os_variant"))
+ print "2:" + str(guest_vm.params.get("os_variant"))
+ ```
+Result is different:
+ ```
+ 1:None
+ 2:rhel7
+ ```
