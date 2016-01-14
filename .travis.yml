@@ -4,6 +4,7 @@ notifications:
   email:
     recipients:
       - spice-qe-auto@redhat.com
+      - astepano@redhat.com
 
 python:
     - "2.7_with_system_site_packages"
