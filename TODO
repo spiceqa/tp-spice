@@ -1,1 +1,2 @@
 * Import selftests from avocado.
+* Add https://coveralls.io and status to README.rst
