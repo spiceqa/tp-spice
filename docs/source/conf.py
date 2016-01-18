@@ -11,7 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys
+import os
+import commands
 from mock import MagicMock
 
 class Mock(MagicMock):
@@ -130,6 +132,16 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
         html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     except ImportError:
         html_theme = 'default'
+
+class DocBuildError(Exception):
+    pass
+
+# Call 'make rst' in 'docs' dir
+docs_dir = os.path.abspath(os.path.join("..", "..", "docs"))
+make = commands.getoutput('which make').strip()
+_status, _output = commands.getstatusoutput("cd %s; %s rst" % (docs_dir, make))
+if _status:
+    raise DocBuildError("API rst auto generation failed: %s" % _output)
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
