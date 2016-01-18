@@ -1,2 +1,2 @@
 autotest
-python-sphinxcontrib-napoleon
+sphinxcontrib-napoleon
