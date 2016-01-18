@@ -5,11 +5,11 @@ Status dashboard for `tp-spice <https://github.com/spiceqa/tp-spice>`_
 .. image:: https://travis-ci.org/spiceqa/tp-spice.svg?branch=master
     :target: https://travis-ci.org/spiceqa/tp-spice
 
-=================================
-Spice test provider for virt-test
-=================================
+==================================
+Spice test provider for avocado-vt
+==================================
 
-This is the official test provider for SPICE subtest types.
+Latest documentations is located at: http://tp-spice.readthedocs.org/.
 
 ===========
 Howto start
@@ -24,7 +24,6 @@ This is done automatically for Beaker task **spice-qe-tests**
 ************
 General info
 ************
-
 
 This tests depends on another test provider: tp-qemu
 
@@ -90,13 +89,14 @@ Code notes
 ==========
 
 ::
- 
+
  print "1:" + str(params.get("os_variant"))
  print "2:" + str(guest_vm.params.get("os_variant"))
 
 Result is different:
 
 ::
- 
+
  1:None
  2:rhel7
+
