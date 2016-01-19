@@ -1,9 +1,11 @@
-==================================
-Spice test provider for avocado-vt
-==================================
+===================================
+Spice test provider for avocado-vt_
+===================================
 
 - Source code repository: https://github.com/spiceqa/tp-spice
 - Latest documentations: http://tp-spice.readthedocs.org
+
+.. _avocado-vt: https://github.com/avocado-framework/avocado-vt
 
 ================
 Travis-ci status
