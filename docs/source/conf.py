@@ -290,3 +290,7 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+# Napoleon settings
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
