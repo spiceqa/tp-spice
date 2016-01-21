@@ -294,3 +294,5 @@ texinfo_documents = [
 # Napoleon settings
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
+todo_include_todos = True
+autodoc_member_order = 'groupwise'

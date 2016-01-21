@@ -10,6 +10,19 @@ import sys
 import subprocess
 import re
 from spice.lib import conf
+from virttest import qemu_vm
+from avocado.core import exceptions
+
+class SpiceVM(qemu_vm.VM):
+    def is_win(self):
+        if self.params.get("os_type") == "windows":
+            return True
+        return False
+
+    def is_linux(self):
+        if self.params.get("os_type") == "linux":
+            return True
+        return False
 
 # TODO: Rework migration, add migration as a option of the session, but that can wait
 
@@ -151,7 +164,7 @@ def start_vdagent(guest_session, os_type, test_timeout):
     elif os_type == "windows":
         cmd = 'net start "RHEV Spice Agent"'
     else:
-        raise error.TestFail("Error: os_type passed to stop_vdagent is invalid")
+        raise exceptions.TestFail("Error: os_type passed to stop_vdagent is invalid")
 
     try:
         guest_session.cmd(cmd, print_func=logging.info,
@@ -182,9 +195,9 @@ def restart_vdagent(guest_session, os_type, test_timeout):
             guest_session.cmd(cmd, print_func=logging.info,
                               timeout=test_timeout)
         except ShellCmdError:
-            raise error.TestFail("Couldn't restart spice vdagent process")
+            raise exceptions.TestFail("Couldn't restart spice vdagent process")
         except:
-            raise error.TestFail("Guest Vdagent Daemon Check failed")
+            raise exceptions.TestFail("Guest Vdagent Daemon Check failed")
 
         logging.debug("------------ End of Spice Vdagent"
                       " Daemon  Restart ------------")
@@ -199,9 +212,9 @@ def restart_vdagent(guest_session, os_type, test_timeout):
             guest_session.cmd('net start "RHEV Spice Agent"',
                               print_func=logging.info, timeout=test_timeout)
         except ShellCmdError:
-            raise error.TestFail("Couldn't restart spice vdagent process")
+            raise exceptions.TestFail("Couldn't restart spice vdagent process")
         except:
-            raise error.TestFail("Guest Vdagent Daemon Check failed")
+            raise exceptions.TestFail("Guest Vdagent Daemon Check failed")
 
         logging.debug("------------ End of Spice Vdagent"
                       " Daemon  Restart ------------")
@@ -222,7 +235,7 @@ def stop_vdagent(guest_session, os_type, test_timeout):
     elif os_type == "windows":
         cmd = 'net stop "RHEV Spice Agent"'
     else:
-        raise error.TestFail("Error: os_type passed to stop_vdagent is invalid")
+        raise exceptions.TestFail("Error: os_type passed to stop_vdagent is invalid")
 
 
     try:
@@ -232,7 +245,7 @@ def stop_vdagent(guest_session, os_type, test_timeout):
         logging.debug("Status code of \"%s\" was not obtained, most likely"
                       "due to a problem with colored output" % cmd)
     except ShellCmdError:
-        raise error.TestFail("Couldn't turn off spice vdagent process")
+        raise exceptions.TestFail("Couldn't turn off spice vdagent process")
     except:
         logging.warn("Starting Vdagent May Not Have Stopped Properly")
         #raise error.TestFail("Guest Vdagent Daemon Check failed")
@@ -273,7 +286,7 @@ def verify_vdagent(guest_session, os_type, test_timeout):
                           " ----")
         wait_timeout(3)
     else:
-        raise error.TestFail("os_type passed to verify_vdagent is invalid")
+        raise exceptions.TestFail("os_type passed to verify_vdagent is invalid")
 
 
 
@@ -299,7 +312,7 @@ def get_vdagent_status(vm_session, os_type, test_timeout):
             return("stopped")
         except:
             logging.info("Unexpected error:", sys.exc_info()[0])
-            raise error.TestFail(
+            raise exceptions.TestFail(
                "Failed attempting to get status of spice-vdagentd")
         wait_timeout(3)
         return(output)
@@ -312,7 +325,7 @@ def get_vdagent_status(vm_session, os_type, test_timeout):
             return("stopped")
         except:
             logging.info("Unexpected error:", sys.exc_info()[0])
-            raise error.TestFail(
+            raise exceptions.TestFail(
                "Failed attempting to get status of spice-vdagentd")
         wait_timeout(3)
         return("running")
@@ -349,7 +362,7 @@ def verify_virtio(guest_session, os_type, test_timeout):
                           " ------------")
         wait_timeout(3)
     else:
-        raise error.TestFail("os_type passed to verify_vdagent is invalid")
+        raise exceptions.TestFail("os_type passed to verify_vdagent is invalid")
 
 
 def install_rv_win(client, host_path, client_path='C:\\virt-viewer.msi'):
@@ -438,7 +451,7 @@ def clear_interface_linux(vm, login_timeout, timeout = None):
     try:
         session.cmd("ps -C %s" % command)
     except:
-        raise error.TestFail("X/gdm not running")
+        raise exceptions.TestFail("X/gdm not running")
     time.sleep(timeout)
 
 def clear_interface_windows(vm, timeout = None):

@@ -17,51 +17,55 @@ class RVConnectError(Exception):
     pass
 
 class RvSession:
-    """
-    Class used to manage remote-viewer connection
+    """Class used to manage remote-viewer connection.
 
-    @param params: Parameters of your avocado/autotest tests
+    Parameters
+    ----------
+    params : virttest.utils_params.Params
+        Dictionary with the test parameters.
+    env : virttest.utils_env.Env
+        Dictionary with test environment.
+
     """
 
     def __init__(self, params, env):
         self.params = params
         self.env = env
-        self.guest_vm = env.get_vm(params["guest_vm"])
+        self.cfg = conf.Params(params)
+        self.guest_vm = env.get_vm(self.cfg.guest_vm)
         self.guest_vm.verify_alive()
         self.guest_session = self.guest_vm.wait_for_login(
-                    timeout=int(params.get("login_timeout", 360)))
-
-        self.client_vm = env.get_vm(params["client_vm"])
+            timeout=int(self.cfg.login_timeout))
+        self.client_vm = env.get_vm(self.cfg.client_vm)
         self.client_vm.verify_alive()
         self.client_session = self.client_vm.wait_for_login(
-                    timeout=int(params.get("login_timeout", 360)))
+            timeout=int(self.cfg.login_timeout))
         if self.client_vm.params.get("os_type") != "windows":
             self.client_session.cmd("export DISPLAY=:0.0")
         self.host = utils_net.get_host_ip_address(self.params)
         if self.guest_vm.get_spice_var("listening_addr") == "ipv6":
-            self.host = ("[" + utils_misc.convert_ipv4_to_ipv6(self.host) + "]")
+            self.host = "[" + utils_misc.convert_ipv4_to_ipv6(self.host) + "]"
         self.port = None
         self.tls_port = None
-        self.rv_binary = self.params.get("rv_binary", "remote-viewer")
-        self.secure_channels = self.params.get("spice_secure_channels")
+        self.rv_binary = self.cfg.rv_binary
+        self.secure_channels = self.cfg.spice_secure_channels
         self.secure_channels_num = 0
         if self.secure_channels:
             self.secure_channels_num = len(self.secure_channels.split(','))
-        self.proxy = params.get("spice_proxy", None)
-        self.ssltype = params.get("ssltype", "")
-        self.test_type = params.get("test_type")
+        self.proxy = self.cfg.spice_proxy
+        self.ssltype = self.cfg.ssltype
+        self.test_type = self.cfg.test_type
         self.host_subj = None
         self.cacert_host = None
-
         if self.guest_vm.get_spice_var("spice_ssl") == "yes":
-            #client needs cacert file
-            self.cacert_host = "%s/%s" % (self.params.get("spice_x509_prefix"),
-                               self.params.get("spice_x509_cacert_file"))
-
-            #cacert subj is in format for create certificate(with '/' delimiter)
-            #remote-viewer needs ',' delimiter. And also is needed to remove
-            #first character (it's '/')
-            self.host_subj = self.guest_vm.get_spice_var("spice_x509_server_subj")
+            # Client needs cacert file
+            self.cacert_host = "%s/%s" % (self.cfg.spice_x509_prefix,
+                                          self.cfg.spice_x509_cacert_file)
+            # Cacert subj is in format for create certificate(with '/'
+            # delimiter) remote-viewer needs ',' delimiter. And also is needed
+            # to remove first character (it's '/')
+            self.host_subj = self.guest_vm.get_spice_var(
+                "spice_x509_server_subj")
             self.host_subj = self.host_subj.replace('/', ',')[1:]
             if self.ssltype == "invalid_explicit_hs":
                 self.host_subj = "Invalid Explicit HS"
@@ -70,118 +74,100 @@ class RvSession:
 
 
     def connect(self):
-        """
-        Attempts to establish connection between client and guest based on
-        test parameters supplied at initialization.
+        """Establish connection between client and guest based on test
+        parameters supplied at initialization.
 
-        :return None; throws exceptions in case of failure:
+        Returns
+        -------
+        None
+
         """
-        rv_binary = self.params.get("rv_binary", "remote-viewer")
-        rv_ld_library_path = self.params.get("rv_ld_library_path")
-        display = self.params.get("display")
-        disable_audio = self.params.get("disable_audio", "no")
-        full_screen = self.params.get("full_screen")
-        check_spice_info = self.params.get("spice_info")
+        rv_binary = self.cfg.rv_binary
+        rv_ld_library_path = self.cfg.rv_ld_library_path
+        display = self.cfg.display
+        disable_audio = self.cfg.disable_audio
+        full_screen = self.cfg.full_screen
+        check_spice_info = self.cfg.spice_info
         # cmd var keeps final remote-viewer command line to be executed on
         # client
         cmd = rv_binary
         if self.client_vm.params.get("os_type") != "windows":
             cmd = cmd + " --display=:0.0"
-
         # If qemu_ticket is set, set the password of the VM using the
         # qemu-monitor
         ticket = None
-        ticket_send = self.params.get("spice_password_send")
-        qemu_ticket = self.params.get("qemu_password")
+        ticket_send = self.cfg.spice_password_send
+        qemu_ticket = self.cfg.qemu_password
         if qemu_ticket:
             self.guest_vm.monitor.cmd("set_password spice %s" % qemu_ticket)
             logging.info("Sending to qemu monitor: set_password spice %s"
                          % qemu_ticket)
-
-        gencerts = self.params.get("gencerts")
-        certdb = self.params.get("certdb")
-        smartcard = self.params.get("smartcard")
-
-        rv_parameters_from = self.params.get("rv_parameters_from", "cmd")
-
+        gencerts = self.cfg.gencerts
+        certdb = self.cfg.certdb
+        smartcard = self.cfg.smartcard
+        rv_parameters_from = self.cfg.rv_parameters_from
         if rv_parameters_from == 'file':
-            cmd += " " + self.params.get("rv_file")
-
+            cmd += " " + self.cfg.rv_file
         if display == "vnc":
             raise NotImplementedError("remote-viewer vnc")
-
         elif not display == "spice":
             raise Exception("Unsupported display value")
-
         ticket = self.guest_vm.get_spice_var("spice_password")
-
         if self.guest_vm.get_spice_var("spice_ssl") == "yes":
-
-            #client needs cacert file
+            # Client needs cacert file
             cacert_client = self.cacert_host
             if self.client_vm.params.get("os_type") == "linux":
                 self.client_session.cmd("rm -rf %s && mkdir -p %s" % (
-                               self.params.get("spice_x509_prefix"),
-                               self.params.get("spice_x509_prefix")))
+                    self.cfg.spice_x509_prefix, self.cfg.spice_x509_prefix))
             if self.client_vm.params.get("os_type") == "windows":
-                cacert_client = "C:\\%s" % self.params.get("spice_x509_cacert_file")
+                cacert_client = "C:\\%s" % self.cfg.spice_x509_cacert_file
             self.client_vm.copy_files_to(self.cacert_host, cacert_client)
-
             self.tls_port = self.guest_vm.get_spice_var("spice_tls_port")
             self.port = self.guest_vm.get_spice_var("spice_port")
-
             # If it's invalid implicit, a remote-viewer connection will be
             # attempted with the hostname, since ssl certs were generated with
-            # the ip address
+            # the ip address.
             self.hostname = socket.gethostname()
             escape_char = self.client_vm.params.get("shell_escape_char",'\\')
             if self.ssltype == "invalid_implicit_hs" or "explicit" in self.ssltype:
-                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (self.hostname,
-                                                                 self.tls_port,
-                                                                 escape_char,
-                                                                 self.port)
+                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (
+                    self.hostname, self.tls_port, escape_char, self.port)
             else:
-                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (self.host,
-                                                                 self.tls_port,
-                                                                 escape_char,
-                                                                 self.port)
-
+                spice_url = " spice://%s?tls-port=%s%s&port=%s" % (
+                    self.host, self.tls_port, escape_char, self.port)
             if rv_parameters_from == "menu":
                 line = spice_url
             elif rv_parameters_from == "file":
                 pass
             else:
                 cmd += spice_url
-
             if not rv_parameters_from == "file":
                 cmd += " --spice-ca-file=%s" % cacert_client
-
-            if (self.params.get("spice_client_host_subject") == "yes" and not
-                rv_parameters_from == "file" ):
+            if (self.cfg.spice_client_host_subject == "yes" and not
+                    rv_parameters_from == "file" ):
                 cmd += " --spice-host-subject=\"%s\"" % self.host_subj
-
         else:
+            # Not spice_ssl.
             self.port = self.guest_vm.get_spice_var("spice_port")
             if rv_parameters_from == "menu":
-                #line to be sent through monitor once r-v is started
-                #without spice url
+                # Line to be sent through monitor once r-v is started without
+                # spice url.
                 line = "spice://%s?port=%s" % (self.host, self.port)
             elif rv_parameters_from == "file":
                 pass
             else:
                 cmd += " spice://%s?port=%s" % (self.host, self.port)
-
-
-        #usbredirection support
-        if self.params.get("usb_redirection_add_device_vm2") == "yes":
-            logging.info("USB redirection set auto redirect on connect for device \
-    class 0x08")
+        # Usbredirection support.
+        if self.cfg.usb_redirection_add_device_vm2 == "yes":
+            logging.info("USB redirection set auto redirect on connect for"
+                         "device class 0x08")
             cmd += " --spice-usbredir-redirect-on-connect=\"0x08,-1,-1,-1,1\""
             client_root_session = self.client_vm.wait_for_login(
-                timeout=int(self.params.get("login_timeout", 360)),
-                username="root", password="123456")
-            usb_mount_path = self.params.get("file_path")
-            #USB was created by qemu (root). This prevents right issue.
+                timeout=int(self.cfg.login_timeout),
+                username=conf.USERNAME,
+                password=conf.PASSWORD)
+            usb_mount_path = self.cfg.file_path
+            # USB was created by qemu (root). This prevents right issue.
             client_root_session.cmd("chown test:test %s" % usb_mount_path)
             if not check_usb_policy(self.client_vm, self.params):
                 logging.info("No USB policy.")
@@ -191,52 +177,43 @@ class RvSession:
                 logging.info("USB policy OK")
         else:
             logging.info("No USB redirection")
-
         # Check to see if the test is using the full screen option.
         if full_screen == "yes" and not rv_parameters_from == "file" :
             logging.info("Remote Viewer Set to use Full Screen")
             cmd += " --full-screen"
-
         if disable_audio == "yes":
             logging.info("Remote Viewer Set to disable audio")
             cmd += " --spice-disable-audio"
-
         # Check to see if the test is using a smartcard.
         if smartcard == "yes":
             logging.info("remote viewer Set to use a smartcard")
             if not rv_parameters_from == "file":
                 cmd += " --spice-smartcard"
-
             if certdb is not None:
                 logging.debug("Remote Viewer set to use the following certificate"
                               " database: " + certdb)
                 cmd += " --spice-smartcard-db " + certdb
-
             if gencerts is not None:
                 logging.debug("Remote Viewer set to use the following certs: " +
                               gencerts)
                 cmd += " --spice-smartcard-certificates " + gencerts
-
         if self.client_vm.params.get("os_type") == "linux":
             cmd = "nohup " + cmd + " &> ~/rv.log &"  # Launch it on background
             if rv_ld_library_path:
                 cmd = "export LD_LIBRARY_PATH=" + rv_ld_library_path + ";" + cmd
-
         if rv_parameters_from == "file":
             logging.info("Generating file")
             self.generate_vv_file()
             logging.info("Uploading file to client")
-            self.client_vm.copy_files_to("rv_file.vv", self.params.get("rv_file"))
-
-        # Launching the actual set of commands
+            self.client_vm.copy_files_to("rv_file.vv", self.cfg.rv_file)
+        # Launching the actual set of commands.
         try:
             if rv_ld_library_path:
                 utils_spice.print_rv_version(self.client_session,
                                              "LD_LIBRARY_PATH=/usr/local/lib "
-                                             "%s" %rv_binary)
+                                             "%s" % rv_binary)
             else:
                 utils_spice.print_rv_version(self.client_session, rv_binary)
-
         except ShellStatusError as ShellProcessTerminatedError:
             # Sometimes It fails with Status error, ingore it and continue.
             # It's not that important to have printed versions in the log.
@@ -244,9 +221,7 @@ class RvSession:
                 "Ignoring a Status Exception that occurs from calling print"
                 "versions of remote-viewer or spice-gtk"
             )
-
         logging.info("Launching %s on the client (virtual)", cmd)
-
         if self.proxy:
             if "http" in self.proxy:
                 split = self.proxy.split('//')[1].split(':')
@@ -262,19 +237,16 @@ class RvSession:
                     self.client_session.cmd("export SPICE_PROXY=%s" % self.proxy)
                 elif self.client_vm.params.get("os_type") == "windows":
                     self.client_session.cmd_output("SET SPICE_PROXY=%s" % self.proxy)
-
         try:
             logging.info("spice,connection: %s", cmd)
             self.client_session.cmd(cmd)
         except ShellStatusError:
             logging.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
-
         #Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
             utils_spice.wait_timeout(1)
             utils_spice.str_input(self.client_vm, line)
-
         # client waits for user entry (authentication) if spice_password is set
         # use qemu monitor password if set, else, if set, try normal password.
         if qemu_ticket:
@@ -284,10 +256,8 @@ class RvSession:
         elif ticket:
             if ticket_send:
                 ticket = ticket_send
-
             utils_spice.wait_timeout(5)  # Wait for remote-viewer to launch
             utils_spice.str_input(self.client_vm, ticket)
-
         utils_spice.wait_timeout(5)  # Wait for conncetion to establish
 
 
@@ -322,7 +292,7 @@ class RvSession:
         bool
             True if successful, False otherwise.
         """
-        rv_binary = self.params.get("rv_binary")
+        rv_binary = self.cfg.rv_binary
         rv_binary = os.path.basename(rv_binary)
         if ".exe" in rv_binary:
             cmd = "netstat -n"
@@ -371,36 +341,25 @@ class RvSession:
 
         :return: None
         """
-        kill_by_name(self.params("rv_binary"))
+        kill_by_name(self.cfg.rv_binary)
 
 
     def clear_guest(self):
         """ Clears interface on guest """
-        utils_spice.clear_interface(self.guest_vm,
-                                    int(self.params.get("login_timeout",
-                                                        "360")))
+        utils_spice.clear_interface(self.guest_vm, int(self.cfg.login_timeout))
 
     def clear_client(self):
         """ Clears interface on client """
         utils_spice.clear_interface(self.client_vm,
-                                    int(self.params.get("login_timeout",
-                                                        "360")))
+                                    int(self.cfg.login_timeout))
 
     def clear_interface_all(self):
         """
-        Clears interface on all vms without restart
-
-        @param params:      Parameters of tests
+        Clears interface on all vms without restart.
         """
-
-        # @NOTE: This thing might be useful, that's for when interface should be cleaned
-        # although it belongs to a different file
-        #if params.get("clear_interface", "yes") == "yes":
-
-        for vm in self.params.get("vms").split():
+        for vm in self.cfg.vms.split():
             utils_spice.clear_interface(self.env.get_vm(vm),
-                                        int(self.params.get("login_timeout",
-                                                            "360")))
+                                        int(self.cfg.login_timeout))
 
     def generate_vv_file(self):
         """
@@ -412,18 +371,16 @@ class RvSession:
         @param cacert:          location of certificate of host
         """
 #def gen_rv_file(params, guest_vm, host_subj = None, cacert = None):
-        full_screen = self.params.get("full_screen")
-        proxy = self.params.get("spice_proxy")
-
+        full_screen = self.cfg.full_screen
+        proxy = self.cfg.spice_proxy
         rv_file = open('rv_file.vv', 'w')
         rv_file.write("[virt-viewer]\n" +
-                      "type=%s\n" % self.params.get("display") +
+                      "type=%s\n" % self.cfg.display +
                       "host=%s\n" % utils_net.get_host_ip_address(self.params) +
                       "port=%s\n" % self.guest_vm.get_spice_var("spice_port"))
-
-        ticket = self.params.get("spice_password", None)
-        ticket_send = self.params.get("spice_password_send", None)
-        qemu_ticket = self.params.get("qemu_password", None)
+        ticket = self.cfg.spice_password
+        ticket_send = self.cfg.spice_password_send
+        qemu_ticket = self.cfg.qemu_password
         if ticket_send:
             ticket = ticket_send
         if qemu_ticket:
@@ -523,6 +480,4 @@ class RvSession:
 
     def get_fullscreen_windows(self):
         windows = self.get_windows_ids()
-
-
     # TODO: Will need to install xdotool on client VM (or dogtail, or both)
