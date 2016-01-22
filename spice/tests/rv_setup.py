@@ -1,3 +1,14 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
 """
 A setup test to perform the preliminary actions that are required for
 the rest of the tests.
@@ -9,6 +20,10 @@ Actions Currently Performed:
 
 Requires: the client and guest VMs to be setup.
 """
+
+# noqa
+# flake8: noqa
+#pylint: skip-file
 
 import logging, os
 import aexpect
@@ -22,10 +37,10 @@ def install_rpm(session, name, rpm):
     @param session: cmd session of a VM
     @rpm: rpm to be installed
     @name name of the package
-    
+
     """
     logging.info("Installing " + name + " from: " + rpm)
-    session.cmd("yum -y localinstall %s" % rpm, timeout = 480)
+    session.cmd("yum -y localinstall %s" % rpm, timeout=480)
     if session.cmd_status("rpm -q " + name):
         raise Exception("Failed to install " + name)
 
@@ -45,8 +60,7 @@ def deploy_tests_linux(vm, params):
     chdir(old)
     vm.copy_files_to("%s/tests.zip" % params.get("test_dir"), \
                      "/home/test/tests.zip")
-    session = vm.wait_for_login(
-            timeout = int(params.get("login_timeout", 360)))
+    session = vm.wait_for_login(timeout=int(params.get("login_timeout", 360)))
     session.cmd("unzip -o /home/test/tests.zip -d " + script_location)
     session.cmd("mkdir -p ~/.gconf/desktop/gnome/interface")
     logging.info("Disabling gconfd")
@@ -64,9 +78,9 @@ def setup_gui_linux(vm, params, env):
 """
     logging.info("Setting up client for GUI tests")
     session = vm.wait_for_login(
-                        username = "root", 
-                        password = "123456", 
-                        timeout=int(params.get("login_timeout", 360)))
+        username="root",
+        password="123456",
+        timeout=int(params.get("login_timeout", 360)))
     arch = vm.params.get("vm_arch_name")
     fedoraurl = params.get("fedoraurl")
     wmctrl_64rpm = params.get("wmctrl_64rpm")
@@ -109,8 +123,7 @@ def setup_vm_windows(test, params, env, vm):
 
     if setup_type == "guest_tools":
         logging.info("Installing Windows guest tools")
-        session = vm.wait_for_login(
-                             timeout = int(params.get("login_timeout", 360)))
+        session = vm.wait_for_login(timeout=int(params.get("login_timeout", 360)))
         winqxl = params.get("winqxl")
         winvdagent = params.get("winvdagent")
         vioserial = params.get("vioserial")
@@ -129,15 +142,15 @@ def setup_vm_windows(test, params, env, vm):
         #copy p7zip to windows and install it silently
         logging.info("Installing 7zip")
         vm.copy_files_to(winp7_path, "C:\\")
-        session.cmd_status("start /wait msiexec /i C:\\7z920-x64.msi /qn") 
+        session.cmd_status("start /wait msiexec /i C:\\7z920-x64.msi /qn")
 
-        #copy over the winqxl, winvdagent, virtio serial 
+        #copy over the winqxl, winvdagent, virtio serial
         vm.copy_files_to(winqxlzip, "C:\\")
         vm.copy_files_to(winvdagentzip, "C:\\")
         vm.copy_files_to(vioserialzip, "C:\\")
         vm.copy_files_to(guest_sr_path, "C:\\")
         vm.copy_files_to(md5sumwin_path, "C:\\")
-        
+
         #extract winvdagent zip and start service if vdservice is not installed
         try:
             output = session.cmd('sc queryex type= service state= all' +
@@ -148,7 +161,7 @@ def setup_vm_windows(test, params, env, vm):
             session.cmd_status("C:\\vdservice.exe install")
             #wait for vdservice to come up
             utils_spice.wait_timeout(5)
-            logging.info(session.cmd("net start vdservice")) 
+            logging.info(session.cmd("net start vdservice"))
             logging.info(session.cmd("chdir"))
 
         #extract winqxl driver, place drivers in correct location & reboot
@@ -174,7 +187,7 @@ def setup_vm_windows(test, params, env, vm):
             #Make sure qxl install is complete
             utils_spice.wait_timeout(5)
         vm.reboot()
-         
+
         logging.info("Installation of Windows guest tools completed")
 
     logging.info("Setup complete")

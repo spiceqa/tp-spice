@@ -1,3 +1,14 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
 """
 rv_gui.py - A test to run dogtail gui tests from the client.
 The test also does verification of the gui tests.
@@ -15,6 +26,10 @@ from virttest import utils_net, utils_spice
 from time import sleep
 
 #TODO: needs rewrite
+
+# noqa
+# flake8: noqa
+#pylint: skip-file
 
 window_title = "'vm1 (1) - Remote Viewer'"
 

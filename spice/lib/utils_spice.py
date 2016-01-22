@@ -13,16 +13,19 @@ from spice.lib import conf
 from virttest import qemu_vm
 from avocado.core import exceptions
 
-class SpiceVM(qemu_vm.VM):
-    def is_win(self):
-        if self.params.get("os_type") == "windows":
-            return True
-        return False
+def is_win(self):
+    if self.params.get("os_type") == "windows":
+        return True
+    return False
 
-    def is_linux(self):
-        if self.params.get("os_type") == "linux":
-            return True
-        return False
+def is_linux(self):
+    if self.params.get("os_type") == "linux":
+        return True
+    return False
+
+def extend_vm():
+    qemu_vm.VM.is_linux = is_linux
+    qemu_vm.VM.is_win = is_win
 
 # TODO: Rework migration, add migration as a option of the session, but that can wait
 
@@ -82,7 +85,7 @@ def _is_pid_alive(session, pid):
 
     return True
 
-def kill_by_name(self, name):
+def kill_by_name(name):
     """
     Kill selected app on selected VM
 

@@ -1,3 +1,14 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
 """
 rv_logging.py - Tests the logging done during a remote-viewer session
 Verifying the qxl driver is logging correctly on the guest
@@ -15,6 +26,9 @@ from spice.lib import utils_spice
 from spice.lib import rv_session
 from spice.lib import conf
 
+# noqa
+# flake8: noqa
+#pylint: skip-file
 
 def run(test, params, env):
     """

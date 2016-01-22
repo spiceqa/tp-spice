@@ -1,9 +1,25 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
 """
 rv_vmshutdown.py - shutdown the guest and verify it is a clean exit.
 
 Requires: connected binaries remote-viewer, Xorg, gnome session
 
 """
+
+# noqa
+# flake8: noqa
+#pylint: skip-file
+
 import logging
 from aexpect import ShellCmdError
 from virttest.virt_vm import VMDeadError
@@ -114,11 +130,11 @@ def run_rv_vmshutdown(test, params, env):
         except ShellCmdError:
             logging.info("Remote-viewer process is not running as expected.")
     elif client_vm.params.get("os_type") == "windows":
-            output = client_session.cmd_output(
-                    'tasklist /FI "IMAGENAME eq remote-viewer.exe"')
-            if "remote-viewer" in output:
-                raise error.TestFail(
-                    "Remote-viewer is still running on the client.")
-            else:
-                logging.info(
-                    "Remote-viewer process is not running as expected.")
+        output = client_session.cmd_output(
+            'tasklist /FI "IMAGENAME eq remote-viewer.exe"')
+        if "remote-viewer" in output:
+            raise error.TestFail(
+                "Remote-viewer is still running on the client.")
+        else:
+            logging.info(
+                "Remote-viewer process is not running as expected.")

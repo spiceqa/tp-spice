@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 
+"""Connect with remote-viewer from client VM to guest VM.
+
+Client requires
+---------------
+    - remote-viewer
+
+Guest requires
+--------------
+    - Xorg
+    - netstat
+"""
+
 import os
 import logging
 import socket
-import time
-import sys
-from avocado.core import exceptions
-from aexpect import ShellCmdError
 from aexpect import ShellStatusError
 from virttest import utils_net
 from virttest import utils_misc
@@ -14,9 +22,11 @@ from spice.lib import utils_spice
 from spice.lib import conf
 
 class RVConnectError(Exception):
+    """Exception for remote-viewer session.
+    """
     pass
 
-class RvSession:
+class RvSession(object):
     """Class used to manage remote-viewer connection.
 
     Parameters
@@ -29,8 +39,10 @@ class RvSession:
     """
 
     def __init__(self, params, env):
+        self.hostname = socket.gethostname()
         self.params = params
         self.env = env
+        utils_spice.extend_vm()
         self.cfg = conf.Params(params)
         self.guest_vm = env.get_vm(self.cfg.guest_vm)
         self.guest_vm.verify_alive()
@@ -40,7 +52,7 @@ class RvSession:
         self.client_vm.verify_alive()
         self.client_session = self.client_vm.wait_for_login(
             timeout=int(self.cfg.login_timeout))
-        if self.client_vm.params.get("os_type") != "windows":
+        if self.client_vm.is_linux():
             self.client_session.cmd("export DISPLAY=:0.0")
         self.host = utils_net.get_host_ip_address(self.params)
         if self.guest_vm.get_spice_var("listening_addr") == "ipv6":
@@ -91,7 +103,7 @@ class RvSession:
         # cmd var keeps final remote-viewer command line to be executed on
         # client
         cmd = rv_binary
-        if self.client_vm.params.get("os_type") != "windows":
+        if self.client_vm.is_linux():
             cmd = cmd + " --display=:0.0"
         # If qemu_ticket is set, set the password of the VM using the
         # qemu-monitor
@@ -100,8 +112,8 @@ class RvSession:
         qemu_ticket = self.cfg.qemu_password
         if qemu_ticket:
             self.guest_vm.monitor.cmd("set_password spice %s" % qemu_ticket)
-            logging.info("Sending to qemu monitor: set_password spice %s"
-                         % qemu_ticket)
+            logging.info("Sending to qemu monitor: set_password spice %s",
+                         qemu_ticket)
         gencerts = self.cfg.gencerts
         certdb = self.cfg.certdb
         smartcard = self.cfg.smartcard
@@ -110,16 +122,16 @@ class RvSession:
             cmd += " " + self.cfg.rv_file
         if display == "vnc":
             raise NotImplementedError("remote-viewer vnc")
-        elif not display == "spice":
+        elif display != "spice":
             raise Exception("Unsupported display value")
         ticket = self.guest_vm.get_spice_var("spice_password")
         if self.guest_vm.get_spice_var("spice_ssl") == "yes":
             # Client needs cacert file
             cacert_client = self.cacert_host
-            if self.client_vm.params.get("os_type") == "linux":
+            if self.client_vm.is_linux():
                 self.client_session.cmd("rm -rf %s && mkdir -p %s" % (
                     self.cfg.spice_x509_prefix, self.cfg.spice_x509_prefix))
-            if self.client_vm.params.get("os_type") == "windows":
+            if self.client_vm.is_win():
                 cacert_client = "C:\\%s" % self.cfg.spice_x509_cacert_file
             self.client_vm.copy_files_to(self.cacert_host, cacert_client)
             self.tls_port = self.guest_vm.get_spice_var("spice_tls_port")
@@ -127,8 +139,7 @@ class RvSession:
             # If it's invalid implicit, a remote-viewer connection will be
             # attempted with the hostname, since ssl certs were generated with
             # the ip address.
-            self.hostname = socket.gethostname()
-            escape_char = self.client_vm.params.get("shell_escape_char",'\\')
+            escape_char = self.client_vm.params.get("shell_escape_char", '\\')
             if self.ssltype == "invalid_implicit_hs" or "explicit" in self.ssltype:
                 spice_url = " spice://%s?tls-port=%s%s&port=%s" % (
                     self.hostname, self.tls_port, escape_char, self.port)
@@ -141,10 +152,10 @@ class RvSession:
                 pass
             else:
                 cmd += spice_url
-            if not rv_parameters_from == "file":
+            if rv_parameters_from != "file":
                 cmd += " --spice-ca-file=%s" % cacert_client
-            if (self.cfg.spice_client_host_subject == "yes" and not
-                    rv_parameters_from == "file" ):
+            if (self.cfg.spice_client_host_subject == "yes" and
+                    rv_parameters_from != "file"):
                 cmd += " --spice-host-subject=\"%s\"" % self.host_subj
         else:
             # Not spice_ssl.
@@ -169,16 +180,16 @@ class RvSession:
             usb_mount_path = self.cfg.file_path
             # USB was created by qemu (root). This prevents right issue.
             client_root_session.cmd("chown test:test %s" % usb_mount_path)
-            if not check_usb_policy(self.client_vm, self.params):
+            if not utils_spice.check_usb_policy(self.client_vm, self.params):
                 logging.info("No USB policy.")
-                add_usb_policy(self.client_vm)
+                utils_spice.add_usb_policy(self.client_vm)
                 utils_spice.wait_timeout(3)
             else:
                 logging.info("USB policy OK")
         else:
             logging.info("No USB redirection")
         # Check to see if the test is using the full screen option.
-        if full_screen == "yes" and not rv_parameters_from == "file" :
+        if full_screen == "yes" and rv_parameters_from != "file":
             logging.info("Remote Viewer Set to use Full Screen")
             cmd += " --full-screen"
         if disable_audio == "yes":
@@ -187,7 +198,7 @@ class RvSession:
         # Check to see if the test is using a smartcard.
         if smartcard == "yes":
             logging.info("remote viewer Set to use a smartcard")
-            if not rv_parameters_from == "file":
+            if rv_parameters_from != "file":
                 cmd += " --spice-smartcard"
             if certdb is not None:
                 logging.debug("Remote Viewer set to use the following certificate"
@@ -197,7 +208,7 @@ class RvSession:
                 logging.debug("Remote Viewer set to use the following certs: " +
                               gencerts)
                 cmd += " --spice-smartcard-certificates " + gencerts
-        if self.client_vm.params.get("os_type") == "linux":
+        if self.client_vm.is_linux():
             cmd = "nohup " + cmd + " &> ~/rv.log &"  # Launch it on background
             if rv_ld_library_path:
                 cmd = "export LD_LIBRARY_PATH=" + rv_ld_library_path + ";" + cmd
@@ -233,16 +244,16 @@ class RvSession:
             else:
                 self.port = "3128"
             if rv_parameters_from != "file":
-                if self.client_vm.params.get("os_type") == "linux":
+                if self.client_vm.is_linux():
                     self.client_session.cmd("export SPICE_PROXY=%s" % self.proxy)
-                elif self.client_vm.params.get("os_type") == "windows":
+                elif self.client_vm.is_win():
                     self.client_session.cmd_output("SET SPICE_PROXY=%s" % self.proxy)
         try:
             logging.info("spice,connection: %s", cmd)
             self.client_session.cmd(cmd)
         except ShellStatusError:
             logging.debug("Ignoring a status exception, will check connection"
-                      "of remote-viewer later")
+                          "of remote-viewer later")
         #Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
             utils_spice.wait_timeout(1)
@@ -341,7 +352,7 @@ class RvSession:
 
         :return: None
         """
-        kill_by_name(self.cfg.rv_binary)
+        utils_spice.kill_by_name(self.cfg.rv_binary)
 
 
     def clear_guest(self):
@@ -396,9 +407,9 @@ class RvSession:
             rv_file.write("host-subject=%s\n" % self.host_subj)
         if self.cacert_host:
             cert = open(self.cacert_host)
-            ca = cert.read()
-            ca = ca.replace('\n', r'\n')
-            rv_file.write("ca=%s\n" % ca)
+            cert_auth = cert.read()
+            cert_auth = cert_auth.replace('\n', r'\n')
+            rv_file.write("ca=%s\n" % cert_auth)
         if full_screen == "yes":
             rv_file.write("fullscreen=1\n")
         if proxy:
@@ -421,37 +432,37 @@ class RvSession:
     #secure-channels
     #delete-this-file (0,1)
 
-    def set_client_resolution(self, res, display = 'qxl-0'):
+    def set_client_resolution(self, res, display='qxl-0'):
         """ Sets resolution of a display device in client
 
         :param res: Requested resolution (WidthxHeight)
         :param display: Display device that you want to change
         :return:
         """
-        return set_resolution(self.client_session, res, display)
+        return utils_spice.set_resolution(self.client_session, res, display)
 
     def get_client_resolution(self):
         """ Get client resolution
 
         :return: List of resolutions on individual displays
         """
-        return get_display_resolution(self.client_session)
+        return utils_spice.get_display_resolution(self.client_session)
 
-    def set_guest_resolution(self, res, display = 'qxl-0'):
+    def set_guest_resolution(self, res, display='qxl-0'):
         """ Sets resolution of a display device in guest
 
         :param res: Requested resolution (WidthxHeight)
         :param display: Display device you want to change
         :return:
         """
-        return set_resolution(self.guest_session, res, display)
+        return utils_spice.set_resolution(self.guest_session, res, display)
 
     def get_guest_resolution(self):
         """ Get guest resolution
 
         :return: List of resolutions on individual displays
         """
-        return get_display_resolution(self.guest_session)
+        return utils_spice.get_display_resolution(self.guest_session)
 
     def get_windows_ids(self):
         """
@@ -459,24 +470,24 @@ class RvSession:
 
         :return: List of remote-viewer window ids
         """
-        return get_open_window_ids(self.client_session, 'remote-viewer')
+        return utils_spice.get_open_window_ids(self.client_session, 'remote-viewer')
 
-    def is_fullscreen_xprop(self, window = 0):
+    def is_fullscreen_xprop(self, window=0):
         """ Tests if remote-viewer windows is fullscreen based on xprop
 
         :param window: Which window is tested (0-3)
         :return: Returns True if fullscreen property is set
         """
-        id = self.get_windows_ids()[window]
-        props = get_window_props(self.client_session, id)
-        for property in props.split('\n'):
-            if ( '_NET_WM_STATE(ATOM)' in  property and
-                 '_NET_WM_STATE_FULLSCREEN ' in property ):
+        win_id = self.get_windows_ids()[window]
+        props = utils_spice.get_window_props(self.client_session, win_id)
+        for prop in props.split('\n'):
+            if ('_NET_WM_STATE(ATOM)' in  prop and
+                    '_NET_WM_STATE_FULLSCREEN ' in prop):
                 return True
 
-    def window_resolution(self, window = 0):
-        id = self.get_windows_ids()[window]
-        return get_window_geometry(self.client_session, id)
+    def window_resolution(self, window=0):
+        win_id = self.get_windows_ids()[window]
+        return utils_spice.get_window_geometry(self.client_session, win_id)
 
     def get_fullscreen_windows(self):
         windows = self.get_windows_ids()

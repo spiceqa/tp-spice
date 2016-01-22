@@ -1,3 +1,14 @@
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
 """
 rv_fullscreen.py - remote-viewer full screen
                    Testing the remote-viewer --full-screen option
@@ -13,6 +24,7 @@ from spice.lib import rv_session
 from spice.lib import conf
 import aexpect
 
+#pylint: skip-file
 
 #TODO: This can probably be removed, replaced by rv_session, utils_spice and the
 # new fullscreen test

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import logging
+"""Default values used in spice tests.
+"""
 
-"""Default values used in spice tests."""
+import logging
 
 LOGIN_TIMEOUT = int("360")
 """SSH login timeout. Seconds."""
@@ -37,7 +38,7 @@ PTRN_QEMU_SSL_ACCEPT_FAILED = "SSL_accept failed"
 AUDIO_REC_FILE = "./recorded.wav"
 """Recorded audio."""
 
-class Params:
+class Params(object):
     """Class used to hold all known keys in cartesian configs known by Spice
     tests.  The default value is used if there is no provided one.
 
@@ -55,7 +56,7 @@ class Params:
     def __init__(self, params):
         self.login_timeout = LOGIN_TIMEOUT
         """Timeout for ssh."""
-        self.spice_proxy = None
+        self.spice_proxy = ""
         """Proxy for HTTP connections."""
         self.ssltype = ""
         """.. todo:: provide info."""
