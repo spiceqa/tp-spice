@@ -21,10 +21,12 @@ from virttest import utils_misc
 from spice.lib import utils_spice
 from spice.lib import conf
 
+
 class RVConnectError(Exception):
     """Exception for remote-viewer session.
     """
     pass
+
 
 class RvSession(object):
     """Class used to manage remote-viewer connection.
@@ -84,6 +86,25 @@ class RvSession(object):
             else:
                 self.host_subj += self.host
 
+    def kill_by_name(self, name):
+        """
+        Kill selected app on selected VM
+
+        @params name - Name of the binary
+        """
+        logging.info("About to kill %s", name)
+        if self.client_vm.params.get("os_type") == "linux":
+            try:
+                output = self.client_session.cmd_output(
+                    "pkill %s" % name.split(os.path.sep)[-1])
+            except:
+                if output == 1:
+                    pass
+                else:
+                    raise
+        elif self.client_vm.params.get("os_type") == "windows":
+            self.client_session.cmd_output("taskkill /F /IM %s" %
+                                           name.split('\\')[-1])
 
     def connect(self):
         """Establish connection between client and guest based on test
@@ -140,7 +161,8 @@ class RvSession(object):
             # attempted with the hostname, since ssl certs were generated with
             # the ip address.
             escape_char = self.client_vm.params.get("shell_escape_char", '\\')
-            if self.ssltype == "invalid_implicit_hs" or "explicit" in self.ssltype:
+            if self.ssltype == "invalid_implicit_hs" or
+            "explicit" in self.ssltype:
                 spice_url = " spice://%s?tls-port=%s%s&port=%s" % (
                     self.hostname, self.tls_port, escape_char, self.port)
             else:
@@ -201,17 +223,19 @@ class RvSession(object):
             if rv_parameters_from != "file":
                 cmd += " --spice-smartcard"
             if certdb is not None:
-                logging.debug("Remote Viewer set to use the following certificate"
-                              " database: " + certdb)
+                logging.debug("Remote Viewer set to use the following "
+                              "certificate database: %s", certdb)
                 cmd += " --spice-smartcard-db " + certdb
             if gencerts is not None:
-                logging.debug("Remote Viewer set to use the following certs: " +
-                              gencerts)
+                logging.debug(
+                    "Remote Viewer set to use the following certs: " +
+                    gencerts)
                 cmd += " --spice-smartcard-certificates " + gencerts
         if self.client_vm.is_linux():
             cmd = "nohup " + cmd + " &> ~/rv.log &"  # Launch it on background
             if rv_ld_library_path:
-                cmd = "export LD_LIBRARY_PATH=" + rv_ld_library_path + ";" + cmd
+                cmd = "export LD_LIBRARY_PATH=" + \
+                    rv_ld_library_path + ";" + cmd
         if rv_parameters_from == "file":
             logging.info("Generating file")
             self.generate_vv_file()
@@ -245,16 +269,18 @@ class RvSession(object):
                 self.port = "3128"
             if rv_parameters_from != "file":
                 if self.client_vm.is_linux():
-                    self.client_session.cmd("export SPICE_PROXY=%s" % self.proxy)
+                    self.client_session.cmd("export SPICE_PROXY=%s" %
+                                            self.proxy)
                 elif self.client_vm.is_win():
-                    self.client_session.cmd_output("SET SPICE_PROXY=%s" % self.proxy)
+                    self.client_session.cmd_output("SET SPICE_PROXY=%s" %
+                                                   self.proxy)
         try:
             logging.info("spice,connection: %s", cmd)
             self.client_session.cmd(cmd)
         except ShellStatusError:
             logging.debug("Ignoring a status exception, will check connection"
                           "of remote-viewer later")
-        #Send command line through monitor since url was not provided
+        # Send command line through monitor since url was not provided
         if rv_parameters_from == "menu":
             utils_spice.wait_timeout(1)
             utils_spice.str_input(self.client_vm, line)
@@ -271,32 +297,32 @@ class RvSession(object):
             utils_spice.str_input(self.client_vm, ticket)
         utils_spice.wait_timeout(5)  # Wait for conncetion to establish
 
+    """
+    # @TODO: This probably needs moving back to rv_connect or to a new file
+    # tbh, not sure why it's here -.-
+        # Get spice info
+        output = guest_vm.monitor.cmd("info spice")
+        logging.debug("INFO SPICE")
+        logging.debug(output)
 
-# @TODO: This probably needs moving back to rv_connect or to a new file
-# tbh, not sure why it's here -.-
-    # Get spice info
-    #~ output = guest_vm.monitor.cmd("info spice")
-    #~ logging.debug("INFO SPICE")
-    #~ logging.debug(output)
-
-    #~ # Check to see if ipv6 address is reported back from qemu monitor
-    #~ if (check_spice_info == "ipv6"):
-        #~ logging.info("Test to check if ipv6 address is reported"
-                     #~ " back from the qemu monitor")
-        #~ # Remove brackets from ipv6 host ip
-        #~ if (host_ip[1:len(host_ip) - 1] in output):
-            #~ logging.info("Reported ipv6 address found in output from"
-                         #~ " 'info spice'")
-        #~ else:
-            #~ raise error.TestFail("ipv6 address not found from qemu monitor"
-                                 #~ " command: 'info spice'")
-    #~ else:
-        #~ logging.info("Not checking the value of 'info spice'"
-                     #~ " from the qemu monitor")
+        # Check to see if ipv6 address is reported back from qemu monitor
+        if (check_spice_info == "ipv6"):
+            logging.info("Test to check if ipv6 address is reported"
+                    " back from the qemu monitor")
+            # Remove brackets from ipv6 host ip
+            if (host_ip[1:len(host_ip) - 1] in output):
+            logging.info("Reported ipv6 address found in output from"
+                        " 'info spice'")
+            else:
+            raise error.TestFail("ipv6 address not found from qemu monitor"
+                                " command: 'info spice'")
+        else:
+            logging.info("Not checking the value of 'info spice'"
+                        " from the qemu monitor")
+    """
 
     def is_connected(self):
-        """
-        Tests whether or not is connection active.
+        """Tests whether or not is connection active.
 
         Returns
         -------
@@ -322,7 +348,7 @@ class RvSession(object):
         tls_port_count = 0
         if tls_port:
             tls_port_count = netstat_out.count(tls_port)
-        #logging.info("netstat output: %s", netstat_out)
+        # logging.info("netstat output: %s", netstat_out)
         if (port_count + tls_port_count) < 4:
             logging.error("Not enough channels were open")
             return False
@@ -331,13 +357,12 @@ class RvSession(object):
             return False
         for line in netstat_out.split('\n'):
             if (
-                    (port
-                     and port in line
-                     and "ESTABLISHED" not in line)
-                    or
-                    (tls_port
-                     and tls_port in line
-                     and "ESTABLISHED" not in line)
+                    (port and
+                     port in line and
+                     "ESTABLISHED" not in line) or
+                    (tls_port and
+                     tls_port in line and
+                     "ESTABLISHED" not in line)
             ):
                 logging.error(
                     "Failed to get established connection from netstat"
@@ -352,8 +377,7 @@ class RvSession(object):
 
         :return: None
         """
-        utils_spice.kill_by_name(self.cfg.rv_binary)
-
+        self.kill_by_name(self.cfg.rv_binary)
 
     def clear_guest(self):
         """ Clears interface on guest """
@@ -381,13 +405,14 @@ class RvSession(object):
         @param host_subj:       subject of the host
         @param cacert:          location of certificate of host
         """
-#def gen_rv_file(params, guest_vm, host_subj = None, cacert = None):
+# def gen_rv_file(params, guest_vm, host_subj = None, cacert = None):
         full_screen = self.cfg.full_screen
         proxy = self.cfg.spice_proxy
         rv_file = open('rv_file.vv', 'w')
         rv_file.write("[virt-viewer]\n" +
                       "type=%s\n" % self.cfg.display +
-                      "host=%s\n" % utils_net.get_host_ip_address(self.params) +
+                      "host=%s\n" %
+                      utils_net.get_host_ip_address(self.params) +
                       "port=%s\n" % self.guest_vm.get_spice_var("spice_port"))
         ticket = self.cfg.spice_password
         ticket_send = self.cfg.spice_password_send
@@ -416,21 +441,21 @@ class RvSession(object):
             rv_file.write("proxy=%s\n" % proxy)
 
     # TODO: Update properties and add functionality to test others
-    #Other properties:
-    #username
-    #version
-    #title
-    #toggle-fullscreen (key combo)
-    #release-cursor (key combo)
-    #smartcard-insert
-    #smartcard-remove
-    #enable-smartcard
-    #enable-usbredir
-    #color-depth
-    #disable-effects
-    #usb-filter
-    #secure-channels
-    #delete-this-file (0,1)
+    # Other properties:
+    # username
+    # version
+    # title
+    # toggle-fullscreen (key combo)
+    # release-cursor (key combo)
+    # smartcard-insert
+    # smartcard-remove
+    # enable-smartcard
+    # enable-usbredir
+    # color-depth
+    # disable-effects
+    # usb-filter
+    # secure-channels
+    # delete-this-file (0,1)
 
     def set_client_resolution(self, res, display='qxl-0'):
         """ Sets resolution of a display device in client
@@ -470,7 +495,8 @@ class RvSession(object):
 
         :return: List of remote-viewer window ids
         """
-        return utils_spice.get_open_window_ids(self.client_session, 'remote-viewer')
+        return utils_spice.get_open_window_ids(self.client_session,
+                                               'remote-viewer')
 
     def is_fullscreen_xprop(self, window=0):
         """ Tests if remote-viewer windows is fullscreen based on xprop
@@ -481,7 +507,7 @@ class RvSession(object):
         win_id = self.get_windows_ids()[window]
         props = utils_spice.get_window_props(self.client_session, win_id)
         for prop in props.split('\n'):
-            if ('_NET_WM_STATE(ATOM)' in  prop and
+            if ('_NET_WM_STATE(ATOM)' in prop and
                     '_NET_WM_STATE_FULLSCREEN ' in prop):
                 return True
 

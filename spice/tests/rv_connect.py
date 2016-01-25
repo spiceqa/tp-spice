@@ -28,6 +28,7 @@ from avocado.core import exceptions
 from spice.lib import rv_session
 from spice.lib import conf
 
+
 def run(test, params, env):
     """Simple tests for Remote Desktop connection. Tests expect that
     remote-viewer will be executed from guest VM. Thus we support clients
@@ -63,7 +64,7 @@ def run(test, params, env):
         if cfg.test_type == conf.TEST_TYPE_NEGATIVE:
             logging.info("Remote viewer connection failed as expected")
             if cfg.ssltype in (conf.SSL_TYPE_IMPLICIT_INVALID,
-                           conf.SSL_TYPE_EXPLICIT_INVALID):
+                               conf.SSL_TYPE_EXPLICIT_INVALID):
                 guest_vm = env.get_vm(cfg.guest_vm)
                 qemulog = guest_vm.process.get_output()
                 if conf.PTRN_QEMU_SSL_ACCEPT_FAILED not in qemulog:
