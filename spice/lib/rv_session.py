@@ -161,8 +161,8 @@ class RvSession(object):
             # attempted with the hostname, since ssl certs were generated with
             # the ip address.
             escape_char = self.client_vm.params.get("shell_escape_char", '\\')
-            if self.ssltype == "invalid_implicit_hs" or
-            "explicit" in self.ssltype:
+            if self.ssltype == "invalid_implicit_hs" or \
+                    "explicit" in self.ssltype:
                 spice_url = " spice://%s?tls-port=%s%s&port=%s" % (
                     self.hostname, self.tls_port, escape_char, self.port)
             else:
