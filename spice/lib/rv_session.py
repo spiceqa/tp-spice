@@ -48,12 +48,11 @@ class RvSession(object):
         self.cfg = conf.Params(params)
         self.guest_vm = env.get_vm(self.cfg.guest_vm)
         self.guest_vm.verify_alive()
-        self.guest_session = self.guest_vm.wait_for_login(
-            timeout=int(self.cfg.login_timeout))
+        timeout = int(self.cfg.login_timeout)
+        self.guest_session = self.guest_vm.wait_for_login(timeout=timeout)
         self.client_vm = env.get_vm(self.cfg.client_vm)
         self.client_vm.verify_alive()
-        self.client_session = self.client_vm.wait_for_login(
-            timeout=int(self.cfg.login_timeout))
+        self.client_session = self.client_vm.wait_for_login(timeout=timeout)
         if self.client_vm.is_linux():
             self.client_session.cmd("export DISPLAY=:0.0")
         self.host = utils_net.get_host_ip_address(self.params)

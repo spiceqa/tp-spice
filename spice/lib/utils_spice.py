@@ -11,6 +11,9 @@ import re
 import aexpect
 from avocado.core import exceptions
 from virttest import qemu_vm
+from virttest import remote
+from virttest import utils_misc
+from virttest.staging import service
 from spice.lib import conf
 
 
@@ -30,11 +33,20 @@ def is_linux(self):
     return False
 
 
+def is_rhel7(self):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    if self.params.get("os_variant") == "rhel7":
+        return True
+    return False
+
+
 def extend_vm():
     """Extend qemu.VM(virt_vm.BaseVM) with useful methods.
     """
     qemu_vm.VM.is_linux = is_linux
     qemu_vm.VM.is_win = is_win
+    qemu_vm.VM.is_win = is_rhel7
 
 # TODO: Rework migration, add migration as a option of the session, but that
 # can wait
@@ -390,48 +402,50 @@ def clear_interface(virtm, login_timeout=360, timeout=None):
     if virtm.params.get("os_type") == "windows":
         clear_interface_windows(virtm, timeout)
     else:
-        clear_interface_linux(virtm, login_timeout, timeout)
+        restart_session_linux(virtm)
 
 
-def clear_interface_linux(virtm, login_timeout, timeout=None):
-    """Clears user interface of a virtm without restart.
+def restart_session_linux(virtm):
+    """Restart graphical session at VM.
+
+    Notes
+    -----
+        To accomplish this change SystemD/SystemV runlevels from graphical mode
+        to multiuser mode, and back.
 
     Parameters
     ----------
     virtm : virttest.qemu_vm.VM
         VM where cleaning is required.
-    login_timeout : int
-        Seconds. Timeout to establish ssh connection to vm.
-    timeout : Optional[int]
-        Seconds. Whait until process gets be killed.
+
+    Raises
+    ------
+    exceptions.TestFail
+        Fails to restart Graphical session
     """
-    os_variant = virtm.params.get("os_variant")
-    if os_variant == "rhel7":
-        command = "gdm"
-        pgrep_process = "'^gdm$'"
-        if not timeout:
-            timeout = 60
-    else:
-        command = "Xorg"
-        pgrep_process = "Xorg"
-        if not timeout:
-            timeout = 15
+    xsession_flag_cmd = r"ss -x src '*X11-unix*' | grep -q -s 'X11'"
+    logging.info("Begin: restart graphical session at VM: %s", virtm.name)
     session = virtm.wait_for_login(username=conf.USERNAME,
                                    password=conf.PASSWORD,
-                                   timeout=login_timeout)
+                                   timeout=conf.LOGIN_TIMEOUT)
     try:
-        logging.info("Restarting X on: %s", virtm.name)
-        pid = session.cmd("pgrep %s" % pgrep_process)
-        session.cmd("killall %s" % command)
-        utils_misc.wait_for(lambda: _is_pid_alive(session, pid),
-                            10, timeout, 0.2)
-    except:
-        pass
-    try:
-        session.cmd("ps -C %s" % command)
-    except:
-        raise exceptions.TestFail("X/gdm not running")
-    time.sleep(timeout)
+        runner = remote.RemoteRunner(session=session)
+        srv_mng = service.Factory.create_service(run=runner.run)
+        srv_mng.set_target("multi-user.target")
+        def is_x(active):
+            r = runner.run(xsession_flag_cmd, ignore_status=True)
+            return not r.exit_status == active
+        if not utils_misc.wait_for(lambda: is_x(False), 100):
+            raise exceptions.TestFail("Can't switch to runlevel 3 at: %s",
+                                    virtm.name)
+        logging.info("Check: no more active X session at VM: %s", virtm.name)
+        srv_mng.set_target("graphical.target")
+        if not utils_misc.wait_for(lambda: is_x(True), 100):
+            raise exceptions.TestFail("Can't switch to runlevel 5 at: %s",
+                                    virtm.name)
+        logging.info("Done: restart graphical session at VM: %s", virtm.name)
+    finally:
+        session.close()
 
 
 def clear_interface_windows(virtm, timeout=None):
