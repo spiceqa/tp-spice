@@ -114,7 +114,7 @@ def run_rv_vmshutdown(test, params, env):
             client_vm, host_ip, host_port, rv_binary)
         raise error.TestFail("Remote-Viewer connection to guest"
                              "is still established.")
-    except utils_spice.RVConnectError:
+    except utils_spice.SpiceUtilsError:
         logging.info("There is no remote-viewer connection as expected")
     else:
         raise error.TestFail("Unexpected error while trying to see if there"

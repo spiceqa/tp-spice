@@ -473,7 +473,7 @@ Tests GUI automation of remote-viewer
             try:
                 utils_spice.rv_connected(client_vm, host_ip, \
                                                host_port, rv_binary)
-            except utils_spice.RVConnectError:
+            except utils_spice.SpiceUtilsError:
                 raise error.TestFail("remote-viewer connection failed")
 
     if errors:

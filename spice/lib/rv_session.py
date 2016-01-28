@@ -21,11 +21,10 @@ from virttest import utils_misc
 from spice.lib import utils_spice
 from spice.lib import conf
 
-
-class RVConnectError(Exception):
+# Root exception for the RV Session
+class RVSessionError(Exception):
     """Exception for remote-viewer session.
     """
-    pass
 
 
 class RvSession(object):
@@ -100,7 +99,7 @@ class RvSession(object):
                 if output == 1:
                     pass
                 else:
-                    raise
+                    raise RVSessionError
         elif self.client_vm.params.get("os_type") == "windows":
             self.client_session.cmd_output("taskkill /F /IM %s" %
                                            name.split('\\')[-1])
@@ -141,9 +140,9 @@ class RvSession(object):
         if rv_parameters_from == 'file':
             cmd += " " + self.cfg.rv_file
         if display == "vnc":
-            raise NotImplementedError("remote-viewer vnc")
+            raise RVSessionError("remote-viewer vnc not implemeted")
         elif display != "spice":
-            raise Exception("Unsupported display value")
+            raise RVSessionError("Unsupported display value")
         ticket = self.guest_vm.get_spice_var("spice_password")
         if self.guest_vm.get_spice_var("spice_ssl") == "yes":
             # Client needs cacert file
@@ -201,6 +200,7 @@ class RvSession(object):
             usb_mount_path = self.cfg.file_path
             # USB was created by qemu (root). This prevents right issue.
             client_root_session.cmd("chown test:test %s" % usb_mount_path)
+            client_root_session.close()
             if not utils_spice.check_usb_policy(self.client_vm, self.params):
                 logging.info("No USB policy.")
                 utils_spice.add_usb_policy(self.client_vm)
