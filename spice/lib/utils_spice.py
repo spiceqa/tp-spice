@@ -432,12 +432,12 @@ def restart_session_linux(virtm):
         def is_x(active):
             r = runner.run(xsession_flag_cmd, ignore_status=True)
             return not r.exit_status == active
-        if not utils_misc.wait_for(lambda: is_x(False), 100):
+        if not utils_misc.wait_for(lambda: is_x(False), 300, first=30, step=30):
             raise SpiceUtilsError("Can't switch to runlevel 3 at: %s",
                                     virtm.name)
         logging.info("Check: no more active X session at VM: %s", virtm.name)
         srv_mng.set_target("graphical.target")
-        if not utils_misc.wait_for(lambda: is_x(True), 100):
+        if not utils_misc.wait_for(lambda: is_x(True), 300, first=30, step=30):
             raise SpiceUtilsError("Can't switch to runlevel 5 at: %s",
                                     virtm.name)
         logging.info("Done: restart graphical session at VM: %s", virtm.name)
