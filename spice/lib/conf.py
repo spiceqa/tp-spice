@@ -35,8 +35,6 @@ SSL_TYPE_EXPLICIT_INVALID = "invalid_explicit_hs"
 PTRN_QEMU_SSL_ACCEPT_FAILED = "SSL_accept failed"
 """Pattern for qemu log - failed to accept SSL."""
 
-AUDIO_REC_FILE = "./recorded.wav"
-"""Recorded audio."""
 
 class Params(object):
     """Class used to hold all known keys in cartesian configs known by Spice
@@ -80,8 +78,6 @@ class Params(object):
         """.. todo:: provide info."""
         self.display = ""
         """RV protocol: vnc, spice. Currently supported only are: spice."""
-        self.disable_audio = "no"
-        """.. todo:: provide info."""
         self.full_screen = ""
         """.. todo:: provide info."""
         self.spice_info = ""
@@ -110,6 +106,26 @@ class Params(object):
         """VM kvm names. Ex.: client guest."""
         self.spice_password = None
         """.. todo:: provide info."""
+        # XXX: obsolete in favour sox
+        self.audio_src = None
+        """rv_audio test. Path to your audio file. Recomendation: generate
+        square/sine wave file. File can be played on client - testing
+        recording.  File can be played an guest - testing playback."""
+        self.audio_tgt = None
+        """.. todo:: provide info."""
+        self.audio_rec = None
+        """rv_audio test. Record to this temporary file."""
+        self.audio_time = int("200")
+        """rv_audio test. arecord capture time."""
+        self.config_test = "no"
+        """Could be: "no", "migration"."""
+        self.rv_record = "Yes"
+        """Flag to test playback or record. yes - test recording. Other -
+        playback."""
+        self.disable_audio = "no"
+        """rv_audio test. """
+        self.rv_audio_threshold = 25000
+        """rv_audio test. """
         for i in vars(self):
             if i in params:
                 logging.info("Set %s to %s", i, params[i])

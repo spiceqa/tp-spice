@@ -32,6 +32,7 @@ role-guest:
     virtio_port_chardev = "spicevmc"
     virtio_port_name_prefix = "com.redhat.spice."
     spice_port = 5901
+    soundcards = ac97
 
 role-client:
     main_vm = client
@@ -40,6 +41,7 @@ role-client:
     vga = cirrus
     display = vnc
     vnc_port = 5901
+    soundcards = hda
 
 Linux:
     # Use non-root user for Spice tests rather than root
