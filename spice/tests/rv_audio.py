@@ -14,6 +14,15 @@
 """This module Plays audio playback / record on guest and detect any pauses in
 the audio stream.
 
+=====
+Audio
+=====
+
+Tests use ``QEMU_AUDIO_DRV=spice`` variable. Both: client and guest should have
+``qemu_audio_drv = spice``. This type of card is enabled only if ``-spice``
+remote desktop protocol is activated. For more info see ``/usr/libexec/qemu-kvm
+--audio-help``.
+
 Requirements for host machine
 -----------------------------
 
@@ -170,7 +179,8 @@ def run(test, params, env):
     timeout = int(session.cfg.login_timeout)
     ret, out = commands.getstatusoutput(SOX_CMD)
     if ret:
-        raise exceptions.TestFail("Cannot generate specimen WAV file: %s" % out)
+        raise exceptions.TestFail(
+            "Cannot generate specimen WAV file: %s" % out)
     if util.strtobool(session.cfg.rv_record):
         logging.info("Testing recording.")
         player = session.client_session
@@ -193,7 +203,7 @@ def run(test, params, env):
     out = recorder.cmd(cmd, timeout=500)
     logging.info("List of rec devices: %s", out)
     try:
-        cmd = "arecord -d %s -f cd -D hw:0,1 %s" % (
+        cmd = "arecord -d %s -f cd -D hw:0,0 %s" % (
             session.cfg.audio_time,
             session.cfg.audio_rec)
         recorder.cmd(cmd, timeout=500)

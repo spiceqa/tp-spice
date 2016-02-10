@@ -38,10 +38,11 @@ role-client:
     main_vm = client
     image_name += _client
     mac = 9a:9b:ac:6d:9e:9f
-    vga = cirrus
-    display = vnc
+    vga = qxl
+    display = spice
     vnc_port = 5901
     soundcards = hda
+    qemu_audio_drv = spice
 
 Linux:
     # Use non-root user for Spice tests rather than root
