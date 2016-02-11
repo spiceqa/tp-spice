@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -9,89 +11,74 @@
 #
 # See LICENSE for more details.
 
-"""
-rv_video.py - Starts video player
-Video is played in a loop, usually kill_app
-test should be called later to close totem.
+"""rv_video.py - Starts video player. Video is played in a loop, usually
+kill_app test should be called later to close totem.
 
-Requires: binaries Xorg, totem, gnome-session
-          Test starts video player
+TEST IS UNFINISHED. AND IS USELESS NOW.
+
+Test env
+--------
+
+    GuestOS - is Linux.
+
+Requirements for GuestOS
+------------------------
+
+    - totem - is simple movie player for the GNOME desktop.
+    - gnome-session.
+    - png2theora -o 1.ogv -v 10 -f '1' -F 1 '%d.png'
 
 """
+
 import logging
 import os
-from virttest import utils_misc, remote
+from virttest import remote
+from virttest import utils_misc
+from distutils import util
 
+def launch_totem(session):
+    """Launch Totem player and play video file.
 
-#TODO: whole file needs rewrite
-
-
-def launch_totem(guest_session, params):
+    Parameters
+    ----------
+    session : RvSession
+        remote-viewer session
     """
-    Launch Totem player
-
-    @param guest_vm - vm object
-    """
-
-    totem_version = guest_session.cmd_output('totem --version')
-    logging.info("Totem version", totem_version)
-
-    # repeat parameters for totem
-    logging.info("Set up video repeat to '%s' to the Totem.",
-                 params.get("repeat_video"))
-
-    #release check. From RHEL7 dconf is used
-    #there is different of settings repeat
-    release = guest_session.cmd_output("cat /etc/redhat-release")
-    if "release 7.0" in release:
+    totem_version = sesion.guest_session.cmd_output('totem --version')
+    logging.info("Totem version %s", totem_version)
+    # Repeat parameters for totem.
+    totem_params = ""
+    if session.guest_vm.is_rhel7():
         repeat_cmd = "dconf write /org/gnome/Totem/repeat true"
         norepeat_cmd = "dconf write /org/gnome/Totem/repeat false"
-        #extra parameters
-        totem_params = ""
-    else:
+    elif session.guest_vm.is_linux():
         repeat_cmd = "gconftool-2 --set /apps/totem/repeat -t bool true"
         norepeat_cmd = "gconftool-2 --set /apps/totem/repeat -t bool false"
-        totem_params = "--display=:0.0 --play"
-
-    if params.get("repeat_video", "no") == "yes":
+        totem_params += "--display=:0.0 --play"
+    if util.strtobool(session.cfg.repeat_video):
         cmd = repeat_cmd
     else:
         cmd = norepeat_cmd
-
-    guest_session.cmd(cmd)
-
-    cmd = "export DISPLAY=:0.0"
-    guest_session.cmd(cmd)
-
-    #fullscreen parameters for totem
-    if params.get("fullscreen", "no") == "yes":
-        fullscreen = " --fullscreen "
-    else:
-        fullscreen = ""
-
-    cmd = "nohup totem %s %s %s &> /dev/null &" \
-            % (fullscreen, params.get("destination_video_file_path"),
-               totem_params)
-    guest_session.cmd(cmd)
-
+    session.guest_session.cmd(cmd, timeout=120)
+    if util.strtobool(session.cfg.fullscreen):
+        totem_params += " --fullscreen "
+    dst = session.cfg.destination_video_file_path
+    cmd = "nohup totem %s %s &> /dev/null &" % (dst, totem_params)
+    session.guest_session.cmd(cmd)
 
 def deploy_video_file(test, vm_obj, params):
-    """
-    Deploy video file into destination on vm
+    """Deploy video file into destination on vm.
 
-    @param vm_obj - vm object
-    @param params: Dictionary with the test parameters.
+    Parameters
+    ----------
+    vm_obj : type
+        - vm object
+    param :
+        Dictionary with the test parameters.
     """
-    source_video_file = params.get("source_video_file")
-    video_dir = os.path.join("deps", source_video_file)
+    video_dir = os.path.join("deps", session.cfg.source_video_file)
     video_path = utils_misc.get_path(test.virtdir, video_dir)
-
-    remote.copy_files_to(vm_obj.get_address(), 'scp',
-                         params.get("username"),
-                         params.get("password"),
-                         params.get("shell_port"),
-                         video_path,
-                         params.get("destination_video_file_path"))
+    session.guest_vm.copy_files_to(video_path, session.cfg.destination_video_file_path)
 
 
 def run_rv_video(test, params, env):

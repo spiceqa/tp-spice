@@ -126,6 +126,14 @@ class Params(object):
         """rv_audio test. """
         self.rv_audio_threshold = 25000
         """rv_audio test. """
+        self.repeat_video = "No"
+        """rv_video test. Repeat video in totem. Yes/No."""
+        self.fullscreen = "No"
+        """rv_video test. Run totem in fullscreen. Yes/No."""
+        self.destination_video_file_path = "/tmp/test.ogv"
+        """rv_video test. Video file for totem."""
+        self.source_video_file = "video_sample_test.ogv"
+        """rv_video test. Source video file for totem."""
         for i in vars(self):
             if i in params:
                 logging.info("Set %s to %s", i, params[i])
