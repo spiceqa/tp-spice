@@ -131,3 +131,17 @@ HINTS
 
     # avocado vt-bootstrap
     # avocado run --show-job-log io-github-autotest-qemu.boot --vt-extra-params 'image_name=images/rhel67-32_client' 'kill_vm_timeout = 30000'
+
+
+===============
+SSL Information
+===============
+
+Certificates are generated at VM start. Place is::
+
+ virttest/qemu_vm.py
+ if optget("spice_ssl") == "yes":
+ utils_misc.create_x509_dir(prefix, c_subj, s_subj, passwd,  
+                                               secure)
+
+

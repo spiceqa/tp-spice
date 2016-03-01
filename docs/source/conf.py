@@ -11,6 +11,11 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+# noqa
+# flake8: noqa
+# pylint: skip-file
+# nopep8
+
 import sys
 import os
 import commands
@@ -19,9 +24,10 @@ from mock import MagicMock
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
-            return Mock()
+        return Mock()
 
-MOCK_MODULES = ['virttest', 'avocado', 'avocado.core','aexpect']
+MOCK_MODULES = ['virttest', 'avocado', 'avocado.core', 'aexpect']
+MOCK_MODULES += ['virttest.staging']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -121,7 +127,7 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 # html_theme = 'sphinxdoc'
 
-# on_rtd is whether we are on readthedocs.org, this line of code grabbed from   
+# on_rtd is whether we are on readthedocs.org, this line of code grabbed from
 # docs.readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
@@ -233,8 +239,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'tp-spice.tex', u'tp-spice Documentation',
-   u'Andrei Stepanov', 'manual'),
+    ('index', 'tp-spice.tex', u'tp-spice Documentation',
+     u'Andrei Stepanov', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -277,9 +283,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'tp-spice', u'tp-spice Documentation',
-   u'Andrei Stepanov', 'tp-spice', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'tp-spice', u'tp-spice Documentation',
+     u'Andrei Stepanov', 'tp-spice', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

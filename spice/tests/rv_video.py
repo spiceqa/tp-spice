@@ -36,6 +36,8 @@ from virttest import remote
 from virttest import utils_misc
 from distutils import util
 
+#pylint: skip-file
+
 def launch_totem(session):
     """Launch Totem player and play video file.
 

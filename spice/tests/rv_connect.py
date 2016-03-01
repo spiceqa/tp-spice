@@ -12,33 +12,23 @@
 # See LICENSE for more details.
 
 """Connect with remote-viewer from client VM to guest VM.
-
-Client requires
----------------
-    - remote-viewer
-
-Guest requires
---------------
-    - Xorg
-    - netstat
 """
 
-import logging
 from avocado.core import exceptions
-from spice.lib import rv_session
-from spice.lib import conf
+from spice.lib import rv_ssn
+from spice.lib import stest
+from spice.lib import utils
 
 
-def run(test, params, env):
-    """Simple tests for Remote Desktop connection. Tests expect that
-    remote-viewer will be executed from guest VM. Thus we support clients
-    running on different OSes.
+def run(vt_test, test_params, env):
+    """Tests for Remote Desktop connection. Tests expect that remote-viewer
+    will be executed from guest VM.
 
     Parameters
     ----------
-    test : avocado.core.plugins.vt.VirtTest
+    vt_test : avocado.core.plugins.vt.VirtTest
         QEMU test object.
-    params : virttest.utils_params.Params
+    test_params : virttest.utils_params.Params
         Dictionary with the test parameters.
     env : virttest.utils_env.Env
         Dictionary with test environment.
@@ -49,29 +39,37 @@ def run(test, params, env):
         Test fails for expected behaviour.
 
     """
-    logging.info("Start test %s", test.name)
-    cfg = conf.Params(params)
-    session = rv_session.RvSession(params, env)
-    session.clear_interface_all()
-    session.connect()
-    if session.is_connected():
-        if cfg.test_type == conf.TEST_TYPE_NEGATIVE:
-            raise exceptions.TestFail(
-                "Remote viewer connection was established when it was"
-                "supposed to be unsuccessful."
-            )
+    test = stest.ClientGuestTest(vt_test, test_params, env)
+    cfg = test.cfg
+    utils.clear_interface(test, test.name_c)
+    utils.clear_interface(test, test.name_c)
+    reason = ""
+    try:
+        rv_ssn.connect(test)
+    except rv_ssn.RVSessionConnect as excp:
+        is_connected = False
+        reason = str(excp)
+    except rv_ssn.RVSessionError:
+        raise exceptions.TestFail("Internal bug.")
     else:
-        if cfg.test_type == conf.TEST_TYPE_NEGATIVE:
-            logging.info("Remote viewer connection failed as expected")
-            if cfg.ssltype in (conf.SSL_TYPE_IMPLICIT_INVALID,
-                               conf.SSL_TYPE_EXPLICIT_INVALID):
-                guest_vm = env.get_vm(cfg.guest_vm)
-                qemulog = guest_vm.process.get_output()
-                if conf.PTRN_QEMU_SSL_ACCEPT_FAILED not in qemulog:
-                    raise exceptions.TestFail(
-                        "Failed to find pattern `${0}` in qemu log."
-                        .format(conf.PTRN_QEMU_SSL_ACCEPT_FAILED)
-                    )
-        else:
-            raise exceptions.TestFail("Connection is not established.")
-    # Test pass.
+        is_connected = True
+    is_not_connected = not is_connected
+    must_fail = utils.is_yes(cfg.must_fail)
+    must_connect = not must_fail
+    # Fail cases
+    if is_not_connected and must_connect:
+        raise exceptions.TestFail(reason)
+        #raise exceptions.TestFail("Connection is not established.")
+    if is_connected and must_fail:
+        raise exceptions.TestFail("Remote viewer connection was established "
+                                  "when it was supposed to be unsuccessful.")
+    is_ssl = cfg.ssltype in (utils.SSL_TYPE_IMPLICIT_INVALID,
+                             utils.SSL_TYPE_EXPLICIT_INVALID)
+    if is_not_connected and must_fail and is_ssl:
+        qemulog = test.vm_g.process.get_output()
+        if utils.PTRN_QEMU_SSL_ACCEPT_FAILED not in qemulog:
+            raise exceptions.TestFail(
+                "Failed to find pattern `{0}` in qemu log.".format(
+                    utils.PTRN_QEMU_SSL_ACCEPT_FAILED))
+    # Test pass
+    return

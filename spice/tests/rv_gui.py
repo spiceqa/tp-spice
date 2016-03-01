@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -9,14 +11,15 @@
 #
 # See LICENSE for more details.
 
-"""
-rv_gui.py - A test to run dogtail gui tests from the client.
-The test also does verification of the gui tests.
+"""rv_gui.py - A test to run dogtail gui tests from the client. The test also
+does verification of the gui tests.
 
-Requires:
-1. rv_setup must be run to have dogtail be installed on the client
-2. rv_connect must be run to restart the gdm session.
-and have to have both client & remote viewer window available.
+Requirements for host machine
+-----------------------------
+
+    - rv_setup must be run to have dogtail be installed on the client.
+    - rv_connect must be run to restart the gdm session. And have to have both
+    client & remote viewer window available.
 """
 from virttest.virt_vm import VMDeadError
 import os, logging

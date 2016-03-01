@@ -1,0 +1,16 @@
+# To generate such config : pylint --generate-rcfile
+
+[MESSAGES CONTROL]
+
+disable=invalid-name,
+    too-many-locals,
+    too-many-lines,
+    too-many-branches,
+    too-many-statements,
+    too-few-public-methods,
+    too-many-instance-attributes,
+    locally-disabled
+
+[REPORTS]
+
+reports=no

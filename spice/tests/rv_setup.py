@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -9,78 +11,97 @@
 #
 # See LICENSE for more details.
 
-"""
-A setup test to perform the preliminary actions that are required for
+"""A setup test to perform the preliminary actions that are required for
 the rest of the tests.
 
-Actions Currently Performed:
-(1) installs dogtail on the client
-(2) performs required setup to get dogtail tests to work
-(2) puts the dogtail scripts onto the client VM
+Actions on the client
+---------------------
 
-Requires: the client and guest VMs to be setup.
+    - Installs dogtail.
+    - Performs required setup to get dogtail tests to work.
+    - Puts the dogtail scripts onto the client VM.
+
 """
 
 # noqa
 # flake8: noqa
-#pylint: skip-file
+# pylint: skip-file
 
-import logging, os
+import logging
+import os
 import aexpect
-from os import system, getcwd, chdir
-from virttest import utils_misc, utils_spice
+from virttest import utils_misc
+from spice.lib import utils_spice
+from spice.lib import rv_session
+from spice.lib import conf
 
-def install_rpm(session, name, rpm):
-    """
-    installs dogtail on a VM
 
-    @param session: cmd session of a VM
-    @rpm: rpm to be installed
-    @name name of the package
+def install_rpm(session, rpm):
+    """Install RPM package on a VM.
 
+    Parameters
+    ----------
+    session : type
+        cmd session of a VM
+    rpm : type
+        Path to RPM to be installed.
     """
     logging.info("Installing " + name + " from: " + rpm)
-    session.cmd("yum -y localinstall %s" % rpm, timeout=480)
-    if session.cmd_status("rpm -q " + name):
-        raise Exception("Failed to install " + name)
+    try:
+        session.cmd("yum -y install %s" % rpm, timeout=480)
+    except aexpect.ShellCmdError as e:
+        logging.error("Install RPM %s", rpm)
+        raise utils_spice.SpiceTestFail("Install RPM %s." % name)
 
-def deploy_tests_linux(vm, params):
+
+def deploy_tests_linux(vm, cfg):
+    """Moves the dogtail tests to a vm
+
+    Note
+    -----
+    Steps are:
+
+        - Create tests.zip from all tests
+        - Copy tests.zip to client VM
+        - Disable gconfd
+        - Enable accessiblity
+
+    Parameters
+    ----------
+    vm :
+        a VM
+    params :
+        dictionary of paramaters
     """
-    Moves the dogtail tests to a vm
-
-    @param vm: a VM
-    @param params: dictionary of paramaters
-    """
-
-    logging.info("Deploying tests")
-    script_location = params.get("test_script_tgt")
-    old = getcwd()
-    chdir(params.get("test_dir"))
-    system("zip -r tests .")
-    chdir(old)
-    vm.copy_files_to("%s/tests.zip" % params.get("test_dir"), \
-                     "/home/test/tests.zip")
-    session = vm.wait_for_login(timeout=int(params.get("login_timeout", 360)))
+    script_location = cfg.test_script_tgt
+    test_dir = cfg.test_dir
+    os.system("pushd %s" % test_dir)
+    os.system("zip -r tests .")
+    os.system("popd")
+    vm.copy_files_to("%s/tests.zip" % test_dir, "/home/test/tests.zip")
+    session = vm.wait_for_login(timeout=cfg.login_timeout)
     session.cmd("unzip -o /home/test/tests.zip -d " + script_location)
     session.cmd("mkdir -p ~/.gconf/desktop/gnome/interface")
     logging.info("Disabling gconfd")
     session.cmd("gconftool-2 --shutdown")
     logging.info("Enabling accessiblity")
-    session.cmd("cp %s/%%gconf.xml ~/.gconf/desktop/gnome/interface/" \
-                % params.get("test_script_tgt"))
+    session.cmd("cp %s/%%gconf.xml ~/.gconf/desktop/gnome/interface/" %
+                params.get("test_script_tgt"))
+
 
 def setup_gui_linux(vm, params, env):
-    """
-    Setup the vm for GUI testing, install dogtail & move tests over.
+    """Setup the vm for GUI testing, install dogtail & move tests over.
 
-@param vm: a VM
-@param params: dictionary of test paramaters
-"""
+    Parameters
+    ----------
+    vm :
+        a VM
+    params :
+        dictionary of test paramaters
+    """
     logging.info("Setting up client for GUI tests")
-    session = vm.wait_for_login(
-        username="root",
-        password="123456",
-        timeout=int(params.get("login_timeout", 360)))
+    self.guest_session = self.guest_vm.wait_for_login(timeout=timeout)
+    session = vm.wait_for_login()
     arch = vm.params.get("vm_arch_name")
     fedoraurl = params.get("fedoraurl")
     wmctrl_64rpm = params.get("wmctrl_64rpm")
@@ -96,6 +117,7 @@ def setup_gui_linux(vm, params, env):
         install_rpm(session, "wmctrl", wmctrlrpm)
     deploy_tests_linux(vm, params)
 
+
 def setup_vm_linux(test, params, env, vm):
     setup_type = params.get("setup_type", None)
     logging.info("Setup type: %s" % setup_type)
@@ -110,6 +132,7 @@ def setup_vm_linux(test, params, env, vm):
     else:
         logging.info("Nothing to setup on guest")
     logging.info("Setup complete")
+
 
 def setup_vm_windows(test, params, env, vm):
     setup_type = vm.params.get("setup_type", None)
@@ -139,19 +162,19 @@ def setup_vm_windows(test, params, env, vm):
         winqxlzip = os.path.join(test.virtdir, 'deps', winqxl)
         winvdagentzip = os.path.join(test.virtdir, 'deps', winvdagent)
         vioserialzip = os.path.join(test.virtdir, 'deps', vioserial)
-        #copy p7zip to windows and install it silently
+        # copy p7zip to windows and install it silently
         logging.info("Installing 7zip")
         vm.copy_files_to(winp7_path, "C:\\")
         session.cmd_status("start /wait msiexec /i C:\\7z920-x64.msi /qn")
 
-        #copy over the winqxl, winvdagent, virtio serial
+        # copy over the winqxl, winvdagent, virtio serial
         vm.copy_files_to(winqxlzip, "C:\\")
         vm.copy_files_to(winvdagentzip, "C:\\")
         vm.copy_files_to(vioserialzip, "C:\\")
         vm.copy_files_to(guest_sr_path, "C:\\")
         vm.copy_files_to(md5sumwin_path, "C:\\")
 
-        #extract winvdagent zip and start service if vdservice is not installed
+        # extract winvdagent zip and start service if vdservice is not installed
         try:
             output = session.cmd('sc queryex type= service state= all' +
                                  ' | FIND "vdservice"')
@@ -159,38 +182,39 @@ def setup_vm_windows(test, params, env, vm):
             session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\wvdagent.zip -oC:\\')
             utils_spice.wait_timeout(2)
             session.cmd_status("C:\\vdservice.exe install")
-            #wait for vdservice to come up
+            # wait for vdservice to come up
             utils_spice.wait_timeout(5)
             logging.info(session.cmd("net start vdservice"))
             logging.info(session.cmd("chdir"))
 
-        #extract winqxl driver, place drivers in correct location & reboot
-        #Note pnputil only works win 7+, need to find a way for win xp
-        #Verify if virtio serial is already installed
+        # Extract winqxl driver, place drivers in correct location & reboot
+        # Note pnputil only works win 7+, need to find a way for win xp Verify
+        # if virtio serial is already installed
         output = session.cmd(pnputil + " /e")
         if("System devices" in output):
-            logging.info( "Virtio Serial already installed")
+            logging.info("Virtio Serial already installed")
         else:
             session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\vioserial.zip -oC:\\')
             output = session.cmd(pnputil + " -i -a C:\\vioser.inf")
             logging.info("Virtio Serial status: " + output)
-            #Make sure virtio install is complete
+            # Make sure virtio install is complete
             utils_spice.wait_timeout(5)
         output = session.cmd(pnputil + " /e")
         if("Display adapters" in output):
             logging.info("QXL already installed")
         else:
-            #winqxl
+            # winqxl
             session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\wqxl.zip -oC:\\')
             output = session.cmd(pnputil + " -i -a C:\\qxl.inf")
-            logging.info( "Win QXL status: " + output )
-            #Make sure qxl install is complete
+            logging.info("Win QXL status: " + output)
+            # Make sure qxl install is complete
             utils_spice.wait_timeout(5)
         vm.reboot()
 
         logging.info("Installation of Windows guest tools completed")
 
     logging.info("Setup complete")
+
 
 def setup_vm(test, params, env, vm):
     if vm.params.get("os_type") == "linux":
@@ -199,6 +223,7 @@ def setup_vm(test, params, env, vm):
         setup_vm_windows(test, params, env, vm)
     else:
         raise error.TestFail("Unsupported OS.")
+
 
 def run_rv_setup(test, params, env):
     """

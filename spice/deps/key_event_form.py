@@ -1,6 +1,7 @@
 import gtk
 import logging
 
+#pylint: skip-file
 
 class TestForm(gtk.Window):
 

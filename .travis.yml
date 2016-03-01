@@ -21,4 +21,3 @@ install:
 script:
     - inspekt lint
     - inspekt indent
-    - inspekt style

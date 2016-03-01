@@ -10,6 +10,7 @@ unattended_install:
 
     Windows:
         cdrom_virtio = virtio/virtio-win-1.7.4.iso
+        pnputil = C:\Windows\winsxs\amd64_microsoft-windows-pnputil_31bf3856ad364e35_6.1.7600.16385_none_5958b438d6388d15\PnPutil.exe
 
         x86_64:
             virtio_floppy = virtio/virtio-win-1.7.4_amd64.vfd
