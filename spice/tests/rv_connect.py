@@ -42,15 +42,15 @@ def run(vt_test, test_params, env):
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     utils.clear_interface(test, test.name_c)
-    utils.clear_interface(test, test.name_c)
+    utils.clear_interface(test, test.name_g)
     reason = ""
     try:
         rv_ssn.connect(test)
     except rv_ssn.RVSessionConnect as excp:
         is_connected = False
         reason = str(excp)
-    except rv_ssn.RVSessionError:
-        raise exceptions.TestFail("Internal bug.")
+    except rv_ssn.RVSessionError as e:
+        raise exceptions.TestFail(str(e))
     else:
         is_connected = True
     is_not_connected = not is_connected

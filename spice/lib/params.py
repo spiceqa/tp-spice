@@ -97,7 +97,7 @@ class Params(object):
     """rv_audio test. arecord capture time."""
     config_test = "no"
     """Could be: "no", "migration"."""
-    rv_record = "Yes"
+    rv_record = ""
     """Flag to test playback or record. yes - test recording. Other -
     playback."""
     disable_audio = "no"
@@ -135,6 +135,10 @@ class Params(object):
     """utils"""
     must_fail = "No"
     """Flag to show that the test should fail."""
+    pause_on_end = "No"
+    """Do not shutdown VMs for some time."""
+    pause_on_fail = "No"
+    """Do not shutdown VMs for some time if test has been failed."""
 
 # Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make
 # duplication.

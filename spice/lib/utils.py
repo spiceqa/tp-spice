@@ -21,6 +21,7 @@ import logging
 import os
 import re
 import sys
+import time
 import subprocess
 from distutils import util
 import aexpect
@@ -28,6 +29,7 @@ from virttest import qemu_vm
 from virttest import remote
 from virttest import utils_misc
 from virttest.staging import service
+from avocado.core import exceptions
 
 
 SSL_TYPE_IMPLICIT = "implicit_hs"
@@ -80,12 +82,21 @@ def is_rhel7(self):
     return False
 
 
+def is_rhel6(self):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    if self.params.get("os_variant") == "rhel6":
+        return True
+    return False
+
+
 def extend_api_vm():
     """Extend qemu.VM(virt_vm.BaseVM) with useful methods.
     """
     qemu_vm.VM.is_linux = is_linux
     qemu_vm.VM.is_win = is_win
-    qemu_vm.VM.is_win = is_rhel7
+    qemu_vm.VM.is_rhel7 = is_rhel7
+    qemu_vm.VM.is_rhel6 = is_rhel6
 
 
 def vm_ssn(test, vm_name):
@@ -178,6 +189,29 @@ class SpiceUtilsError(Exception):
     """Exception raised in case the lib API fails."""
 
 
+class SpiceTestFail(exceptions.TestFail):
+    """Unknow VM type."""
+
+    def __init__(self, test, *args, **kwargs):
+        super(Exception, self).__init__(args, kwargs)
+        if is_yes(test.cfg.pause_on_fail) or is_yes(test.cfg.pause_on_end):
+            # 1 hour
+            seconds = 60 * 60 * 10
+            logging.error("Test %s has failed. Do nothing for %s seconds.",
+                          test.cfg.id, seconds)
+            time.sleep(seconds)
+
+
+def finish_test(test):
+    """Could be located at the end of the tests."""
+    if is_yes(test.cfg.pause_on_end):
+        # 1 hour
+        seconds = 60 * 60
+        logging.info("Test %s is finished. Do nothing for %s seconds.",
+                      test.cfg.id, seconds)
+        time.sleep(seconds)
+
+
 class SpiceUtilsUnknownVmType(SpiceUtilsError):
     """Unknow VM type."""
 
@@ -202,7 +236,7 @@ class SpiceUtilsBadVmType(SpiceUtilsError):
 # ..todo:: or aexpect.xxx ???
 class SpiceUtilsCmdRun(SpiceUtilsError):
     """Fail to run cmd on VM."""
-    def __init__(self, cmd, output, vm_name, *args, **kwargs):
+    def __init__(self, vm_name, cmd, output, *args, **kwargs):
         super(SpiceUtilsCmdRun, self).__init__(args, kwargs)
         self.cmd = cmd
         self.output = output
@@ -695,15 +729,15 @@ def wait_for_win(test, vm_name, pattern, prop="_NET_WM_NAME"):
     """
     ssn = test.sessions[vm_name]
     cmd = r"xprop -notype -id " \
-        "$(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) "
+        r"$(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) "
     cmd += prop
 
     def is_active():
         """Test if window is active."""
         try:
             output = ssn.cmd(cmd)
-        except aexpect.ShellError, details:
-            logging.info("Can't get current win name: %s", details)
+        except aexpect.ShellError as e:
+            raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
         logging.info("Current win name: %s", output)
         return pattern in output
 

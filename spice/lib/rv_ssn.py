@@ -126,7 +126,7 @@ def get_host_subj(test):
     return subj
 
 
-def connect(test):
+def connect(test, env={}):
     """Establish connection between client and guest based on test
     parameters supplied at cartesian config.
 
@@ -142,6 +142,8 @@ def connect(test):
     ----------
     test : SpiceTest
         Spice test object.
+    env : dict
+        Dictionary of env variables to passed before remote-viewer start.
 
     Returns
     -------
@@ -169,6 +171,11 @@ def connect(test):
             ssn_c.cmd("export SPICE_PROXY=%s" % cfg.spice_proxy)
         elif vm_c.is_win():
             ssn_c.cmd_output("SET SPICE_PROXY=%s" % cfg.spice_proxy)
+    for key in env:
+        if vm_c.is_linux():
+            ssn_c.cmd("export %s=%s" % (key, env[key]))
+        elif vm_c.is_win():
+            ssn_c.cmd_output("SET %s=%s" % (key, env[key]))
     utils.print_rv_version(test, test.name_c)
     # Set the password of the VM using the qemu-monitor.
     if cfg.qemu_password:
