@@ -87,6 +87,10 @@ def deploy_tests_linux(vm, cfg):
     logging.info("Enabling accessiblity")
     session.cmd("cp %s/%%gconf.xml ~/.gconf/desktop/gnome/interface/" %
                 params.get("test_script_tgt"))
+    if test.vm_c.is_rhel7():
+        logging.info("Enabling accessibility on client.")
+        cmd = "gsettings set org.gnome.desktop.interface toolkit-accessibility true"
+        ssn_c.cmd(cmd)
 
 
 def setup_gui_linux(vm, params, env):

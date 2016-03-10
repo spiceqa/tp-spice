@@ -12,6 +12,9 @@
 # See LICENSE for more details.
 
 
+WINDOW_TITLE = "'vm1 (1) - Remote Viewer'"
+
+
 """Connect with remote-viewer from client VM to guest VM.
 
 Client requires
@@ -162,7 +165,6 @@ def connect(test, env={}):
         raise RVSessionError("Unsupported display value")
     # Print remove-viewer version on client
     if vm_c.is_linux():
-        ssn_c.cmd("export DISPLAY=:0.0")
         if cfg.rv_ld_library_path:
             cmd = "export LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path
             ssn_c.cmd(cmd)
@@ -453,3 +455,5 @@ def generate_vv_file(test):
         rv_file.write("fullscreen=1\n")
     if cfg.spice_proxy:
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)
+
+

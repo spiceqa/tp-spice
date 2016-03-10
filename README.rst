@@ -144,4 +144,9 @@ Certificates are generated at VM start. Place is::
  utils_misc.create_x509_dir(prefix, c_subj, s_subj, passwd,  
                                                secure)
 
+============
+Client tests
+============
 
+Directory **ctests** contains tests for RV user interface. This tests are
+copied to client VM and are run inside client VM.

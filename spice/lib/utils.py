@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import time
+import tempfile
 import subprocess
 from distutils import util
 import aexpect
@@ -683,7 +684,7 @@ def restart_session_linux(test, vm_name):
 
     """
     logging.info("Begin: restart graphical session at VM: %s", vm_name)
-    _, ssn = vm_assn(test, vm_name)
+    vm, ssn = vm_assn(test, vm_name)
     runner = remote.RemoteRunner(session=ssn)
     srv_mng = service.Factory.create_service(run=runner.run)
     srv_mng.set_target("multi-user.target")  # pylint: disable=no-member
@@ -701,6 +702,18 @@ def restart_session_linux(test, vm_name):
     if not utils_misc.wait_for(lambda: is_x(True), 300, first=30, step=30):
         raise SpiceUtilsError("Can't switch to runlevel 5 at: %s" % vm_name)
     logging.info("Done: restart graphical session at VM: %s", vm_name)
+    """Export essentials variables per SSH session."""
+    if vm.is_linux():
+        ssn.cmd("export DISPLAY=:0.0")
+        var_list = ['DBUS_SESSION_BUS_ADDRESS']
+        for var_name in var_list:
+            val = get_x_var(test, vm_name, var_name)
+            if val:
+                logging.info("%s export %s == %s", vm_name, var_name, var_val)
+                cmd = r"export %s='%s'" % (var_name, var_val)
+                ssn.cmd(cmd)
+
+
 
 
 def wait_for_win(test, vm_name, pattern, prop="_NET_WM_NAME"):
@@ -1071,10 +1084,243 @@ def window_resolution(test, vm_name, win_name, window=0):
     """ ..todo:: write me
     """
     win_id = get_open_window_ids(test, vm_name, win_name)[window]
-    return get_window_geometry(test.ssn_c, vm_name, win_id)
+    return get_window_geometry(test, vm_name, win_id)
 
+
+def get_res(test, vm_name):
+    """Gets the resolution of a VM
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+
+    Return
+    ------
+
+    """
+    vm, ssn = vm_ssn(test, vm_name)
+    if not vm.is_linux():
+        raise SpiceUtilsBadVmType(vm_name)
+    try:
+        guest_res_raw = ssn.cmd_output("xrandr -d :0 2> /dev/null | grep '*'")
+        guest_res = guest_res_raw.split()[0]
+    except (aexpect.ShellCmdError, IndexError):
+    except aexpect.ShellCmdError, e:
+        raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
+    except IndexError:
+        raise SpiceUtilsError("Can't get resolution.")
+    return guest_res
 
 # ..todo:: implement
 # def get_fullscreen_windows(test):
 #    cfg = test.cfg
 #    windows = self.get_windows_ids()
+
+def get_corners(test, vm_name, win_title):
+    """Gets the coordinates of the 4 corners of the window.
+
+    Info
+    ----
+    http://www.x.org/archive/X11R6.8.0/doc/X.7.html#sect6
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+
+    Return
+    ------
+    list
+        Corners in format: [('+470', '+187'), ('-232', '+187'),
+                            ('-232', '-13'), ('+470', '-13')]
+
+    """
+    _, ssn = utils.vm_ssn(test, vm_name)
+    rv_xinfo_cmd = "xwininfo -name %s" % win_title
+    rv_xinfo_cmd += " | grep Corners"
+    try:
+        # Expected format:   Corners:  +470+187  -232+187  -232-13  +470-13
+        raw_out = client_session.cmd(rv_xinfo_cmd)
+        line = raw_out.strip()
+    except aexpect.ShellCmdError, e:
+        raise RVSessionError(str(e)):
+    except IndexError:
+        raise RVSessionError("Could not get the geometry for %s", win_title)
+    corners = [tuple(re.findall("[+-]\d+",i)) for i in line.split()[1:]]
+    return corners
+
+
+def get_geom(test, vm_name, win_title):
+    """Gets the geometry of the rv_window.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+
+    Returns
+    -------
+    tuple
+        Geometry of RV window. (x,y)
+
+    """
+    xinfo_cmd = "xwininfo -name %s" % win_title
+    xinfo_cmd += " | grep geometry"
+    _, ssn = utils.vm_ssn(test, vm_name)
+    try:
+        # Expected '  -geometry 898x700+470-13'
+        res_raw = ssn.cmd(rv_xinfo_cmd)
+        res = re.findall('\d+x\d+', res_raw)[0]
+    except aexpect.ShellCmdError, e:
+        raise RVSessionError(str(e)):
+    except IndexError:
+        raise RVSessionError("Could not get the geometry of the window %s.",
+                             win_title)
+    logging.debug("Window %s has geometry: %s", win_title, res)
+    return str2res(rv_res)
+
+
+def str2res(res):
+    """Convert resolution in str for: XXXxYYY to tuple.
+
+    Parameters
+    ----------
+    res : str
+        Resolution.
+
+    Returns
+    -------
+    tuple
+        Resolution.
+
+    """
+    width = int(res.split('x')[0])
+    # The second split of - is a workaround because the xwinfo sometimes
+    # prints out dashes after the resolution for some reason.
+    height = int(res.split('x')[1].split('-')[0])
+    return (width, height)
+
+
+def res_gt(res1, res2):
+    """Test res2 > res1
+
+    Parameters
+    ----------
+    res1: tuple
+        resolution
+    res2: tuple
+        resolution
+
+    Returns
+    -------
+    bool
+        res1 > res2
+
+    """
+    return h2 > h1 and w2 > w1
+
+
+def res_eq(res1, res2):
+    """Test res1 == res2
+
+    Parameters
+    ----------
+    res1: tuple
+        resolution
+    res2: tuple
+        resolution
+
+    Returns
+    -------
+    bool
+        res1 == res2
+
+    """
+    return res1 == res2
+
+
+def is_eq(val, tgt, err_limit):
+    """Test if val is equal to tgt in allowable limits.
+
+    Parameters
+    ----------
+    val :
+        Value to check.
+    tgt :
+        Specimen.
+    err_limit :
+        Acceptable percent change of x2 from x1.
+
+    init: original integer value
+    post: integer that must be within an acceptable percent of x1
+
+    """
+    if not isinstance(tgt, int):
+        tgt = int(tgt)
+    if not isinstance(post, int):
+        val = int(val)
+    if not isinstance(err_limit, int):
+        err_limit = int(err_limit)
+    sub = tgt * err_limit / 100
+    bottom = tgt - sub
+    up = tgt + sub
+    ret =  bottom <= val and val <= up
+    logging.info("Stating %d <= %d <= %d is %s.", bottom, val, up, str(ret))
+    return ret
+
+
+def get_x_var(test, vm_name, var_name):
+    """Gets the env variable value by its name from X session.
+
+    Info
+    ----
+    It is no straight way to get variable value from X session. If you try to
+    read var value from SSH session it could be different from X session var or
+    absent. The strategy used in this function is:
+
+        1. Run terminal. Terminal will be disconnected from SSH session. The
+        parent of the terminal will be X manager. Terminal inherits variables
+        from X manager.  Dump variables to file.
+        2. Read the file for interested variable.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+
+    Returns
+    -------
+    str
+        Env variable value.
+
+    """
+    _, ssn = utils.vm_ssn(test, vm_name)
+    terminal = 'gnome-terminal'
+    dump_file = tempfile.mktemp()
+    dump_env_cmd = r'"sh -c \"export -p > %s\""' % dump_file
+    cmd1 = terminal + " -e " + dump_env_cmd
+    cmd2 = r'cat "%s"' % dump_file
+    pattern = "\s%s=.+" % var_name
+    try:
+        ssn.cmd(cmd1)
+        env = ssn.cmd(cmd2)
+        ret = re.findall(pattern, env)
+        if res:
+            ret = ret[0]
+            ret = ret.strip()
+            ret = ret.split('=', 1)[1]
+        else:
+            ret = ""
+    except aexpect.ShellCmdError, e:
+        raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
+    logging.debug("%s has %s = %s", var_name, ret)
+    return ret
