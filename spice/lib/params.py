@@ -157,6 +157,13 @@ class Params(object):
     """rv_gui."""
     test_script_tgt = ""
     """rv_gui."""
+    make_rv_connect = "Yes"
+    """rv_gui. Connect with RV before run actual GUI tests."""
+    epel_rpm = ""
+    """rv_gui. RPM for EPEL repo."""
+    client_tests = "client-tests"
+    """rv_gui. Dir with client tests."""
+
 
 # Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make
 # duplication.

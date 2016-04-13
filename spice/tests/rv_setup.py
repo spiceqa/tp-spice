@@ -36,22 +36,6 @@ from spice.lib import rv_session
 from spice.lib import conf
 
 
-def install_rpm(session, rpm):
-    """Install RPM package on a VM.
-
-    Parameters
-    ----------
-    session : type
-        cmd session of a VM
-    rpm : type
-        Path to RPM to be installed.
-    """
-    logging.info("Installing " + name + " from: " + rpm)
-    try:
-        session.cmd("yum -y install %s" % rpm, timeout=480)
-    except aexpect.ShellCmdError as e:
-        logging.error("Install RPM %s", rpm)
-        raise utils_spice.SpiceTestFail("Install RPM %s." % name)
 
 
 def deploy_tests_linux(vm, cfg):

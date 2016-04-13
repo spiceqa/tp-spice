@@ -59,7 +59,7 @@ USBCLERK_DISTR_PATH = r'C:\usbclerk.msi'
 DISPLAY = "qxl-0"
 
 
-def is_win(self):
+def vm_is_win(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
     if self.params.get("os_type") == "windows":
@@ -67,7 +67,7 @@ def is_win(self):
     return False
 
 
-def is_linux(self):
+def vm_is_linux(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
     if self.params.get("os_type") == "linux":
@@ -75,7 +75,7 @@ def is_linux(self):
     return False
 
 
-def is_rhel7(self):
+def vm_is_rhel7(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
     if self.params.get("os_variant") == "rhel7":
@@ -83,7 +83,7 @@ def is_rhel7(self):
     return False
 
 
-def is_rhel6(self):
+def vm_is_rhel6(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
     if self.params.get("os_variant") == "rhel6":
@@ -91,13 +91,27 @@ def is_rhel6(self):
     return False
 
 
+def vm_info(self, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logging.info(self.name + " : " + string, *args, **kwargs)
+
+
+def vm_error(self, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logging.error(self.name + " : " + string, *args, **kwargs)
+
+
 def extend_api_vm():
     """Extend qemu.VM(virt_vm.BaseVM) with useful methods.
     """
-    qemu_vm.VM.is_linux = is_linux
-    qemu_vm.VM.is_win = is_win
-    qemu_vm.VM.is_rhel7 = is_rhel7
-    qemu_vm.VM.is_rhel6 = is_rhel6
+    qemu_vm.VM.is_linux = vm_is_linux
+    qemu_vm.VM.is_win = vm_is_win
+    qemu_vm.VM.is_rhel7 = vm_is_rhel7
+    qemu_vm.VM.is_rhel6 = vm_is_rhel6
+    qemu_vm.VM.info = vm_info
+    qemu_vm.VM.error = vm_error
 
 
 def vm_ssn(test, vm_name):
@@ -244,7 +258,7 @@ class SpiceUtilsCmdRun(SpiceUtilsError):
         self.vm_name = vm_name
 
     def __str__(self):
-        return "Command: {0} failed at: {1} with output: {3}".format(
+        return "Command: {0} failed at: {1} with output: {2}".format(
             self.cmd, self.vm_name, self.output)
 
 
@@ -662,6 +676,37 @@ def clear_interface(test, vm_name):
         raise SpiceUtilsUnknownVmType
 
 
+def install_rpm(test, vm_name, rpm):
+    """Install RPM package on a VM.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+    rpm : str
+        Path to RPM to be installed. It could be path to .rpm file, or RPM
+        name.
+    """
+    vm, ssn = vm_assn(test, vm_name)
+    if not vm.is_linux():
+        raise SpiceUtilsBadVmType(vm_name)
+    vm.info("Install RPM : %s.", rpm)
+    pkg = rpm
+    if rpm.endswith('.rpm'):
+        pkg = rpm[:-4]
+    try:
+        cmd = 'rpm -q %s' % pkg
+        status = ssn.cmd_status(cmd)
+        if status == 0:
+            vm.info("RPM %s is already installed.", pkg)
+            return
+        ssn.cmd("yum -y install %s" % rpm, timeout=500)
+    except aexpect.ShellCmdError as e:
+        raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
+
+
 def restart_session_linux(test, vm_name):
     """Restart graphical session at VM.
 
@@ -704,6 +749,7 @@ def restart_session_linux(test, vm_name):
     logging.info("Done: restart graphical session at VM: %s", vm_name)
     """Export essentials variables per SSH session."""
     if vm.is_linux():
+        vm, ssn = vm_ssn(test, vm_name)
         ssn.cmd("export DISPLAY=:0.0")
         var_list = ['DBUS_SESSION_BUS_ADDRESS']
         for var_name in var_list:
@@ -1107,8 +1153,7 @@ def get_res(test, vm_name):
     try:
         guest_res_raw = ssn.cmd_output("xrandr -d :0 2> /dev/null | grep '*'")
         guest_res = guest_res_raw.split()[0]
-    except (aexpect.ShellCmdError, IndexError):
-    except aexpect.ShellCmdError, e:
+    except aexpect.ShellCmdError as e:
         raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
     except IndexError:
         raise SpiceUtilsError("Can't get resolution.")
@@ -1140,15 +1185,15 @@ def get_corners(test, vm_name, win_title):
                             ('-232', '-13'), ('+470', '-13')]
 
     """
-    _, ssn = utils.vm_ssn(test, vm_name)
+    _, ssn = vm_ssn(test, vm_name)
     rv_xinfo_cmd = "xwininfo -name %s" % win_title
     rv_xinfo_cmd += " | grep Corners"
     try:
         # Expected format:   Corners:  +470+187  -232+187  -232-13  +470-13
         raw_out = client_session.cmd(rv_xinfo_cmd)
         line = raw_out.strip()
-    except aexpect.ShellCmdError, e:
-        raise RVSessionError(str(e)):
+    except aexpect.ShellCmdError as e:
+        raise RVSessionError(str(e))
     except IndexError:
         raise RVSessionError("Could not get the geometry for %s", win_title)
     corners = [tuple(re.findall("[+-]\d+",i)) for i in line.split()[1:]]
@@ -1173,13 +1218,13 @@ def get_geom(test, vm_name, win_title):
     """
     xinfo_cmd = "xwininfo -name %s" % win_title
     xinfo_cmd += " | grep geometry"
-    _, ssn = utils.vm_ssn(test, vm_name)
+    _, ssn = vm_ssn(test, vm_name)
     try:
         # Expected '  -geometry 898x700+470-13'
         res_raw = ssn.cmd(rv_xinfo_cmd)
         res = re.findall('\d+x\d+', res_raw)[0]
-    except aexpect.ShellCmdError, e:
-        raise RVSessionError(str(e)):
+    except aexpect.ShellCmdError as e:
+        raise RVSessionError(str(e))
     except IndexError:
         raise RVSessionError("Could not get the geometry of the window %s.",
                              win_title)
@@ -1303,10 +1348,10 @@ def get_x_var(test, vm_name, var_name):
         Env variable value.
 
     """
-    _, ssn = utils.vm_ssn(test, vm_name)
+    _, ssn = vm_ssn(test, vm_name)
     terminal = 'gnome-terminal'
     dump_file = tempfile.mktemp()
-    dump_env_cmd = r'"sh -c \"export -p > %s\""' % dump_file
+    dump_env_cmd = """'sh -c "export -p > %s"'""" % dump_file
     cmd1 = terminal + " -e " + dump_env_cmd
     cmd2 = r'cat "%s"' % dump_file
     pattern = "\s%s=.+" % var_name
@@ -1314,13 +1359,43 @@ def get_x_var(test, vm_name, var_name):
         ssn.cmd(cmd1)
         env = ssn.cmd(cmd2)
         ret = re.findall(pattern, env)
-        if res:
+        if ret:
             ret = ret[0]
             ret = ret.strip()
             ret = ret.split('=', 1)[1]
         else:
             ret = ""
-    except aexpect.ShellCmdError, e:
+    except aexpect.ShellCmdError as e:
         raise SpiceUtilsCmdRun(vm_name, e.cmd, e.output)
     logging.debug("%s has %s = %s", var_name, ret)
     return ret
+
+
+def turn_accessibility(test, vm_name, on=True):
+    """Turn accessibility on vm.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+    vm_name : str
+        VM name.
+
+    """
+    vm, ssn = vm_ssn(test, vm_name)
+    if not vm.is_linux():
+        raise SpiceUtilsBadVmType(vm_name)
+    if on:
+        val = 'true'
+    else:
+        val = 'false'
+    if vm.is_rhel6():
+        # gconftool-2 --get "/desktop/gnome/interface/accessibility"
+        # temporarily (for a single session) enable Accessibility:
+        # GNOME_ACCESSIBILITY=1
+        # session.cmd("gconftool-2 --shutdown")
+        cmd = "gconftool-2 --set /desktop/gnome/interface/accessibility --type bool %s" % val
+        ssn.cmd(cmd)
+    elif vm.is_rhel7():
+        cmd = "gsettings set org.gnome.desktop.interface toolkit-accessibility %s" % val
+        ssn.cmd(cmd)
