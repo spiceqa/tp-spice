@@ -8,18 +8,32 @@ image_size = 30G
 drive_cache = none
 workaround_qemu_qmp_crash = always
 
+#
+# Dogtail info
+#
+# Upstream: https://fedorahosted.org/dogtail/
+# Fedora/EPEL:  http://koji.fedoraproject.org/koji/packageinfo?packageID=304
+# For more info DesktopQE beaker-task: /desktop/rhel7/install
+# git.app.eng.bos.redhat.com/git/desktopqe/install.git?h=rhel-7
+#
+
 rv:
     Linux:
         RHEL.7:
-            dogtail_rpm = 'http://kojipkgs.fedoraproject.org//packages/dogtail/0.8.2/2.fc20/noarch/dogtail-0.8.2-2.fc20.noarch.rpm'
-            wmctrl_64rpm = 'http://kojipkgs.fedoraproject.org/packages/wmctrl/1.07/15.fc20/x86_64/wmctrl-1.07-15.fc20.x86_64.rpm'
+            epel_rpm = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm'
+            dogtail_rpm = 'https://dl.fedoraproject.org/pub/epel/7/x86_64/d/dogtail-0.9.0-3.el7.noarch.rpm'
+            wmctrl_rpm = 'http://kojipkgs.fedoraproject.org/packages/wmctrl/1.07/15.fc20/x86_64/wmctrl-1.07-15.fc20.x86_64.rpm'
+
+        RHEL.6:
+            epel_rpm = 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm'
 
         RHEL.6..x86_64:
-            dogtail_rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/dogtail-0.7.1.1-1.el6.noarch.rpm'
-            wmctrl_64rpm = 'http://dl.fedoraproject.org/pub/epel/6/x86_64/wmctrl-1.07-12.el6.x86_64.rpm'
+            dogtail_rpm = 'https://dl.fedoraproject.org/pub/epel/6/x86_64/dogtail-0.7.1.1-1.el6.noarch.rpm'
+            wmctrl_rpm = 'https://dl.fedoraproject.org/pub/epel/6/x86_64/wmctrl-1.07-12.el6.x86_64.rpm'
 
         RHEL.6..i386:
-            wmctrl_32rpm = 'http://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686.rpm'
+            dogtail_rpm = 'https://dl.fedoraproject.org/pub/epel/6/i386/dogtail-0.7.1.1-1.el6.noarch.rpm'
+            wmctrl_rpm = 'https://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686.rpm'
 
 role-guest:
     main_vm = guest
