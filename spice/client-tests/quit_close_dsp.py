@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,12 +12,21 @@
 # See LICENSE for more details.
 
 
-import logging
-import time
-import sys
+"""Close remote_viewer.
+"""
 
-def run(helper):
-    for i in range(50):
-        t = time.time()
-        reply = helper.query_master(i, t)
-        logging.info("Reply %s: %s", i, str(reply))
+import os
+import sys
+import logging
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+import rv
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+rv_app = rv.Application(method="mouse")
+# Test assumes there is only one virtual display.
+assert rv_app.dsp_count() == 1
+logger.info("Close by deselecting last display.")
+rv_app.dsp1.close(1)
+assert rv_app.app.dead

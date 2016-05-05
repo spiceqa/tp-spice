@@ -148,5 +148,12 @@ Certificates are generated at VM start. Place is::
 Client tests
 ============
 
-Directory **ctests** contains tests for RV user interface. This tests are
+Directory **client-tests** contains tests for RV user interface. This tests are
 copied to client VM and are run inside client VM.
+
+- http://git.app.eng.bos.redhat.com/git/desktopqe/install.git?h=rhel-7
+- https://vhumpa.fedorapeople.org/dogtail/epydoc/
+- https://people.gnome.org/~parente/pyatspi/doc/
+- http://git.app.eng.bos.redhat.com/git/desktopqe/
+- vhumpa@: sticking latest el7 packages here:
+  https://gitlab.com/dogtail/dogtail/tree/rpms/rpm

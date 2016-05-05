@@ -1,0 +1,1547 @@
+key goas - 3 
+key responsibility - 3
+
+
+Sending command: rpm -q https://dl.fedoraproject.org/pub/epel/6/i386/wmctrl-1.07-12.el6.i686
+
+
+z = tree.root
+z = pyatspi.Registry.getDesktop(0)
+x = z.applications()
+for i in x: print i.name
+
+
+node = x.child(roleName='drawing area')
+node = x.children[0].child(roleName='scroll pane')
+
+	node.gragFocus()
+
+
+x = z.application('remote-viewer')
+for i in x.children: print i.name                                                   
+... 
+RHEL-6-64:2 - Remote Viewer
+RHEL-6-64:3 - Remote Viewer
+
+
+x = z.application('remote-viewer')
+x.child('View')
+
+x = z.application('remote-viewer')
+x.name
+x.children[0].name
+'Connection details'
+
+
+x.children[0] !!!!==== Display1. can be active only 3rd display.
+
+>>> c = x.child('Connection Address', roleName='label')                                 
+>>> c.labelee
+<Accessible object at 0x33b4af0 (AtspiAccessible at 0x8d06660)
+
+
+>>> pprint(dir(x.children[0]))                                               
+['URI',
+ '_Node__nodeIsIdentifiable',
+ '_Node__setupUserData',
+ '__bool__',
+ '__class__',
+ '__copy__',
+ '__deepcopy__',
+ '__delattr__',
+ '__dict__',
+ '__doc__',
+ '__eq__',
+ '__format__',
+ '__gdoc__',
+ '__ge__',
+ '__getattribute__',
+ '__getitem__',
+ '__gpointer__',
+ '__grefcount__',
+ '__gsignals__',
+ '__gt__',
+ '__gtype__',
+ '__hash__',
+ '__info__',
+ '__init__',
+ '__le__',
+ '__len__',
+ '__lt__',
+ '__module__',
+ '__ne__',
+ '__new__',
+ '__nonzero__',
+ '__reduce__',
+ '__reduce_ex__',
+ '__repr__',
+ '__setattr__',
+ '__sizeof__',
+ '__str__',
+ '__subclasshook__',
+ '__weakref__',
+ '_fastFindChild',
+ '_force_floating',
+ '_ref',
+ '_ref_sink',
+ '_unref',
+ '_unsupported_data_method',
+ '_unsupported_method',
+ 'accessible_parent',
+ 'actions',
+ 'add_column_selection',
+ 'add_row_selection',
+ 'add_selection',
+ 'app',
+ 'application',
+ 'applications',
+ 'atspiVersion',
+ 'attributes',
+ 'bind_property',
+ 'bind_property_full',                                                        
+ 'blink',
+ 'button',
+ 'cached_properties',
+ 'caretOffset',
+ 'chain',
+ 'checked',
+ 'child',
+ 'childCount',
+ 'childLabelled',
+ 'childNamed',
+ 'children',
+ 'clearCache',
+ 'clear_cache',
+ 'clear_selection',
+ 'click',
+ 'combovalue',
+ 'compat_control',
+ 'connect',
+ 'connect_after',
+ 'connect_data',                                                              
+ 'connect_object',
+ 'connect_object_after',
+ 'contains',
+ 'copy_text',
+ 'cut_text',
+ 'dead',
+ 'debugName',
+ 'delete_text',
+ 'description',
+ 'deselect',
+ 'deselectAll',
+ 'deselect_child',
+ 'deselect_selected_child',
+ 'dialog',
+ 'disconnect',
+ 'disconnect_by_func',
+ 'doActionNamed',
+ 'do_action',
+ 'doubleClick',
+ 'dump',
+ 'emit',
+ 'emit_stop_by_name',
+ 'extents',
+ 'findAncestor',
+ 'findChild',
+ 'findChildren',
+ 'find_property',
+ 'focusable',
+ 'focused',
+ 'force_floating',
+ 'freeze_notify',
+ 'g_type_instance',
+ 'getAbsoluteSearchPath',
+ 'getApplication',
+ 'getAttributes',
+ 'getChildAtIndex',
+ 'getChildAtPoint',
+ 'getChildCount',
+ 'getIndexInParent',
+ 'getLocalizedRoleName',
+ 'getLogString',
+ 'getRelationSet',
+ 'getRelativeSearch',
+ 'getRole',
+ 'getRoleName',
+ 'getState',
+ 'getUserVisibleStrings',
+ 'getWnckApplication',
+ 'get_accessible_at',
+ 'get_accessible_at_point',
+ 'get_action',
+ 'get_alpha',
+ 'get_application',
+ 'get_atspi_version',
+ 'get_attribute_run',
+ 'get_attribute_value',
+ 'get_attributes',
+ 'get_attributes_as_array',
+ 'get_bounded_ranges',
+ 'get_caption',
+ 'get_caret_offset',
+ 'get_character_at_offset',
+ 'get_character_count',
+ 'get_character_extents',
+ 'get_child_at_index',
+ 'get_child_count',
+ 'get_collection',
+ 'get_column_at_index',
+ 'get_column_description',
+ 'get_column_extent_at',
+ 'get_column_header',
+ 'get_component',
+ 'get_current_value',
+ 'get_data',
+ 'get_default_attributes',
+ 'get_description',
+ 'get_document',
+ 'get_editable_text',
+ 'get_extents',
+ 'get_hyperlink',
+ 'get_hypertext',
+ 'get_id',
+ 'get_image',
+ 'get_image_description',
+ 'get_image_extents',
+ 'get_image_locale',
+ 'get_image_position',
+ 'get_image_size',
+ 'get_index_at',
+ 'get_index_in_parent',
+ 'get_interfaces',
+ 'get_key_binding',
+ 'get_layer',
+ 'get_link',
+ 'get_link_index',
+ 'get_locale',
+ 'get_localized_name',
+ 'get_localized_role_name',
+ 'get_matches',
+ 'get_matches_from',
+ 'get_matches_to',
+ 'get_maximum_value',
+ 'get_mdi_z_order',
+ 'get_minimum_increment',
+ 'get_minimum_value',
+ 'get_n_actions',
+ 'get_n_columns',
+ 'get_n_links',
+ 'get_n_rows',
+ 'get_n_selected_children',
+ 'get_n_selected_columns',
+ 'get_n_selected_rows',
+ 'get_n_selections',
+ 'get_name',
+ 'get_object_locale',
+ 'get_offset_at_point',
+ 'get_parent',
+ 'get_position',                                                              
+ 'get_process_id',
+ 'get_properties',
+ 'get_property',
+ 'get_qdata',
+ 'get_range_extents',
+ 'get_relation_set',
+ 'get_role',
+ 'get_role_name',
+ 'get_row_at_index',
+ 'get_row_column_extents_at_index',
+ 'get_row_description',
+ 'get_row_extent_at',
+ 'get_row_header',
+ 'get_selected_child',
+ 'get_selected_columns',
+ 'get_selected_rows',
+ 'get_selection',
+ 'get_size',
+ 'get_state_set',
+ 'get_summary',                                                               
+ 'get_table',
+ 'get_text',
+ 'get_text_after_offset',
+ 'get_text_at_offset',
+ 'get_text_before_offset',
+ 'get_toolkit_name',
+ 'get_toolkit_version',
+ 'get_value',
+ 'grabFocus',
+ 'grab_focus',
+ 'handler_block',
+ 'handler_block_by_func',
+ 'handler_disconnect',
+ 'handler_is_connected',
+ 'handler_unblock',
+ 'handler_unblock_by_func',
+ 'id',
+ 'indexInParent',
+ 'insert_text',
+ 'install_properties',                                                         
+ 'install_property',
+ 'interface_find_property',
+ 'interface_install_property',
+ 'interface_list_properties',
+ 'interfaces',
+ 'isChecked',
+ 'isChild',
+ 'isEqual',
+ 'isSelected',
+ 'is_ancestor_of',
+ 'is_child_selected',
+ 'is_column_selected',
+ 'is_floating',
+ 'is_row_selected',
+ 'is_selected',
+ 'keyCombo',
+ 'labelee',
+ 'labeler',
+ 'labellee',
+ 'labeller',                                                                   
+ 'list_properties',
+ 'maxValue',
+ 'menu',
+ 'menuItem',
+ 'minValue',
+ 'minValueIncrement',
+ 'name',
+ 'new',
+ 'notify',
+ 'notify_by_pspec',
+ 'objectLocale',
+ 'override_property',
+ 'parent',
+ 'paste_text',
+ 'path',
+ 'point',
+ 'position',
+ 'props',
+ 'qdata',
+ 'queryAction',                                                               
+ 'queryCollection',
+ 'queryComponent',
+ 'queryDocument',
+ 'queryEditableText',
+ 'queryHyperlink',
+ 'queryHypertext',
+ 'queryImage',
+ 'querySelection',
+ 'queryTable',
+ 'queryText',
+ 'queryValue',
+ 'ref',
+ 'ref_count',
+ 'ref_sink',
+ 'remove_column_selection',
+ 'remove_row_selection',
+ 'remove_selection',
+ 'replace_data',
+ 'replace_qdata',
+ 'role',                                                                      
+ 'roleName',
+ 'run_dispose',
+ 'satisfies',
+ 'select',
+ 'selectAll',
+ 'select_all',
+ 'select_child',
+ 'selected',
+ 'selectedChildren',
+ 'sensitive',
+ 'setCacheMask',
+ 'set_cache_mask',
+ 'set_caret_offset',
+ 'set_current_value',
+ 'set_data',
+ 'set_extents',
+ 'set_position',
+ 'set_properties',
+ 'set_property',
+ 'set_selection',                                                              
+ 'set_size',
+ 'set_text_contents',
+ 'showing',
+ 'size',
+ 'states',
+ 'steal_data',
+ 'steal_qdata',
+ 'stop_emission',
+ 'stop_emission_by_name',
+ 'tab',
+ 'text',
+ 'textentry',
+ 'thaw_notify',
+ 'toolkitName',
+ 'toolkitVersion',
+ 'typeText',
+ 'unref',
+ 'value',
+ 'watch_closure',
+ 'weak_ref',
+ 'window']
+
+
+
+>>> x.dump()                                                                            
+[application | remote-viewer]
+ [dialog | Connection details]
+  [filler | ]
+   [filler | ]
+    [label | Connection Address]
+    [text | ]
+     [action | activate | <Alt>c ]
+    [label | For example, spice://foo.example.org:5900]
+    [label | Recent Connections]
+    [filler | ]
+     [filler | ]
+      [scroll pane | ]
+       [table | ]
+        [table column header | meta]
+         [action | click |  ]
+        [table cell | /tmp/console.vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | console.vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | spice://spice-bkr02:5960]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | spice://spice-bkr02:5901]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | vnc://spice-bkr02:5900]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | /tmp/console-3.vv]
+         [action | edit |  ]
+         [action | activate |  ]                                               
+        [table cell | /home/astepano/Downloads/console(1).vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | console(1).vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | console-2.vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | /tmp/console-2.vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | console-1.vv]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]                                                
+        [table cell | spice://spice-bkr02:3000]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | spice://spice-bkr02:3001]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+        [table cell | vnc://spice-bkr02:3000]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+       [scroll bar | ]
+       [scroll bar | ]
+      [filler | ]
+       [combo box | ]
+        [action | press |  ]
+        [menu | ]
+   [filler | ]
+    [filler | ]
+     [push button | Cancel]
+      [action | click | <Alt>c ]
+     [push button | Connect]
+      [action | click | <Alt>o ]
+
+
+
+
+>>> x.dump()                                                                  
+[application | remote-viewer]
+ [frame | WIN-7-64:1 - Remote Viewer]
+  [filler | ]
+   [menu bar | ]
+    [menu | File]
+     [action | click | <Alt>f;<Alt>f; ]
+     [menu item | Screenshot]
+      [action | click |  ]
+     [menu item | USB device selection]
+      [action | click |  ]
+     [menu item | Smartcard insertion]
+     [menu item | Smartcard removal]
+     [separator | ]
+     [menu item | Quit]
+      [action | click | q;<Alt>f:q; ]
+    [menu | View]
+     [action | click | <Alt>v;<Alt>v; ]
+     [check menu item | Full screen]
+      [action | click | ;;<Shift>F11 ]
+     [menu | Zoom]                                                             
+      [action | click | z;<Alt>v:z; ]
+      [menu item | Zoom In]
+       [action | click | i;<Alt>v:z:i; ]
+      [menu item | Zoom Out]
+       [action | click | o;<Alt>v:z:o; ]
+      [separator | ]
+      [menu item | Normal Size]
+       [action | click | n;<Alt>v:z:n; ]
+     [menu | Displays]
+      [action | click |  ]
+      [check menu item | Display 1]
+       [action | click |  ]
+      [check menu item | Display 2]
+       [action | click |  ]
+      [check menu item | Display 3]
+       [action | click |  ]
+      [check menu item | Display 4]
+       [action | click |  ]
+     [menu item | Release cursor]
+    [menu | Send key]                                                          
+     [action | click | <Alt>s;<Alt>s; ]
+     [menu item | Ctrl+Alt+Del]
+      [action | click | d;<Alt>s:d;<Primary><Alt>End ]
+     [menu item | Ctrl+Alt+Backspace]
+      [action | click | b;<Alt>s:b; ]
+     [separator | ]
+     [menu item | Ctrl+Alt+F1]
+      [action | click | 1;<Alt>s:1; ]
+     [menu item | Ctrl+Alt+F2]
+      [action | click | 2;<Alt>s:2; ]
+     [menu item | Ctrl+Alt+F3]
+      [action | click | 3;<Alt>s:3; ]
+     [menu item | Ctrl+Alt+F4]
+      [action | click | 4;<Alt>s:4; ]
+     [menu item | Ctrl+Alt+F5]
+      [action | click | 5;<Alt>s:5; ]
+     [menu item | Ctrl+Alt+F6]
+      [action | click | 6;<Alt>s:6; ]
+     [menu item | Ctrl+Alt+F7]
+      [action | click | 7;<Alt>s:7; ]                                          
+     [menu item | Ctrl+Alt+F8]
+      [action | click | 8;<Alt>s:8; ]
+     [menu item | Ctrl+Alt+F9]
+      [action | click | 9;<Alt>s:9; ]
+     [menu item | Ctrl+Alt+F10]
+      [action | click | 0;<Alt>s:0; ]
+     [menu item | Ctrl+Alt+F11]
+      [action | click |  ]
+     [menu item | Ctrl+Alt+F12]
+      [action | click |  ]
+     [separator | ]
+     [menu item | PrintScreen]
+      [action | click | p;<Alt>s:p; ]
+     [menu item | Ctrl+Alt+End]
+      [action | click |  ]
+     [menu item | Shift+F12]
+      [action | click |  ]
+     [menu item | Shift+F11]
+      [action | click |  ]
+    [menu | Help]                                                               
+     [action | click | <Alt>h;<Alt>h; ]
+     [menu item | Guest Details]
+      [action | click | g;<Alt>h:g; ]
+     [menu item | About]
+      [action | click | a;<Alt>h:a; ]
+   [filler | ]
+    [panel | ]
+     [tool bar | ]
+      [panel | ]
+       [push button | Leave fullscreen]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+        [action | click |  ]
+      [panel | ]
+       [push button | USB device selection]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+ [action | click |  ]
+    [page tab list | ]
+     [page tab | ]
+      [label | Waiting for display 1...]
+     [page tab | ]
+      [panel | ]
+       [drawing area | ]
+
+
+
+
+error.dump()
+[alert | Error]
+ [filler | ]
+  [label |  ]
+ [filler | ]
+  [filler | ]
+   [filler | ]
+    [label | Unable to connect to the graphic server spice://spice-bkr02:5901]
+    [label | Could not connect to spice-bkr02: Connection refused]
+  [filler | ]
+   [filler | ]
+    [push button | OK]
+     [action | click | <Alt>o ]
+
+
+
+>>> auth = a.children[1]                                                                
+>>> auth.dump()
+[dialog | Authentication required]
+ [filler | ]
+  [label | Authentication is required for the SPICE connection:
+]
+  [panel | ]
+   [check box | Show password]
+    [action | click |  ]
+   [password text | ]
+    [action | activate |  ]
+   [text | ]
+    [action | activate |  ]
+   [label | Username:]
+   [label | Password:]
+  [filler | ]
+   [filler | ]
+    [push button | Cancel]
+    [action | click | <Alt>c ]
+    [push button | OK]
+     [action | click | <Alt>o ]
+
+
+
+
+
+
+panel = about.findChildren(predicate.GenericPredicate(roleName='panel'))[1]
+
+>>> about.findChildren(predicate.GenericPredicate(roleName='panel'))[1].dump()          
+[panel | ]
+ [filler | ]
+  [label | 2.0-7.el7]
+  [label | A remote desktop client built with GTK-VNC, SPICE-GTK and libvirt]
+  [filler | ]
+   [label | virt-manager.org]
+    [link | ]
+    [label | virt-manager.org]
+     [link | ]
+     [label | virt-manager.org]
+      [link | ]
+      [label | virt-manager.org]
+       [link | ]
+       [label | virt-manager.org]
+
+
+
+
+>>> filler = panel.children[0]
+>>> filler.children[0]
+<Accessible object at 0x1906870 (AtspiAccessible at 0x1acfd00)>
+>>> filler = panel.children[0]                                                          
+>>> filler.children[0].dump()                                                           
+[label | 2.0-7.el7]
+>>> filler.children[1].dump()                                                           
+[label | A remote desktop client built with GTK-VNC, SPICE-GTK and libvirt]
+>>> filler.children[3].dump()
+[label | Copyright (C) 2007-2012 Daniel P. Berrange
+Copyright (C) 2007-2014 Red Hat, Inc.]
+>>> filler.children[4].dump()
+[label | license]
+
+
+
+
+
+
+[application | remote-viewer]
+ [frame | spice://spice-bkr02:5960 (1) - Remote Viewer]
+  [filler | ]
+   [menu bar | ]
+    [menu | File]
+     [action | click | <Alt>f;<Alt>f; ]
+     [menu item | Screenshot]
+      [action | click |  ]
+     [menu item | USB device selection]
+     [menu item | Smartcard insertion]
+     [menu item | Smartcard removal]
+     [separator | ]
+     [menu item | Quit]
+      [action | click | q;<Alt>f:q; ]
+    [menu | View]
+     [action | click | <Alt>v;<Alt>v; ]
+     [check menu item | Full screen]
+      [action | click | ;;F11 ]
+     [menu | Zoom]
+      [action | click | z;<Alt>v:z; ]
+      [menu item | Zoom In]
+       [action | click | i;<Alt>v:z:i;<Primary>plus ]
+      [menu item | Zoom Out]
+       [action | click | o;<Alt>v:z:o;<Primary>minus ]
+      [separator | ]
+      [menu item | Normal Size]
+       [action | click | n;<Alt>v:z:n;<Primary>0 ]
+     [menu | Displays]
+      [action | click |  ]
+      [check menu item | Display 1]
+       [action | click |  ]
+     [menu item | Release cursor]
+    [menu | Send key]
+     [action | click | <Alt>s;<Alt>s; ]
+     [menu item | Ctrl+Alt+Del]
+      [action | click | d;<Alt>s:d;<Primary><Alt>End ]
+     [menu item | Ctrl+Alt+Backspace]
+      [action | click | b;<Alt>s:b; ]
+     [separator | ]
+     [menu item | Ctrl+Alt+F1]
+      [action | click | 1;<Alt>s:1; ]
+     [menu item | Ctrl+Alt+F2]
+      [action | click | 2;<Alt>s:2; ]
+     [menu item | Ctrl+Alt+F3]
+      [action | click | 3;<Alt>s:3; ]
+     [menu item | Ctrl+Alt+F4]
+      [action | click | 4;<Alt>s:4; ]
+     [menu item | Ctrl+Alt+F5]
+      [action | click | 5;<Alt>s:5; ]
+     [menu item | Ctrl+Alt+F6]
+      [action | click | 6;<Alt>s:6; ]
+     [menu item | Ctrl+Alt+F7]
+      [action | click | 7;<Alt>s:7; ]
+     [menu item | Ctrl+Alt+F8]
+      [action | click | 8;<Alt>s:8; ]
+     [menu item | Ctrl+Alt+F9]
+      [action | click | 9;<Alt>s:9; ]
+     [menu item | Ctrl+Alt+F10]
+      [action | click | 0;<Alt>s:0; ]
+     [menu item | Ctrl+Alt+F11]
+      [action | click |  ]
+     [menu item | Ctrl+Alt+F12]
+      [action | click |  ]
+     [separator | ]
+     [menu item | PrintScreen]
+      [action | click | p;<Alt>s:p; ]
+    [menu | Help]
+     [action | click | <Alt>h;<Alt>h; ]
+     [menu item | Guest Details]
+      [action | click | g;<Alt>h:g; ]
+     [menu item | About]
+      [action | click | a;<Alt>h:a; ]
+   [filler | ]
+    [panel | ]
+     [tool bar | ]
+      [panel | ]
+       [push button | Leave fullscreen]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+        [action | click |  ]
+      [panel | ]
+       [push button | USB device selection]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+        [action | click |  ]  ----- CLOSE
+    [page tab list | ]
+     [page tab | ]
+      [label | Connected to graphic server]
+     [page tab | ]
+      [panel | ]
+       [drawing area | ]
+ [dialog | About Virtual Machine Viewer]
+  [panel | ]
+   [filler | ]
+    [radio button | About]
+     [action | click |  ]
+    [radio button | Credits]
+     [action | click |  ]
+    [radio button | License]
+     [action | click |  ]
+  [filler | ]
+   [filler | ]
+    [icon | ]
+    [label | Virtual Machine Viewer]
+    [panel | ]
+     [filler | ]
+      [label | 2.0-7.el7]
+      [label | A remote desktop client built with GTK-VNC, SPICE-GTK and libvirt]
+      [filler | ]
+       [label | virt-manager.org]
+        [link | ]
+      [label | Copyright (C) 2007-2012 Daniel P. Berrange
+Copyright (C) 2007-2014 Red Hat, Inc.]
+      [label | license]
+     [filler | ]
+      [scroll pane | ]
+       [viewport | ]
+        [panel | ]
+         [label | ]
+         [label | The Fedora Translation Team]
+         [label | Translated by]
+         [label | ]
+         [label | ]
+         [label | Marc-André Lureau]
+         [label | Daniel P. Berrange]
+         [label | Created by]
+       [scroll bar | ]
+       [scroll bar | ]
+     [filler | ]
+      [scroll pane | ]
+       [viewport | ]
+        [panel | ]
+       [scroll bar | ]
+       [scroll bar | ]
+     [filler | ]
+      [scroll pane | ]
+       [text | ]
+       [scroll bar | ]
+       [scroll bar | ]
+   [filler | ]
+    [filler | ]
+>
+
+
+
+
+
+
+>>> z.dump()
+[application | remote-viewer]
+ [frame | spice://spice-bkr02:5960 (1) - Remote Viewer]
+  [filler | ]
+   [menu bar | ]
+    [menu | File]
+     [action | click | <Alt>f;<Alt>f; ]
+     [menu item | Screenshot]
+      [action | click |  ]
+     [menu item | USB device selection]
+     [menu item | Smartcard insertion]
+     [menu item | Smartcard removal]
+     [separator | ]
+     [menu item | Quit]
+      [action | click | q;<Alt>f:q; ]
+    [menu | View]
+     [action | click | <Alt>v;<Alt>v; ]
+     [check menu item | Full screen]
+      [action | click | ;;F11 ]
+     [menu | Zoom]
+      [action | click | z;<Alt>v:z; ]
+      [menu item | Zoom In]
+       [action | click | i;<Alt>v:z:i;<Primary>plus ]
+      [menu item | Zoom Out]
+       [action | click | o;<Alt>v:z:o;<Primary>minus ]
+      [separator | ]
+      [menu item | Normal Size]
+       [action | click | n;<Alt>v:z:n;<Primary>0 ]
+     [menu | Displays]
+      [action | click |  ]
+      [check menu item | Display 1]
+       [action | click |  ]
+     [menu item | Release cursor]
+    [menu | Send key]
+     [action | click | <Alt>s;<Alt>s; ]
+     [menu item | Ctrl+Alt+Del]
+      [action | click | d;<Alt>s:d;<Primary><Alt>End ]
+     [menu item | Ctrl+Alt+Backspace]
+      [action | click | b;<Alt>s:b; ]
+     [separator | ]
+     [menu item | Ctrl+Alt+F1]
+      [action | click | 1;<Alt>s:1; ]
+     [menu item | Ctrl+Alt+F2]
+      [action | click | 2;<Alt>s:2; ]
+     [menu item | Ctrl+Alt+F3]
+      [action | click | 3;<Alt>s:3; ]
+     [menu item | Ctrl+Alt+F4]
+      [action | click | 4;<Alt>s:4; ]
+     [menu item | Ctrl+Alt+F5]
+      [action | click | 5;<Alt>s:5; ]
+     [menu item | Ctrl+Alt+F6]
+      [action | click | 6;<Alt>s:6; ]
+     [menu item | Ctrl+Alt+F7]
+      [action | click | 7;<Alt>s:7; ]
+     [menu item | Ctrl+Alt+F8]
+      [action | click | 8;<Alt>s:8; ]
+     [menu item | Ctrl+Alt+F9]
+      [action | click | 9;<Alt>s:9; ]
+     [menu item | Ctrl+Alt+F10]
+      [action | click | 0;<Alt>s:0; ]
+     [menu item | Ctrl+Alt+F11]
+      [action | click |  ]
+     [menu item | Ctrl+Alt+F12]
+      [action | click |  ]
+     [separator | ]
+     [menu item | PrintScreen]
+      [action | click | p;<Alt>s:p; ]
+    [menu | Help]
+     [action | click | <Alt>h;<Alt>h; ]
+     [menu item | Guest Details]
+      [action | click | g;<Alt>h:g; ]
+     [menu item | About]
+      [action | click | a;<Alt>h:a; ]
+   [filler | ]
+    [panel | ]
+     [tool bar | ]
+      [panel | ]
+       [push button | Leave fullscreen]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+        [action | click |  ]
+      [panel | ]
+       [push button | USB device selection]
+        [action | click |  ]
+      [panel | ]
+       [push button | ]
+        [action | click |  ]
+    [page tab list | ]
+     [page tab | ]
+      [label | Connected to graphic server]
+     [page tab | ]
+      [panel | ]
+       [drawing area | ]
+ [file chooser | Save screenshot]
+  [panel | ]
+   [push button | Cancel]
+    [action | click | <Alt>c ]
+   [push button | Save]
+    [action | click | <Alt>s ]
+  [filler | ]
+   [filler | ]
+    [filler | ]
+     [panel | ]
+      [text | ]
+       [action | activate | <Alt>n ]
+      [label | Name:]
+    [filler | ]
+     [split pane | ]
+      [scroll pane | ]
+       [table | ]
+        [table column header | ]
+         [action | click |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Recent]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Recent]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Home]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Home]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Downloads]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Downloads]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Pictures]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Pictures]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Enter Location]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Enter Location]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | 250 GB Volume]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | 250 GB Volume]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | 524 MB Volume]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | 524 MB Volume]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Computer]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Computer]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Documents]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Documents]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Music]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Music]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Videos]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | Videos]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+        [table cell | ]
+         [action | edit |  ]
+         [action | expand or contract |  ]
+         [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | usr]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | ]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+         [table cell | usr]
+          [action | edit |  ]
+          [action | expand or contract |  ]
+          [action | activate |  ]
+       [scroll bar | ]
+       [scroll bar | ]
+      [filler | ]
+       [filler | ]
+        [panel | ]
+         [filler | ]
+          [panel | ]
+           [toggle button | Pictures]
+            [action | click |  ]
+           [toggle button | astepano]
+            [action | click |  ]
+           [toggle button | home]
+            [action | click |  ]
+           [toggle button | File System Root]
+            [action | click |  ]
+           [push button | Up Path]
+            [action | click |  ]
+           [push button | Down Path]
+            [action | click |  ]
+          [push button | Create Folder]
+           [action | click | <Alt>l ]
+         [filler | ]
+          [label | Location:]
+       [panel | ]
+        [panel | ]
+         [filler | ]
+          [filler | ]
+          [filler | ]
+           [text | Search]
+            [action | activate |  ]
+            [icon | edit-find-symbolic]
+          [filler | ]
+           [push button | ]
+            [action | click |  ]
+       [filler | ]
+        [scroll pane | ]
+         [table | Files]
+          [table column header | Name]
+           [action | click |  ]
+          [table column header | Size]
+           [action | click |  ]
+          [table column header | Modified]
+           [action | click |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2015-12-23 11:56:22.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 412.8 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 12/23/2015]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-08 16-12-25.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 615.1 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/08/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-08 16-15-05.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 494.0 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/08/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-09 14-17-26.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 19.3 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/09/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-15 15-26-55.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 368.5 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/15/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-16 17-13-42.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 111.0 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/16/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-19 10-57-48.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 798.5 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/19/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-22 17-30-01.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 49.5 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/22/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-02-26 14-35-29.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 448.7 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 02/26/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-03-30 16-59-37.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 79.9 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 03/30/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Screenshot from 2016-04-04 18-37-50.png]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | 104.8 kB]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 04/04/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+           [table cell | ]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+           [table cell | Webcam]
+            [action | edit |  ]
+            [action | expand or contract |  ]
+            [action | activate |  ]
+          [table cell | ]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+          [table cell | 04/22/2016]
+           [action | edit |  ]
+           [action | expand or contract |  ]
+           [action | activate |  ]
+         [scroll bar | ]
+         [scroll bar | ]
+        [filler | ]
+    [panel | ]
+     [filler | ]
+     [filler | ]
+      [combo box | ]
+       [action | press |  ]
+       [menu | ]
+   [filler | ]
+    [filler | ]
+
+
+
+      [label | Waiting for display 1...]
+     [page tab | ]
+      [panel | ]
+       [drawing area | ]
+[dialog | Select USB devices for redirection]
+  [filler | ]
+   [filler | ]
+    [label | Select USB devices to redirect (0 free channels)]
+    [panel | ]
+     [info bar | Information]
+      [panel | ]
+       [filler | ]
+        [filler | ]
+         [filler | ]
+          [icon | Warning]
+          [label | The connected VM is not configured for USB redirection]
+        [filler | ]
+        [push button | ]
+         [action | click |  ]
+    [panel | ]
+     [check box | Lenovo ThinkPad USB Laser Mouse]
+      [action | click |  ]
+    [panel | ]
+     [check box | Elechouse USB NFC Device]
+      [action | click |  ]
+    [panel | ]
+     [check box | Cherry GmbH CyMotion Master Linux Keyboard G230]
+      [action | click |  ]
+    [panel | ]
+     [check box | Validity Sensors, Inc. Fingerprint Reader]
+      [action | click |  ]
+    [panel | ]
+     [check box | SunplusIT INC. Integrated Camera]
+      [action | click |  ]
+    [panel | ]
+     [check box | Intel Corp. Device]
+      [action | click |  ]
+   [filler | ]
+    [filler | ]
+     [push button | Close]
+      [action | click | <Alt>c ]
+
+

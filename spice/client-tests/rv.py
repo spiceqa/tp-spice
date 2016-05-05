@@ -1,331 +1,741 @@
 #!/usr/bin/python
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
+
+"""Manipulate remote-viewer GUI by using dogtail.
+
+Requires
+--------
+    dogtail.
+    running remote-viewer.
+
+Notes
+-----
+    Prior to running the rv interaction commands run the following calls:
+
+        remote = RemoteViewer()
+
+    initializes with the display of remote-viewer you want control over.
+    remote.open() - opens or verifies the display is open
+    remote.raise_window() - grab focus on the remote-viewers drawing area.
+
 """
-remote_viewer.py - class to manipulate the remote-viewer application with the GUI by using dogtail.
 
-Requires: dogtail, assumes remote-viewer is already running.
-
-Usage Notes: Prior to running the rv interaction commands run the following calls:
-
-remote = RemoteViewer() - initialize with the display of remote-viewer you want control over.
-if not(remote.rv_available()):
-    print "Remote_Viewer is not available"
-    sys.exit(1)
-- verify remote_viewer is available, exit if not
-remote.open() - opens or verifies the display is open
-remote.raise_window() - grab focus on the remote-viewers drawing area.
-
-"""
-
-from dogtail.tree import *
-from dogtail.procedural import *
-from time import sleep
+import os
+import sys
+import logging
+from dogtail import tree
+from dogtail import predicate
+import platform
+import time
 import subprocess
 
-class RemoteViewer(Window):
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+import retries
 
-    main = ""
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-    def __init__(self, display = 1):
-        self.display = display
-        self.window = ""
-        self.widget = ""
-        self.about = ""
-        output = subprocess.Popen("cat /etc/redhat-release", stdout=subprocess.PIPE, shell=True).communicate()[0]
-        #output = subprocess.check_output("cat /etc/redhat-release", shell=True)
-        self.isRHEL7 = "release 7." in output
-         
 
-    def rv_available(self):
+class GeneralError(Exception):
+    pass
+
+
+def is_rhel7():
+    return '7.' in platform.dist()[1]
+
+
+def do_click(node):
+    is_showing(node)
+    if node.roleName == 'menu' \
+            or node.roleName == 'radio button':
+        click_and_focused(node)
+    if node.roleName == 'menu item' \
+            or node.roleName == 'check menu item':
+        point_and_focused(node)
+        node.click()
+    if node.roleName == 'push button':
+        point_and_pointed(node)
+        node.click()
+
+
+@retries.retries(5, exceptions=(AssertionError,))
+def is_focused(node):
+    try:
+        assert node.focused
+    finally:
+        logger.info("Node [%s | %s] is: not focused.", node.roleName,
+                    node.name)
+    logger.info("Node [%s | %s] is: focused.", node.roleName, node.name)
+
+
+@retries.retries(5, exceptions=(AssertionError,))
+def is_showing(node):
+    try:
+        assert node.showing
+    finally:
+        logger.info("Node [%s | %s] is: not showing.", node.roleName,
+                    node.name)
+    logger.info("Node [%s | %s] is: showing.", node.roleName, node.name)
+
+
+@retries.retries(5, exceptions=(AssertionError,))
+def click_and_focused(node):
+    node.click()
+    try:
+        assert node.focused
+    finally:
+        logger.info("Click for node [%s | %s]: failed.", node.roleName,
+                    node.name)
+    logger.info("Click for node [%s | %s]: success.", node.roleName, node.name)
+
+@retries.retries(5, exceptions=(AssertionError,))
+def point_and_focused(node):
+    node.point()
+    try:
+        assert node.focused
+    finally:
+        logger.info("Focus for node [%s | %s]: failed.", node.roleName,
+                    node.name)
+    logger.info("Focus for node [%s | %s]: success.", node.roleName, node.name)
+
+
+@retries.retries(5, exceptions=(AssertionError,))
+def point_and_pointed(node):
+    node.point()
+    try:
+        assert node.position[0] >= 0
+        assert node.position[1] >= 0
+        pointX = node.position[0] + node.size[0] / 2
+        pointY = node.position[1] + node.size[1] / 2
+        assert node.parent.getChildAtPoint(pointX, pointY) == node
+    finally:
+        logger.info("Point for node [%s | %s]: failed.", node.roleName,
+                    node.name)
+    logger.info("Point for node [%s | %s]: success.", node.roleName, node.name)
+
+
+class Display(object):
+
+    def __init__(self, application, num):
+        self.application = application  # Application object
+        self.app = application.app      # Dogtail object
+        self.num = num
+        self.dsp = Display.get(self.app, num)  # Dogtail object
+        self.drawing_area = self.dsp.child(roleName='drawing area')
+
+    @staticmethod
+    def get(app, num):
+        label_name = 'Waiting for display %s...' % num
+        retry = True
+        if str(num) == str(1):
+            # Do not retry search in case Display#1 is requrested. As it be done
+            # further.
+            retry = False
         try:
-            RemoteViewer.main = root.application('remote-viewer')
-        except SearchError:
-            return False
-        return True
+            node = app.child(roleName='label', name=label_name, retry=retry)
+        except tree.SearchError:
+            # Fail back to case where spice-vdagent is absent, and exists only one
+            # display.
+            if str(num) != str(1):
+                raise GeneralError('Cannot find display %s.' % num)
+            node = app.child(roleName='drawing area')
+        pred = predicate.IsAWindow()
+        dsp = node.findAncestor(pred)
+        return dsp
 
-    def open(self):
-        if not self.is_checked():
-            RemoteViewer.main.child('View').click()
-            sleep(1)
-            RemoteViewer.main.child('Displays').click()
-            sleep(1)  
-            RemoteViewer.main.child('Display %d' % self.display).click()
-        self.window = RemoteViewer.main.children[self.display-1]
-        return self.is_open()
+    @staticmethod
+    def make(application, num, method):
+        for cls in Display.__subclasses__():
+            if cls.is_for(method):
+                return cls(application, num)
+        raise ValueError
 
-    def close(self, menu = False):
-        if self.is_checked():
-            if menu:
-                self.window.child('View').click()
-                sleep(1)
-                self.window.child('Displays').click()  
-                self.window.child('Display %d' % self.display).click()
-                return
-            else:
-                self.keyCombo('<Alt>F4')                
-        return not(self.rv_available())
-#        return self.is_open()
 
-    def is_open(self):
-        for display, window in enumerate(RemoteViewer.main.children, start = 1):
-            if '(%d)' % self.display in window.name:
-                return display
-        return False
 
-    def is_checked(self):
-        return root.application('remote-viewer').child('Display %d' % self.display).isChecked
+    def typeText(self, text):
+        logger.info("Display #%s, type text: %s", self.num, text)
+        return self.dsp.window.typeText(text)
 
-    def menu_focus(self):
-        sleep(1)
-        self.window.child('View').click()
-        sleep(1)
-        self.window.child('View').click()
-        sleep(1)
 
-    def zoom_in(self, menu = True):
-        if self.isRHEL7:
-            if menu:
-                zoomin = self.window.child('Zoom In')
-                zoomin.doActionNamed('click')
-            else:
-                self.keyCombo('<Control>plus')
+    def key_combo(self, combo):
+        self.push_front()
+        if self.is_fullscreen():
+            # remote-viewer intercepts _all_ keys. It is necessary to point to
+            # some RV widget.
+            n = self.dsp.button('Leave fullscreen')
+            point_and_pointed(n)
+            # rawinput.absoluteMotion(xcord, 0)
         else:
-            attempt = 1
-            failed = 0
-            if menu:
-                self.window.child('View').click()
-                sleep(1)
-                while attempt < 5: 
-                    self.window.child('Zoom').click()
-                    sleep(2)
-                    attempt += 1
-                    if attempt == 5:
-                       failed = 1
-                    if self.window.child('Zoom In').showing:
-                        attempt = 5
-                self.window.child('Zoom In').click()
-                return failed
-            self.keyCombo('<Control>plus')
-
-    def zoom_out(self, menu = True):
-        if self.isRHEL7:
-            if menu:
-                zoomin = self.window.child('Zoom Out')
-                zoomin.doActionNamed('click')
-            else:
-                self.keyCombo('<Control>minus')
-        else:
-            attempt = 1
-            failed = 0
-            if menu:
-                self.window.child('View').click()
-                sleep(1)
-                while attempt <5:
-                    self.window.child('Zoom').click()
-                    sleep(2)
-                    attempt += 1
-                    if attempt == 5:
-                        failed =1
-                    if self.window.child('Zoom Out').showing:
-                        attempt = 5
-                self.window.child('Zoom Out').click()
-                return failed
-            self.keyCombo('<Control>minus')
-
-    def zoom_norm(self, menu = True):
-        if self.isRHEL7:
-            if menu:
-                zoomin = self.window.child('Normal Size')
-                zoomin.doActionNamed('click')
-            else:
-                self.keyCombo("<Control>0")
-        else:
-            attempt = 1
-            failed = 0
-            if menu:
-                self.window.child('View').click()
-                sleep(1)
-                while attempt <5:
-                    self.window.child('Zoom').click()
-                    sleep(2)
-                    attempt += 1
-                    if attempt == 5:
-                        failed =1
-                    if self.window.child('Normal Size').showing:
-                       attempt = 5
-
-                self.window.child('Normal Size').click()
-                return failed
-            #I believe the commented out keycombo should work
-            #not sure if the way it does work is just a workaround.
-            #self.keyCombo("<Control>0")
-            self.keyCombo("<Control>_0")
+            point_and_pointed(self.dsp.menu('File'))
+        logger.info("Display #%s, send key combo: %s", self.num, combo)
+        self.drawing_area.keyCombo(combo)
 
 
-    def fullscreen_toggle(self, menu = False):
-        if menu:
-            self.window.child('View').click()
-            sleep(1)
-            self.window.child('Full screen').click()
-            sleep(1)
-            return
-        self.keyCombo('F11')
+    def push_front(self):
+        self.drawing_area.grabFocus()
+        is_focused(self.drawing_area)
+        # time.sleep(1) -- It is wrong way to do. Do it in correct way:
+        check_cmd = ["xdotool", "getactivewindow", "getwindowpid"]
+        pid_req = self.dsp.get_process_id()
+        for i in range(10):
+            pid = subprocess.check_output(check_cmd)
+            pid = int(pid.rstrip('\n'))
+            if pid_req == pid:
+                break
+            logger.info("Active PID: %s, required PID: %s. Waiting #%s.", pid,
+                        pid_req, i)
+            time.sleep(i)
+        assert pid_req == pid
+
 
     def is_fullscreen(self):
-        return root.application('remote-viewer').child('Full screen').isChecked
+        flag = self.dsp.menu('View').menuItem('Full screen').isChecked
+        if flag:
+            virt_dsp_pos = self.dsp.position
+            # .. todo:: compare with actual client's resolution.
+            if virt_dsp_pos != (0, 0):
+                err_msg = "Wrong position %s." % str(virt_dsp_pos)
+                raise GeneralError(err_msg)
+        return flag
 
-    def leave_fullscreen(self, menu = False):
-        if self.isRHEL7:
-            if menu:
-                leavefullscreen = self.window.child('Leave fullscreen')
-                leavefullscreen.doActionNamed('click')
-            else:
-                sleep(3)
-                xcord = self.window.size[0]/2
-                print xcord
-                rawinput.absoluteMotion(xcord, 0)
-                keyCombo('F11')
-                #rawinput.pressKey('F11')
+
+    def is_window(self):
+        return not self.is_fullscreen()
+
+
+    def fullscreen_on(self):
+        raise NotImplementedError()
+
+
+    def fullscreen_off(self):
+        raise NotImplementedError()
+
+
+    def zoom(self, direction):
+        raise NotImplementedError()
+
+
+    def vm_sendkey(self, key):
+        raise NotImplementedError()
+
+
+    def screenshot(self, save_as):
+        raise NotImplementedError()
+
+
+    def closeabout(self):
+        assert self.is_window()
+        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about.keyCombo('Esc')
+
+
+class DisplayMouse(Display):
+
+    @classmethod
+    def is_for(cls, method):
+        return method == 'mouse'
+
+    def app_quit(self):
+        logger.info("Close app by accessing Quit menu entry.")
+        self.push_front()
+        if self.is_window():
+            n = self.dsp.menu('File')
+            do_click(n)
+            n = self.dsp.menu('File').menuItem('Quit')
+            do_click(n)
+        elif self.is_fullscreen():
+            # Button doesn't have a name. See dogtail dump(). Reffer by index.
+            panel = self.dsp.button('Leave fullscreen').parent.parent
+            n = panel.findChildren(
+                # 3 - button #4.
+                predicate.GenericPredicate(roleName='push button'))[3]
+            do_click(n)
         else:
-            #first only brings focus to the panel that contains the Leave fullscreenoption
-            self.window.children[0].children[1].children[0].click()
-            #self.window.child('Leave fullscreen').click()
-            sleep(2)
-            #Now the operation to leave fullscreen will be performed
-            if menu:
-                if self.window.child('Leave fullscreen').showing:
-                    self.window.child('Leave fullscreen').click()
-                    return
-                else:
-                    #calling the leave full screen twice
-                    print "Not showing"
-                    self.window.child('Leave fullscreen').click()
-                    self.window.child('Leave fullscreen').click()
-                    return
-            keyCombo('F11')
-        
-    def is_autoresize(self):
-        return self.window.child('Automatically resize').isChecked
+            raise NotImplementedError()
+        assert self.app.dead
 
-    def toggle_autoresize(self):
-        self.window.child('View').click()
-        sleep(1)
-        self.window.child('Automatically resize').click()
+    def open(self, num):
+        assert self.application.dsp_is_inactive(num)
+        self.toggle(num)
+        assert self.application.dsp_is_active(num)
 
-    def get_widget(self):
-        return self.window.children[0].children[1].children[1].children[1].children[0].children[0]
-
-    def raise_window(self):
-        self.get_widget().grabFocus()
-
-    def keyCombo(self, combo, widget = False):
-        if widget:
-            return self.get_widget().keyCombo(combo)        
-        return self.window.keyCombo(combo)
-        
-    def typeText(self, text, widget = False):
-        if widget:
-           return self.get_widget().typeText(text)
-        return self.window.typeText(text)
-
-    def SendKey_Menu(self, key):
-        """
-        Valid values for key are:
-        Ctrl+Alt+Del, Ctrl+Alt+Backspace
-        Ctrl+Alt+F1, Ctrl+Alt+F2, Ctrl+Alt+F3, Ctrl+Alt+F4
-        Ctrl+Alt+F5, Ctrl+Alt+F6, Ctrl+Alt+F7, Ctrl+Alt+F8
-        Ctrl+Alt+F9, Ctrl+Alt+F10, Ctrl+Alt+F11, Ctrl+Alt+F12
-        PrintScreen
-        """
-        self.window.child('Send key').click()
-        sleep(1)
-        
-        try:
-            self.window.child(key).click()
-        except SearchError:
-            return False
-        return True
-        
-
-    def help(self, menu = True):
-        if menu:
-            self.window.child('Help').click()
-            sleep(1)
-            self.window.child('About').click()
-
-            #Verify there is a Credits, License, and Close button
-            try:
-                #self.about = RemoteViewer.main.children[-1]
-                self.about = RemoteViewer.main.child("About Virtual Machine Viewer",roleName = "dialog")
-                verifylist = []
-                verifylist.append(self.about.childNamed('Credits').roleName == "push button")
-                verifylist.append(self.about.childNamed('License').roleName == "push button")
-                verifylist.append(self.about.childNamed('Close').roleName == "push button")
-                #verify Credits, License, and Close are all push buttons:
-                if all(bool for bool in verifylist):
-                    return self.about.children[0].children[0].children[1].text
-                else:
-                    return "None"
-            except SearchError:
-                return "None"
-        return "None"
-    
-    def help_license(self, menu = True):
-        self.help()
-        self.about.child('License').click()
-        license = RemoteViewer.main.child("License",roleName = "dialog")
-        #print license.text#license.dump()
-        return license.children[0].children[0].children[0].text
- 
-    def help_credits(self, menu = True):
-        credits_info_list = [] 
-        self.help()
-        self.about.child('Credits').click()
-        credits = RemoteViewer.main.child("Credits",roleName = "dialog")
-        credits.child("Written by").click()
-        credits_info_list.append(credits.child("Written by").children[0].children[0].text)
-        credits.child("Translated by").click()
-        credits_info_list.append(credits.child("Translated by").children[0].children[0].text)
-          
-        return credits_info_list
-   
-    def closeabout(self, menu = True):
-        self.about = RemoteViewer.main.child("About Virtual Machine Viewer",roleName = "dialog")
-        #Close any subdialogs if they exist (License or Credits)
-        try:
-            license = RemoteViewer.main.child("License",roleName = "dialog")
-            license.child('Close').click()
-        except SearchError:
-            pass
-        try:
-            credits = RemoteViewer.main.child("Credits",roleName = "dialog")
-            credits.child('Close').click()
-        except SearchError:
-            pass
-        self.about.child('Close').click()
-        #RemoteViewer.main.children[-1].childNamed('Close').click()
-
-    def quit(self, menu = False):
-        if menu:
-            self.window.child('File').click()
-            sleep(1)
-            self.window.child('Quit').click()
+    def close(self, num):
+        assert self.application.dsp_is_active(num)
+        self.toggle(num)
+        if self.app.dead:
+            # RV auto-closes when last display is closed.
             return
-        self.keyCombo('<Control><Shift>Q')
+        assert self.application.dsp_is_inactive(num)
 
-    def screenshot(self, name = None):
-        self.window.child('File').click()
-        self.window.child('Screenshot').click()
-        if name:
-            root.application('remote-viewer').children[-1].childLabelled('Name:').text = name
-        root.application('remote-viewer').children[-1].child('Save').click()
+    def toggle(self, num):
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('View')
+        do_click(n)
+        n = self.dsp.menu('View').menu('Displays')
+        point_and_focused(n)
+        display = 'Display %d' % num
+        n = self.dsp.menu('View').menu('Displays').menuItem(display)
+        do_click(n)
 
-    def connect(self, url):
-        #This must be called prior to calling open, since there are no display windows.
-        Dialog = RemoteViewer.main.child('Connection details')
-        URLTextField = Dialog.children[0].children[0].children[0]
-        URLTextField.grabFocus()
-        sleep(1)
-        URLTextField.typeText(url)
-        sleep(1)
-        Dialog.child('Connect').click()
-        
+    def zoom(self, direction='normal'):
+        assert self.is_window()
+        self.push_front()
+        logger.info("Display #%s do zoom: %s", self.num, direction)
+        menu = {'in': 'Zoom In',
+                'out': 'Zoom Out',
+                'normal': 'Normal Size'}
+        menu_item = menu[direction]
+        n = self.dsp.menu('View')
+        do_click(n)
+        n = self.dsp.menu('View').menu('Zoom')
+        point_and_focused(n)
+        n = self.dsp.menu('View').menu('Zoom').menuItem(menu_item)
+        do_click(n)
+
+
+    def screenshot(self, filename):
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('File')
+        do_click(n)
+        n = self.dsp.menu('File').menuItem('Screenshot')
+        do_click(n)
+        file_chooser = self.app.child(roleName='file chooser')
+        file_chooser.childLabelled('Name:').text = filename
+        n = file_chooser.button('Save')
+        do_click(n)
+        if self.app.isChild(roleName='alert', name='Question'):
+            n = self.app.child(roleName='alert', name='Question').button('Replace')
+            do_click(n)
+
+
+    def fullscreen_on(self):
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('View')
+        do_click(n)
+        n = self.dsp.menu('View').menuItem('Full screen')
+        do_click(n)
+        assert self.is_fullscreen()
+
+
+    def fullscreen_off(self):
+        assert self.is_fullscreen()
+        self.push_front()
+        n = self.dsp.button('Leave fullscreen')
+        do_click(n)
+        assert self.is_window()
+
+
+    def help_license(self):
+        # Return license text.
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('Help')
+        do_click(n)
+        n = self.dsp.menu('Help').menuItem('About')
+        do_click(n)
+        scroll_panes = about.findChildren(
+            predicate.GenericPredicate(roleName='scroll pane'))
+        # See scheme. Currently widgets tree has only one `text' element.
+        l = next(i for i in scroll_panes if i.isChild(roleName='text'))
+        return l.child(roleName='text').text
+
+
+    def help_credits(self):
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('Help')
+        do_click(n)
+        n = self.dsp.menu('Help').menuItem('About')
+        do_click(n)
+        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        n = about.child(name="Credits", roleName="radio button")
+        do_click(n)
+        scroll_panel = about.child(roleName='scroll pane')
+        labels = about.findChildren(
+            predicate.GenericPredicate(roleName='label'))
+        return [i.name for i in labels if i.name]
+
+
+    def vm_sendkey(self, key):
+        logger.info("Send key to guest VM using 'Send key' menu.")
+        self.push_front()
+        if self.is_window():
+            n = self.dsp.menu('Send key')
+            do_click(n)
+            n = self.dsp.menu('Send key').menuItem(key)
+            do_click(n)
+        elif self.is_fullscreen():
+            # Button doesn't have name. See dogtail dump(). Reffer by index.
+            panel = self.dsp.button('Leave fullscreen').parent.parent
+            n = panel.findChildren(
+                # 1 - button #2.
+                predicate.GenericPredicate(roleName='push button'))[1]
+            do_click(n)
+            # There are two different clones of menu. Operate on second.
+            n = self.app.child(roleName='window').child(roleName='menu').menuItem(key)
+            do_click(n)
+        else:
+            raise NotImplementedError()
+
+
+    def help_version(self):
+        logger.info("Get RV version using Help->About dialog.")
+        assert self.is_window()
+        self.push_front()
+        n = self.dsp.menu('Help')
+        do_click(n)
+        n = self.dsp.menu('Help').menuItem('About')
+        do_click(n)
+        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        n = about.child(name="About", roleName="radio button")
+        do_click(n)
+        # Dirty hack, it is because of:
+        # [panel | ]
+        # [filler | ]
+        #   [label | 2.0-7.el7]
+        #     [label | A remote desktop client built with GTK-VNC, ...
+        #       [filler | ]
+        #          [label | virt-manager.org]
+        #              [link | ]
+        #                  [label | virt-manager.org]
+        #                       [link | ]
+        #                            [label | virt-manager.org]
+        #                                  [link | ]
+        #                                        [label | virt-manager.org]
+        panel = about.findChildren(
+            predicate.GenericPredicate(roleName='panel'))[1]
+        filler = panel.children[0]
+        # See rv_dogtail.txt
+        return filler.children[0].text
+
+
+
+
+class DisplayAccessKey(Display):
+
+    def_key_mapping = {
+        'File' : '<Alt>f',
+        'File|Quit' : 'q',
+        'Help' : '<Alt>h',
+        'Help|About' : 'a',
+        'View' : '<Alt>v',
+        'View|Zoom' : 'z',
+        'View|Zoom|Zoom out' : 'o',
+        'View|Zoom|Normal size' : 'n',
+        'View|Zoom|Zoom in' : 'i',
+        'Send key' : '<Alt>s',
+        'Send key|Ctrl+Alt+Del' : 'd',
+        'Send key|Ctrl+Alt+Backspace' : 'b',
+        'Send key|Ctrl+Alt+F1' : '1',
+        'Send key|Ctrl+Alt+F2' : '2',
+        'Send key|Ctrl+Alt+F3' : '3',
+        'Send key|Ctrl+Alt+F4' : '4',
+        'Send key|Ctrl+Alt+F5' : '5',
+        'Send key|Ctrl+Alt+F6' : '6',
+        'Send key|Ctrl+Alt+F7' : '7',
+        'Send key|Ctrl+Alt+F8' : '8',
+        'Send key|Ctrl+Alt+F9' : '9',
+        'Send key|Ctrl+Alt+F10' : '0',
+        'Send key|PrintScreen' : 'p',
+    }
+
+    @classmethod
+    def is_for(cls, method):
+        return method == 'access_key'
+
+
+    def __init__(self, app, num, kmap={}):
+        super(DisplayAccessKey, self).__init__(app, num)
+        self.kmap = {}
+        self.kmap.update(DisplayAccessKey.def_key_mapping)
+        self.kmap.update(kmap)
+
+
+    def menu(self, menu, sub_menu):
+        """menu - name for menu. E.g.: File
+        sub_menu - [str,...]. Eg.g.: File|Quit
+        """
+        logger.info("Access a display menu entry using access keys.")
+        assert self.is_window()
+        self.push_front()
+        self.key_combo(self.kmap[menu])
+        menu_entry = self.dsp.menu(menu)
+        is_focused(menu_entry.children[0])
+        for i in sub_menu:
+            key = self.kmap[i]
+            logger.info("Display #%s, send to menu: %s.", self.num, key)
+            menu_entry.keyCombo(key)
+
+    def zoom(self, direction='normal'):
+        logger.info("Display #%s do zoom: %s", self.num, direction)
+        menus = {'in': 'View|Zoom|Zoom in',
+                 'out': 'View|Zoom|Zoom out',
+                 'normal': 'View|Zoom|Normal size'}
+        self.menu('View', ['View|Zoom', menus[direction]])
+
+
+    def vm_sendkey(self, key):
+        menu = 'Send key|%s' % key
+        self.menu('Send key', [menu,])
+
+
+    def app_quit(self):
+        self.menu('File', ['File|Quit'])
+        assert self.app.dead
+
+
+    def help_version(self):
+        self.menu('Help', ['Help|About'])
+        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        # Dirty hack, it is because of:
+        # [panel | ]
+        # [filler | ]
+        #   [label | 2.0-7.el7]
+        #     [label | A remote desktop client built with GTK-VNC, ...
+        #       [filler | ]
+        #          [label | virt-manager.org]
+        #              [link | ]
+        #                  [label | virt-manager.org]
+        #                       [link | ]
+        #                            [label | virt-manager.org]
+        #                                  [link | ]
+        #                                        [label | virt-manager.org]
+        panel = about.findChildren(
+            predicate.GenericPredicate(roleName='panel'))[1]
+        filler = panel.children[0]
+        # See rv_dogtail.txt
+        return filler.children[0].text
+
+
+class DisplayHotKey(Display):
+
+    # See dogtail/rawinput.py keyNameAliases = {..}
+    def_key_mapping = {
+        'quit': '<Control><Shift>q',
+        'zoom_out': '<Control>minus',
+        'zoom_normal': '<Control>0',
+        'zoom_in': '<Control><Shift>plus',
+        'Ctrl+Alt+Del': '<Control><Alt>End',
+    }
+
+    def __init__(self, app, num, kmap={}):
+        super(DisplayHotKey, self).__init__(app, num)
+        self.kmap = {}
+        self.kmap.update(DisplayHotKey.def_key_mapping)
+        self.kmap.update(kmap)
+
+    @classmethod
+    def is_for(cls, method):
+        return method == 'hot_key'
+
+    def zoom(self, direction='normal'):
+        kmap_keys =  {'in': 'zoom_in',
+                      'out': 'zoom_out',
+                      'normal': 'zoom_normal'}
+        key = self.kmap[kmap_keys[direction]]
+        self.key_combo(key)
+
+
+    def app_quit(self):
+        self.key_combo(self.kmap['quit'])
+        assert self.app.dead
+
+
+    def vm_sendkey(self, key):
+        self.key_combo(self.kmap[key])
+
+
+class DisplayWMKey(Display):
+
+    def_key_mapping = {
+        'fullscreen': 'F11',
+        'quit': '<Alt>F4',
+    }
+
+    @classmethod
+    def is_for(cls, method):
+        return method == 'wm_key'
+
+
+    def __init__(self, app, num, kmap={}):
+        super(DisplayWMKey, self).__init__(app, num)
+        self.kmap = {}
+        self.kmap.update(DisplayWMKey.def_key_mapping)
+        self.kmap.update(kmap)
+
+
+    def wm_send_key(self, key):
+        self.push_front()
+        if self.is_fullscreen():
+            # remote-viewer intercepts _all_ keys. It is necessary to point to
+            # some RV widget.
+            n = self.dsp.button('Leave fullscreen')
+            point_and_pointed(n)
+        else:
+            point_and_pointed(self.dsp.menu('File'))
+        logger.info("Display #%s, send key: %s", self.num, key)
+        time.sleep(1.5)  # Hrrrr!!!!!!!!!!!
+        tree.root.keyCombo(key)
+        #rawinput.pressKey('F11')
+
+
+    def app_quit(self):
+        assert not self.app.dead
+        key = self.kmap['quit']
+        self.wm_send_key(key)
+        assert self.app.dead
+
+
+    def fullscreen_toggle(self):
+        key = self.kmap['fullscreen']
+        self.wm_send_key(key)
+
+
+    def fullscreen_on(self):
+        assert self.is_window()
+        self.fullscreen_toggle()
+        assert self.is_fullscreen()
+
+
+    def fullscreen_off(self):
+        assert self.is_fullscreen()
+        # It seems that F11 is processed by WindowManager, not RemoteViewer.
+        # It is necessary to point on some RV widget.
+        self.fullscreen_toggle()
+        assert self.is_window()
+
+
+# Connect dialog
+class Connect(object):
+
+    def __init__(self, application):
+        self.application = application  # Application object
+        self.app = application.app      # Dogtail object
+        self.conn = self.get(self.app)
+
+    @staticmethod
+    def get(app):
+        assert not app.dead
+        scroll_pane = app.child(roleName='scroll pane')
+        scroll_pane.grabFocus()
+        is_focused(scroll_pane)
+        pred = predicate.IsADialogNamed(dialogName='Connection details')
+        win = scroll_pane.findAncestor(pred)
+        return win
+
+    @staticmethod
+    def make(app, method):
+        for cls in Connect.__subclasses__():
+            if cls.is_for(method):
+                return cls(app)
+        raise ValueError
+
+
+class ConnectMouse(Connect):
+
+    @classmethod
+    def is_for(cls, method):
+        return method == 'mouse'
+
+
+    def connect(self, url, ticket=""):
+        con_addr = self.conn.child(roleName='text')
+        con_addr.grabFocus()
+        is_focused(con_addr)
+        con_addr.typeText(url)
+        n = self.conn.child(roleName='push button', name='Connect')
+        do_click(n)
+        if ticket:
+            dialog = self.app.child(name='Authentication required',
+                                roleName='dialog')
+            passw = dialog.child(roleName='password text')
+            passw.typeText(ticket)
+            passw.keyCombo('enter')
+        # Checks
+        assert not self.app.isChild(name='Authentication required',
+                                    roleName='dialog', retry=False), \
+            "RV asks for ticket."
+        assert not self.app.isChild(name='Error', roleName='alert',
+                                    retry=False), \
+            "RV shows alert pop-up."
+        assert not self.app.isChild(name='Connecting to graphic server',
+                                    retry=False), \
+            "RV stuck at connection to graphic server."
+        assert self.app.isChild(roleName='drawing area', retry=False), \
+            "No active display."
+
+
+
+class Application(object):
+    """XXX.
+
+    """
+    def __init__(self, app=None, method='mouse'):
+        self.app = app
+        self.method = method
+        if not self.app:
+            self.app = self.get()
+
+    @staticmethod
+    def get():
+        pred = predicate.IsAnApplicationNamed('remote-viewer')
+        apps = tree.root.findChildren(pred, recursive=False)
+        rv_instances = len(apps)
+        try:
+            assert rv_instances == 1
+        except AssertionError:
+            err_msg = "This kind of tests support exactly one instance of RV, " \
+                "found %s" % rv_instances
+            raise GeneralError(err_msg)
+        return apps[0]
+
+    def dsp(self, num):
+        return Display.make(self, num=num, method=self.method)
+
+    @property
+    def dsp1(self):
+        return Display.make(self, num=1, method=self.method)
+
+    @property
+    def dsp2(self):
+        return Display.make(self, num=2, method=self.method)
+
+    @property
+    def dsp3(self):
+        return Display.make(self, num=3, method=self.method)
+
+    @property
+    def dsp4(self):
+        return Display.make(self, num=4, method=self.method)
+
+    @property
+    def diag_connect(self):
+        return Connect.make(self, method=self.method)
+
+    def dsp_count(self):
+        # Get number of active displays.
+        pred = predicate.GenericPredicate(roleName='drawing area')
+        displays = self.app.findChildren(pred)
+        active_displays = len(displays)
+        logger.info("remote-viewer has active displays: %s", active_displays)
+        return active_displays
+
+    def dsp_is_active(self, num):
+        dsp = "Display %s" % num
+        return self.app.menu('View').menu('Displays').menuItem(dsp).isChecked
+
+    def dsp_is_inactive(self, num):
+        return not self.dsp_is_active(num)
