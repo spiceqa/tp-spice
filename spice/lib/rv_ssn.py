@@ -55,6 +55,10 @@ from virttest import utils_net
 from virttest import utils_misc
 from spice.lib import utils
 
+
+logger = logging.getLogger(__name__)
+
+
 RV_WIN_NAME_AUTH = "Authentication required"
 """Expected window caption."""
 RV_WIN_NAME = "Remote Viewer"
@@ -129,7 +133,7 @@ def get_host_subj(test):
     return subj
 
 
-def connect(test, env={}):
+def connect(test, ssn, env={}):
     """Establish connection between client and guest based on test
     parameters supplied at cartesian config.
 
@@ -145,6 +149,8 @@ def connect(test, env={}):
     ----------
     test : SpiceTest
         Spice test object.
+    ssn : xxx
+        Session object, as a exec-layer to VM.
     env : dict
         Dictionary of env variables to passed before remote-viewer start.
 
@@ -154,7 +160,6 @@ def connect(test, env={}):
 
     """
     cfg = test.cfg
-    ssn_c = test.ssn_c
     vm_c = test.vm_c
     vm_g = test.vm_g
     kvm_g = test.kvm_g
@@ -167,18 +172,18 @@ def connect(test, env={}):
     if vm_c.is_linux():
         if cfg.rv_ld_library_path:
             cmd = "export LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path
-            ssn_c.cmd(cmd)
+            ssn.cmd(cmd)
     if cfg.spice_proxy and cfg.rv_parameters_from != "file":
         if vm_c.is_linux():
-            ssn_c.cmd("export SPICE_PROXY=%s" % cfg.spice_proxy)
+            ssn.cmd("export SPICE_PROXY=%s" % cfg.spice_proxy)
         elif vm_c.is_win():
-            ssn_c.cmd_output("SET SPICE_PROXY=%s" % cfg.spice_proxy)
+            ssn.cmd_output("SET SPICE_PROXY=%s" % cfg.spice_proxy)
     for key in env:
         if vm_c.is_linux():
-            ssn_c.cmd("export %s=%s" % (key, env[key]))
+            ssn.cmd("export %s=%s" % (key, env[key]))
         elif vm_c.is_win():
-            ssn_c.cmd_output("SET %s=%s" % (key, env[key]))
-    utils.print_rv_version(test, test.name_c)
+            ssn.cmd_output("SET %s=%s" % (key, env[key]))
+    test.cmd_c.print_rv_version()
     # Set the password of the VM using the qemu-monitor.
     if cfg.qemu_password:
         logging.info("Guest qemu monitor: set_password spice %s",
@@ -196,7 +201,7 @@ def connect(test, env={}):
     if cfg.rv_parameters_from == 'file':
         cmd += " " + cfg.rv_file
     host_ip = get_host_ip(test)
-    if utils.is_yes(kvm_g.spice_ssl):
+    if utils.is_yes(test.kvm_g.spice_ssl):
         # Copy cacert file to client.
         # cacert file on the host
         cacert_host = get_cacert_path_host(test)
@@ -208,9 +213,9 @@ def connect(test, env={}):
         # Remove previous cacert on the client
         if vm_c.is_linux():
             xcmd = "rm -rf %s" % cfg.spice_x509_prefix
-            ssn_c.cmd(xcmd)
+            ssn.cmd(xcmd)
             xcmd = "mkdir -p %s" % cfg.spice_x509_prefix
-            ssn_c.cmd(xcmd)
+            ssn.cmd(xcmd)
         vm_c.copy_files_to(cacert_host, cacert_client)
         # Cacert subj is in format for create certificate(with '/'
         # delimiter) remote-viewer needs ',' delimiter. And also is needed
@@ -238,7 +243,7 @@ def connect(test, env={}):
             pass
         if cfg.rv_parameters_from != "file":
             cmd += " --spice-ca-file=%s" % cacert_client
-        if utils.is_yes(cfg.spice_client_host_subject) and \
+        if cfg.spice_client_host_subject and \
                 cfg.rv_parameters_from != "file":
             cmd += ' --spice-host-subject="%s"' % host_subj
     else:
@@ -253,7 +258,7 @@ def connect(test, env={}):
         else:
             cmd += " spice://%s?port=%s" % (host_ip, port)
     # Usbredirection support.
-    if utils.is_yes(cfg.usb_redirection_add_device):
+    if cfg.usb_redirection_add_device:
         logging.info("USB redirection set auto redirect on connect for device"
                      "class 0x08")
         cmd += ' --spice-usbredir-redirect-on-connect="0x08,-1,-1,-1,1"'
@@ -261,53 +266,57 @@ def connect(test, env={}):
         # ..todo:: must be root session
         if vm_c.is_linux():
             ccmd = "chown {0}:{0} {1}".format(cfg.username, cfg.file_path)
-            ssn_c.cmd(ccmd)
-        if not utils.check_usb_policy(test, test.name_c):
-            utils.add_usb_policy(test, test.name_c)
+            ssn.cmd(ccmd)
+        if not test.cmd_c.check_usb_policy():
+            test.cmd_c.add_usb_policy()
     if cfg.rv_parameters_from == "cmd":
-        if utils.is_yes(cfg.full_screen):
+        if cfg.full_screen:
             cmd += " --full-screen"
-        if utils.is_yes(cfg.disable_audio):
+        if cfg.disable_audio:
             cmd += " --spice-disable-audio"
-        if utils.is_yes(cfg.smartcard):
+        if cfg.smartcard:
             cmd += " --spice-smartcard"
             if cfg.certdb:
                 cmd += " --spice-smartcard-db " + cfg.certdb
             if cfg.gencerts:
                 cmd += " --spice-smartcard-certificates " + cfg.gencerts
     if test.vm_c.is_linux():
-        cmd = "nohup " + cmd + " &> ~/rv.log &"  # Launch it on background
+        cmd = cmd + " &> ~/rv.log"
     if cfg.rv_parameters_from == "file":
         generate_vv_file(test)
         test.vm_c.copy_files_to(cfg.rv_file, cfg.rv_file)
     logging.info("Final cmd for client is: %s", cmd)
     try:
-        test.ssn_c.cmd(cmd)
+        pid = ssn.get_pid()
+        logger.info("RV pid1: %s", pid)
+        ssn.sendline(cmd)
+        pid = ssn.get_pid()
+        logger.info("RV pid2: %s", pid)
     except aexpect.ShellStatusError:
         logging.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
     # Send command line through monitor since url was not provided
     if cfg.rv_parameters_from == "menu":
-        utils.str_input(test, test.name_c, url)
+        test.cmd_c.str_input(url)
     # client waits for user entry (authentication) if spice_password is set
     # use qemu monitor password if set, else, if set, try normal password.
     ticket = kvm_g.spice_password
     # At this step remote-viewer application window must exist.  It can be any
     # remote-viewer window: main, pop-up, menu, etc.
     try:
-        utils.wait_for_win(test, test.name_c, RV_WM_CLASS, "WM_CLASS")
+        test.cmd_c.wait_for_win(RV_WM_CLASS, "WM_CLASS")
     except utils.SpiceUtilsError:
         raise RVSessionError
     if cfg.qemu_password:
         # Wait for remote-viewer to launch
-        utils.wait_for_win(test, test.name_c, RV_WIN_NAME_AUTH)
-        utils.str_input(test, test.name_c, cfg.qemu_password)
+        test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
+        test.cmd_c.str_input(cfg.qemu_password)
     elif ticket:
         if cfg.spice_password_send:
             ticket = cfg.spice_password_send
         try:
-            utils.wait_for_win(test, test.name_c, RV_WIN_NAME_AUTH)
-            utils.str_input(test, test.name_c, ticket)
+            test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
+            test.cmd_c.str_input(ticket)
         except utils.SpiceUtilsError:
             raise RVSessionConnect
     is_connected(test)
@@ -337,7 +346,9 @@ def connect(test, env={}):
 
 
 def is_connected(test):
-    """Tests whether or not is connection active.
+    """Tests if connection is active.
+
+    .. todo:: rewrte to test per session.
 
     Parameters
     ----------
@@ -370,7 +381,7 @@ def is_connected(test):
         cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % \
             (remote_ip, rv_binary)
     elif test.vm_c.is_win():
-        # ..todo: finish it
+        #.. todo: finish it
         cmd = "netstat -n"
     try:
         # Wait all RV Spice links raise UP.
@@ -414,7 +425,7 @@ def disconnect(test):
 
     :return: None
     """
-    utils.kill_by_name(test, test.name_c, test.cfg.rv_binary)
+    test.cmd_c.kill_by_name(test.cfg.rv_binary)
 
 
 def generate_vv_file(test):
@@ -451,7 +462,7 @@ def generate_vv_file(test):
         cert_auth = cert.read()
         cert_auth = cert_auth.replace('\n', r'\n')
         rv_file.write("ca=%s\n" % cert_auth)
-    if utils.is_yes(cfg.full_screen):
+    if cfg.full_screen:
         rv_file.write("fullscreen=1\n")
     if cfg.spice_proxy:
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)

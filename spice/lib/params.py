@@ -163,6 +163,15 @@ class Params(object):
     """rv_gui. RPM for EPEL repo."""
     client_tests = "client-tests"
     """rv_gui. Dir with client tests."""
+    log_test = 'qxl'
+    """rv_logging. : qxl, spice-vdagent"""
+    qxl_log = "/var/log/Xorg.0.log"
+    vdagent_log = "/var/log/spice-vdagent.log"
+    interpreter = "python"
+    guest_script = ""
+    script_params = ""
+    dst_dir = "/tmp"
+    text_to_test = ""
 
 
 # Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make

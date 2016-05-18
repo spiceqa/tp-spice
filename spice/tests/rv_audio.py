@@ -185,7 +185,7 @@ def verify_recording(path, cfg):
         pauses += 1
     logging.info("Total pauses: %s.", pauses)
     if payload_frames == 0:
-        if utils.is_yes(cfg.disable_audio):
+        if cfg.disable_audio:
             return True
         else:
             return False
@@ -212,8 +212,8 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    utils.clear_interface(test, test.name_c)
-    utils.clear_interface(test, test.name_g)
+    test.cmd_c.reset_gui()
+    test.cmd_g.reset_gui()
     # Get default sink at the client.
     cmd = r"pacmd stat | grep 'Default sink name' | " \
         r"sed -e 's/^.*[[:space:]]//'"
@@ -224,7 +224,7 @@ def run(vt_test, test_params, env):
     logging.info("Default sink at client is: %s", def_sink)
     # Create RV session
     env = {}
-    if utils.is_yes(cfg.rv_record):
+    if cfg.rv_record:
         env["PULSE_SOURCE"] = "%s.monitor" % def_sink
     try:
         rv_ssn.connect(test, env=env)
@@ -238,7 +238,7 @@ def run(vt_test, test_params, env):
     rec_cmd = "arecord -d %s -f cd %s" % (cfg.audio_time,
                                           cfg.audio_rec)
     # Check test type
-    if utils.is_yes(cfg.rv_record):
+    if cfg.rv_record:
         logging.info("Recording test. Player is client. Recorder is guest.")
         player = test.ssn_c
         recorder = test.ssn_g

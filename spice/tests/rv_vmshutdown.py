@@ -9,8 +9,7 @@
 #
 # See LICENSE for more details.
 
-"""
-rv_vmshutdown.py - shutdown the guest and verify it is a clean exit.
+"""rv_vmshutdown.py - shutdown the guest and verify it is a clean exit.
 
 Requires: connected binaries remote-viewer, Xorg, gnome session
 

@@ -11,21 +11,24 @@
 #
 # See LICENSE for more details.
 
-"""Connect with remote-viewer from client VM to guest VM.
+"""Examine Xorg log in guest-VM.
+
+    - Verifying the qxl driver in Xorg logs.
+
 """
 
 import logging
 from avocado.core import exceptions
+from virttest import utils_misc
 from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
-
 
 logger = logging.getLogger(__name__)
 
 
 def run(vt_test, test_params, env):
-    """Run remote-viewer at client VM.
+    """Inspects Xorg logs for QLX presence.
 
     Parameters
     ----------
@@ -36,10 +39,14 @@ def run(vt_test, test_params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
 
+    Raises
+    ------
+    TestFail
+        Test fails for some reason.
+
     """
-    test = stest.ClientGuestTest(vt_test, test_params, env)
+    test = stest.GuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.reset_gui()
-    test.cmd_g.reset_gui()
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
+    utils.reset_gui(test, test.name)
+    test_cmd = "grep -i qxl %s" % cfg.qxl_log
+    test.ssn.cmd(test_cmd)

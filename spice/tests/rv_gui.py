@@ -115,7 +115,7 @@ def run(vt_test, test_params, env):
     vm_c.copy_files_to(libs_files, cfg.test_script_tgt)
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
-    if utils.is_yes(cfg.make_rv_connect):
+    if cfg.make_rv_connect:
         try:
             rv_ssn.connect(test)
             is_connected = True

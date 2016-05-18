@@ -70,57 +70,42 @@ def do_click(node):
 
 @retries.retries(5, exceptions=(AssertionError,))
 def is_focused(node):
-    try:
-        assert node.focused
-    finally:
-        logger.info("Node [%s | %s] is: not focused.", node.roleName,
-                    node.name)
+    assert node.focused, \
+        "Node [%s | %s] is: not focused." % (node.roleName, node.name)
     logger.info("Node [%s | %s] is: focused.", node.roleName, node.name)
 
 
 @retries.retries(5, exceptions=(AssertionError,))
 def is_showing(node):
-    try:
-        assert node.showing
-    finally:
-        logger.info("Node [%s | %s] is: not showing.", node.roleName,
-                    node.name)
+    assert node.showing, \
+        "Node [%s | %s] is: not showing." % (node.roleName, node.name)
     logger.info("Node [%s | %s] is: showing.", node.roleName, node.name)
 
 
 @retries.retries(5, exceptions=(AssertionError,))
 def click_and_focused(node):
     node.click()
-    try:
-        assert node.focused
-    finally:
-        logger.info("Click for node [%s | %s]: failed.", node.roleName,
-                    node.name)
+    assert node.focused, \
+        "Click for node [%s | %s]: failed." % (node.roleName, node.name)
     logger.info("Click for node [%s | %s]: success.", node.roleName, node.name)
 
 @retries.retries(5, exceptions=(AssertionError,))
 def point_and_focused(node):
     node.point()
-    try:
-        assert node.focused
-    finally:
-        logger.info("Focus for node [%s | %s]: failed.", node.roleName,
-                    node.name)
+    assert node.focused, \
+        "Focus for node [%s | %s]: failed." % (node.roleName, node.name)
     logger.info("Focus for node [%s | %s]: success.", node.roleName, node.name)
 
 
 @retries.retries(5, exceptions=(AssertionError,))
 def point_and_pointed(node):
     node.point()
-    try:
-        assert node.position[0] >= 0
-        assert node.position[1] >= 0
-        pointX = node.position[0] + node.size[0] / 2
-        pointY = node.position[1] + node.size[1] / 2
-        assert node.parent.getChildAtPoint(pointX, pointY) == node
-    finally:
-        logger.info("Point for node [%s | %s]: failed.", node.roleName,
-                    node.name)
+    assert node.position[0] >= 0
+    assert node.position[1] >= 0
+    pointX = node.position[0] + node.size[0] / 2
+    pointY = node.position[1] + node.size[1] / 2
+    assert node.parent.getChildAtPoint(pointX, pointY) == node \
+        "Point for node [%s | %s]: failed." % (node.roleName, node.name)
     logger.info("Point for node [%s | %s]: success.", node.roleName, node.name)
 
 

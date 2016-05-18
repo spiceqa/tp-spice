@@ -63,29 +63,6 @@ http://www.scribd.com/doc/17471845/FireGeier-Unattended-Vista-Guide-2#scribd
 
   # NETCFG -WINPE to install the WinPE network stack
 
-================
-Know dict values
-================
-
-#. **ssltype**
-
-   * explicit_hs
-   * implicit_hs
-   * invalid_explicit_hs
-   * invalid_implicit_hs
-
-#. **test_type**
-
-   * test_type
-
-#. **rv_binary** - path to remote viewer
-
-   * /usr/bin/remote-viewer (default)
-
-#. **spice_secure_channels** - format is 'one, two, three'
-
-   * main, inputs
-
 
 ==========
 Code notes
@@ -120,10 +97,6 @@ Style
 .. _Google: https://google.github.io/styleguide/pyguide.html
 .. _PEP257: https://www.python.org/dev/peps/pep-0257
 
-..
-    vim: fileencoding=utf-8 filetype=rst :
-    vim:set tw=72:
-
 
 =====
 HINTS
@@ -157,3 +130,50 @@ copied to client VM and are run inside client VM.
 - http://git.app.eng.bos.redhat.com/git/desktopqe/
 - vhumpa@: sticking latest el7 packages here:
   https://gitlab.com/dogtail/dogtail/tree/rpms/rpm
+
+
+=======
+Configs
+=======
+
+http://avocado-vt.readthedocs.io/en/latest/CartesianConfig.html
+
+::
+
+ +  Low priority                                   +----------------------------------+
+ |                                                 |       top.cfg                    |
+ |   +----------------+                            +---+---------------------------+--+                                +-------------+
+ |   | base.cfg       |                                |                           |                                   |base.cfg     |
+ |   | machines.cfg   |                                |                           |                                   |machines.cfg |
+ |   | subtests.cfg   |    +------------------------+  |                           |  +--------------------------+     |guest-os.cfg |
+ |   | guest-os.cfg   |    |                        |  |                           |  |                          |     |guest-hw.cfg |
+ |   | guest-hw.cfg   |    | tests-shared.cfg-qemu  |  |                           |  |  tests-shared.cfg-spice  |     |             |
+ |   | cdkeys.cfg     |    |          X<---------------+                           +------------>X               |     +-------------+
+ |   | virtio-win.cfg +-------------->X             |    +-----------------------+    |          X<----------------------------+
+ |   |                |    |          X<-----------------+ assignments.cfg-w-sfx +-------------->X               |
+ |   +----------------+    |                        |    |                       |    |                          |   +--------------------------+
+ |                         |          X<-----+      |    +-----------------------+    |       suffix / join      |   |                          |
+ |                         |                 |      |                                 |          X<------------------+ spice-tests.cfg          |
+ |                         |                 |      |                                 |    +---->X               |   | tests->ariants.cfg(name) |
+ |                         |                 |      |                                 |    |                     |   |                          |
+ |                         +--------+---------------+    +------------------------+   +-----------+--------------+   +--------------------------+
+ |                                  |        |           | assignments.cfg-wo-sfx |        |      |
+ |                                  |        +-----------+                        +--------+      |
+ |                                  |                    +------------------------+               |
+ |                                  |                                                             |
+ |                                  |                          +------------+                     |
+ |                                  |                          | tests.cfg  |                     |      +-----------------------------+
+ |                                  +------------------------------->X<---------------------------+      |                             |
+ |                                                             |     X<----------------------------------+           run.cfg           |
+ |                   RESULT                                    +-----+------+                            |                             |
+ |                      ^                                            |                                   | OS version for guest/client |
+ |                      +--------------------------------------------+                                   |                             |
+ |                                                                                                       +-----------------------------+
+ |
+ |
+ v  High priority
+
+
+..
+    vim: fileencoding=utf-8 filetype=rst :
+    vim:set tw=72:

@@ -14,15 +14,12 @@
 """Connect with remote-viewer from client VM to guest VM.
 """
 
-import logging
 from avocado.core import exceptions
 from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
 
-
 logger = logging.getLogger(__name__)
-
 
 def run(vt_test, test_params, env):
     """Run remote-viewer at client VM.
@@ -36,10 +33,21 @@ def run(vt_test, test_params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
 
+    Raises
+    ------
+    TestFail
+        Test fails for expected behaviour.
+
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     test.cmd_c.reset_gui()
     test.cmd_g.reset_gui()
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
+    try:
+        rv_ssn.connect(test)
+    except rv_ssn.RVSessionConnect as e:
+        logger.info("Test failed as expected. Reason: %s", e)
+        pass
+    else:
+        raise exceptions.TestFail(
+            "RV connection was established when it was supposed to fail.")
