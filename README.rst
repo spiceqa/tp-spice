@@ -140,38 +140,18 @@ http://avocado-vt.readthedocs.io/en/latest/CartesianConfig.html
 
 ::
 
- +  Low priority                                   +----------------------------------+
- |                                                 |       top.cfg                    |
- |   +----------------+                            +---+---------------------------+--+                                +-------------+
- |   | base.cfg       |                                |                           |                                   |base.cfg     |
- |   | machines.cfg   |                                |                           |                                   |machines.cfg |
- |   | subtests.cfg   |    +------------------------+  |                           |  +--------------------------+     |guest-os.cfg |
- |   | guest-os.cfg   |    |                        |  |                           |  |                          |     |guest-hw.cfg |
- |   | guest-hw.cfg   |    | tests-shared.cfg-qemu  |  |                           |  |  tests-shared.cfg-spice  |     |             |
- |   | cdkeys.cfg     |    |          X<---------------+                           +------------>X               |     +-------------+
- |   | virtio-win.cfg +-------------->X             |    +-----------------------+    |          X<----------------------------+
- |   |                |    |          X<-----------------+ assignments.cfg-w-sfx +-------------->X               |
- |   +----------------+    |                        |    |                       |    |                          |   +--------------------------+
- |                         |          X<-----+      |    +-----------------------+    |       suffix / join      |   |                          |
- |                         |                 |      |                                 |          X<------------------+ spice-tests.cfg          |
- |                         |                 |      |                                 |    +---->X               |   | tests->ariants.cfg(name) |
- |                         |                 |      |                                 |    |                     |   |                          |
- |                         +--------+---------------+    +------------------------+   +-----------+--------------+   +--------------------------+
- |                                  |        |           | assignments.cfg-wo-sfx |        |      |
- |                                  |        +-----------+                        +--------+      |
- |                                  |                    +------------------------+               |
- |                                  |                                                             |
- |                                  |                          +------------+                     |
- |                                  |                          | tests.cfg  |                     |      +-----------------------------+
- |                                  +------------------------------->X<---------------------------+      |                             |
- |                                                             |     X<----------------------------------+           run.cfg           |
- |                   RESULT                                    +-----+------+                            |                             |
- |                      ^                                            |                                   | OS version for guest/client |
- |                      +--------------------------------------------+                                   |                             |
- |                                                                                                       +-----------------------------+
- |
- |
- v  High priority
+               tests-shared-spice.cfg           tests-shared-qemu.cfg
+  base.cfg       +      X<-------------+top.cfg+----------->X    +    base.cfg
+  machines.cfg+-------->X                                   X<-------+machines.cfg
+  subtests.cfg   |      X<------+assignments-w-sfx.cfg+---->X    |    guest-os.cfg
+  guest-os.cfg   | suffix / join                                 |    guest-hw.cfg
+  guest-hw.cfg   |      X<------+tests-variants.cfg              |
+  cdkeys.cfg     |                      X<------+spice-base.cfg  |
+  virtio-win.cfg |                                               |
+                 |                                               |
+                 |                      tests.cfg+----->Result   |
+                 |             run.cfg+---->X                    |
+                 +------------------------->X<-------------------+
 
 
 ..
