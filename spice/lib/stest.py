@@ -25,6 +25,39 @@ from virttest import virt_vm
 logger = logging.getLogger(__name__)
 
 
+# Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make
+# duplication.
+KVM_SPICE_KNOWN_PARAMS = [
+    "spice_port",
+    "spice_password",
+    "spice_addr",
+    "spice_ssl",
+    "spice_tls_port",
+    "spice_tls_ciphers",
+    "spice_gen_x509",
+    "spice_x509_dir",
+    "spice_x509_prefix",
+    "spice_x509_key_file",
+    "spice_x509_cacert_file",
+    "spice_x509_key_password",
+    "spice_x509_secure",
+    "spice_x509_cacert_subj",
+    "spice_x509_server_subj",
+    "spice_secure_channels",
+    "spice_image_compression",
+    "spice_jpeg_wan_compression",
+    "spice_zlib_glz_wan_compression",
+    "spice_streaming_video",
+    "spice_agent_mouse",
+    "spice_playback_compression",
+    "spice_ipv4",
+    "spice_ipv6",
+    "spice_x509_cert_file",
+    "disable_copy_paste",
+    "spice_seamless_migration",
+    "listening_addr"]
+
+
 class AttributeDict(dict):
     """Dictionary class derived from standard dict. Reffer to keys as obj.key.
     """
@@ -34,7 +67,10 @@ class AttributeDict(dict):
     def __getattr__(self, key):
         if key in ["__getstate__", "__setstate__", "__slots__"]:
             raise AttributeError()
-        item = dict.__getitem__(self, key)
+        try:
+            item = dict.__getitem__(self, key)
+        except KeyError:
+            item = ""
         try:
             return utils.is_yes(item)
         except ValueError:
@@ -74,10 +110,6 @@ class SpiceTest(object):
         utils.extend_api_vm()
         logger.info("Start test %s", test.name)
         self.cfg = AttributeDict()
-        """Construct test's parameters. Merge default pre-defined values with
-        provided through Cartesian config."""
-        for prm in (x for x in dir(params.Params) if not x.startswith('_')):
-            self.cfg[prm] = getattr(params.Params, prm)
         self.cfg.update(parameters)
         self.vms = {}
         vm_names = self.cfg.vms.split()
@@ -99,7 +131,7 @@ class SpiceTest(object):
         """Spice KVM options per VM."""
         for name in vm_names:
             self.kvm[name] = AttributeDict()
-            for prm in params.KVM_SPICE_KNOWN_PARAMS:
+            for prm in KVM_SPICE_KNOWN_PARAMS:
                 self.kvm[name][prm] = self.vms[name].get_spice_var(prm)
                 if self.kvm[name][prm]:
                     logger.info("VM %s spice server option %s is %s.", name,

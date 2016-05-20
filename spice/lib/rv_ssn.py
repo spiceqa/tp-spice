@@ -109,6 +109,7 @@ def get_cacert_path_host(test):
     if utils.is_yes(test.kvm_g.spice_ssl):
         path = "%s/%s" % (test.cfg.spice_x509_prefix,
                           test.cfg.spice_x509_cacert_file)
+    logger.info("CA cert file on host: %s", path)
     return path
 
 
@@ -376,8 +377,9 @@ def is_connected(test):
         if len(split) > 1:
             proxy_port = split[1]
         logging.info("Proxy port to inspect: %s", proxy_port)
+    rv_binary = test.vm_c.params.get("rv_binary")
+    rv_binary = os.path.basename(rv_binary)
     if test.vm_c.is_linux():
-        rv_binary = os.path.basename(cfg.rv_binary)
         cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % \
             (remote_ip, rv_binary)
     elif test.vm_c.is_win():

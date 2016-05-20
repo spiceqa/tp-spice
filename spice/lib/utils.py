@@ -201,9 +201,7 @@ def is_yes(string):
     True values are y, yes, t, true, on and 1; false values are n, no, f,
     false, off and 0. Raises ValueError if val is anything else.
     """
-    if not string:
-        return False
-    return util.strtobool(string)
+    return util.strtobool(str(string))
 
 
 def str2res(res):
