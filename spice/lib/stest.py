@@ -17,7 +17,6 @@
 
 import logging
 import pprint
-from spice.lib import params
 from spice.lib import utils
 from virttest import virt_vm
 
