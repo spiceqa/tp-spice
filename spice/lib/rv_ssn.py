@@ -69,6 +69,14 @@ RV_WM_CLASS = "remote-viewer"
 class RVSessionError(Exception):
     """Exception for remote-viewer session. Root exception for the RV Sessiov.
     """
+    def __init__(self, test, *args, **kwargs):
+        super(RVSessionError, self).__init__(args, kwargs)
+        if test.cfg.pause_on_fail or test.cfg.pause_on_end:
+            # 1 hour
+            seconds = 60 * 60 * 10
+            logger.error("Test %s has failed. Do nothing for %s seconds.",
+                          test.cfg.id, seconds)
+            time.sleep(seconds)
 
 
 class RVSessionNotImplemented(RVSessionError):
@@ -166,9 +174,9 @@ def connect(test, ssn, env={}):
     kvm_g = test.kvm_g
     # Check correct invocation.
     if cfg.display == "vnc":
-        raise RVSessionError("remote-viewer vnc not implemeted")
+        raise RVSessionError(test, "remote-viewer vnc not implemeted")
     elif cfg.display != "spice":
-        raise RVSessionError("Unsupported display value")
+        raise RVSessionError(test, "Unsupported display value")
     # Print remove-viewer version on client
     if vm_c.is_linux():
         if cfg.rv_ld_library_path:
@@ -186,10 +194,10 @@ def connect(test, ssn, env={}):
             ssn.cmd_output("SET %s=%s" % (key, env[key]))
     test.cmd_c.print_rv_version()
     # Set the password of the VM using the qemu-monitor.
-    if cfg.qemu_password:
+    if cfg.ticket_set:
         logging.info("Guest qemu monitor: set_password spice %s",
-                     cfg.qemu_password)
-        cmd = "set_password spice %s" % cfg.qemu_password
+                     cfg.ticket_set)
+        cmd = "set_password spice %s" % cfg.ticket_set
         vm_g.monitor.cmd(cmd)
     # Command line parameters for RV
     cmd = ""
@@ -200,7 +208,10 @@ def connect(test, ssn, env={}):
     if vm_c.is_linux():
         cmd = cmd + " --display=:0.0"
     if cfg.rv_parameters_from == 'file':
-        cmd += " " + cfg.rv_file
+        dcmd = 'getent passwd %s | cut -d: -f6' % cfg.username
+        client_dir = test.ssn_c.cmd_output(dcmd).rstrip('\r\n')
+        client_vv_file = os.path.join(client_dir, cfg.rv_file)
+        cmd += " " + client_vv_file
     host_ip = get_host_ip(test)
     if utils.is_yes(test.kvm_g.spice_ssl):
         # Copy cacert file to client.
@@ -284,66 +295,40 @@ def connect(test, ssn, env={}):
     if test.vm_c.is_linux():
         cmd = cmd + " &> ~/rv.log"
     if cfg.rv_parameters_from == "file":
-        generate_vv_file(test)
-        test.vm_c.copy_files_to(cfg.rv_file, cfg.rv_file)
+        host_dir = os.path.expanduser('~')
+        host_vv_file = os.path.join(host_dir, cfg.rv_file)
+        generate_vv_file(host_vv_file, test)
+        logger.info("Copy from host: %s to client: %s", host_vv_file,
+                    client_vv_file)
+        test.vm_c.copy_files_to(host_vv_file, client_vv_file)
     logging.info("Final cmd for client is: %s", cmd)
     try:
         pid = ssn.get_pid()
-        logger.info("RV pid1: %s", pid)
+        logger.info("shell pid id: %s", pid)
         ssn.sendline(cmd)
-        pid = ssn.get_pid()
-        logger.info("RV pid2: %s", pid)
     except aexpect.ShellStatusError:
         logging.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
     # Send command line through monitor since url was not provided
     if cfg.rv_parameters_from == "menu":
         test.cmd_c.str_input(url)
-    # client waits for user entry (authentication) if spice_password is set
-    # use qemu monitor password if set, else, if set, try normal password.
-    ticket = kvm_g.spice_password
     # At this step remote-viewer application window must exist.  It can be any
     # remote-viewer window: main, pop-up, menu, etc.
     try:
         test.cmd_c.wait_for_win(RV_WM_CLASS, "WM_CLASS")
     except utils.SpiceUtilsError:
-        raise RVSessionError
-    if cfg.qemu_password:
+        raise RVSessionError(test)
+    # client waits for user entry (authentication) if spice_password is set
+    # use qemu monitor password if set, else, if set, try normal password.
+    if cfg.ticket_send:
         # Wait for remote-viewer to launch
-        test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
-        test.cmd_c.str_input(cfg.qemu_password)
-    elif ticket:
-        if cfg.spice_password_send:
-            ticket = cfg.spice_password_send
         try:
             test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
-            test.cmd_c.str_input(ticket)
+            test.cmd_c.str_input(cfg.ticket_send)
         except utils.SpiceUtilsError:
-            raise RVSessionConnect
+            raise RVSessionConnect(test)
     is_connected(test)
 
-#    # @TODO: This probably needs moving back to rv_connect or to a new file
-#    # tbh, not sure why it's here -.-
-#        # Get spice info
-#        output = vm_g.monitor.cmd("info spice")
-#        logging.debug("INFO SPICE")
-#        logging.debug(output)
-#
-#        # Check to see if ipv6 address is reported back from qemu monitor
-#        check_spice_info = cfg.spice_info
-#        if (check_spice_info == "ipv6"):
-#            logging.info("Test to check if ipv6 address is reported"
-#                    " back from the qemu monitor")
-#            # Remove brackets from ipv6 host ip
-#            if (host_ip[1:len(host_ip) - 1] in output):
-#            logging.info("Reported ipv6 address found in output from"
-#                        " 'info spice'")
-#            else:
-#            raise error.TestFail("ipv6 address not found from qemu monitor"
-#                                " command: 'info spice'")
-#        else:
-#            logging.info("Not checking the value of 'info spice'"
-#                        " from the qemu monitor")
 
 
 def is_connected(test):
@@ -389,31 +374,48 @@ def is_connected(test):
         # Wait all RV Spice links raise UP.
         time.sleep(5)
         netstat_out = test.ssn_c.cmd_output(cmd)
-    except aexpect.ShellCmdError, info:
-        raise RVSessionError(info)
+    except aexpect.ShellCmdError as info:
+        raise RVSessionError(test, info)
     proxy_port_count = 0
     if cfg.spice_proxy:
         proxy_port_count = netstat_out.count(proxy_port)
+    test.vm_g.info("Active proxy ports %s: %s", proxy_port, proxy_port_count)
     port = test.kvm_g.spice_port
     tls_port = test.kvm_g.spice_tls_port
     port_count = netstat_out.count(port)
+    test.vm_g.info("Active ports %s: %s", port, port_count)
     tls_port_count = 0
     if tls_port:
         tls_port_count = netstat_out.count(tls_port)
+    test.vm_g.info("Active TLS ports %s: %s", tls_port, tls_port_count)
     opened_ports = port_count + tls_port_count + proxy_port_count
     if opened_ports < 4:
-        raise RVSessionConnect("Total links per session is less then 4 (%s)." %
+        raise RVSessionConnect(test,
+                               "Total links per session is less then 4 (%s)." %
                                opened_ports)
     if cfg.spice_secure_channels:
         tls_port_expected = len(cfg.spice_secure_channels.split(','))
         if tls_port_count < tls_port_expected:
             msg = "Secure links per session is less then expected. %s (%s)" % (
                 tls_port_count, tls_port_expected)
-            raise RVSessionConnect(msg)
+            raise RVSessionConnect(test, msg)
     for line in netstat_out.split('\n'):
         for p in port, tls_port, proxy_port:
             if p and p in line and "ESTABLISHED" not in line:
-                raise RVSessionConnect("Missing active link at port %s", p)
+                raise RVSessionConnect(test, "Missing active link at port %s",
+                                       p)
+    output = test.vm_g.monitor.cmd("info spice")
+    logger.info(output)
+    # Check to see if ipv6 address is reported back from qemu monitor
+    if cfg.spice_info == "ipv6":
+        # Remove brackets from ipv6 host ip
+        host_ip = get_host_ip(test)
+        if host_ip[1:len(host_ip) - 1] in output:
+            logging.info(
+                "Reported ipv6 address found in output from 'info spice'")
+        else:
+            raise RVSessionConnect("ipv6 address not found from qemu monitor"
+                            " command: 'info spice'")
     logging.debug("Connection checking pass")
 
 
@@ -430,7 +432,7 @@ def disconnect(test):
     test.cmd_c.kill_by_name(test.cfg.rv_binary)
 
 
-def generate_vv_file(test):
+def generate_vv_file(path, test):
     """Generates vv file for remote-viewer.
 
     Parameters
@@ -440,18 +442,13 @@ def generate_vv_file(test):
 
     """
     cfg = test.cfg
-    rv_file = open(cfg.rv_file, 'w')
+    rv_file = open(path, 'w')
     rv_file.write("[virt-viewer]\n")
     rv_file.write("type=%s\n" % cfg.display)
     rv_file.write("host=%s\n" % utils_net.get_host_ip_address(cfg))
     rv_file.write("port=%s\n" % test.kvm_g.spice_port)
-    ticket = cfg.spice_password
-    if cfg.spice_password_send:
-        ticket = cfg.spice_password_send
-    if cfg.qemu_password:
-        ticket = cfg.qemu_password
-    if ticket:
-        rv_file.write("password=%s\n" % ticket)
+    if cfg.ticket_send:
+        rv_file.write("password=%s\n" % cfg.ticket_send)
     if utils.is_yes(test.kvm_g.spice_ssl):
         rv_file.write("tls-port=%s\n" % test.kvm_g.spice_tls_port)
         rv_file.write("tls-ciphers=DEFAULT\n")

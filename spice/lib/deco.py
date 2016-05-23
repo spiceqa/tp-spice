@@ -30,16 +30,21 @@ import functools
 import logging
 import time
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-def example_exc_handler(tries_remaining, exception, delay):
+
+def exc_handler(tries_remaining, exception, delay):
     """Example exception handler; prints a warning to stderr.
 
     tries_remaining: The number of tries remaining.
     exception: The exception instance which was raised.
     """
-    print >> sys.stderr, "Caught '%s', %d tries remaining, sleeping for %s seconds" % (exception, tries_remaining, delay)
+    logger.info("Caught '%s', %d tries remaining, sleeping for %s seconds", exception, tries_remaining, delay)
+    if tries_remaining == 0:
+        seconds = 60 * 60 * 10
+        logger.error("Test has failed. Do nothing for %s seconds.", seconds)
+        time.sleep(seconds)
+
 
 
 def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
@@ -109,8 +114,8 @@ def log(level=logging.DEBUG, name=None, message=None):
             f_result = func(*args, **kwds)
             end = time.time()
             logger.info('Exiting {}'.format(logmsg))
-            log.log(level, func.__name__, "time ", end-start)
-            log.log(level, logmsg)
+            logger.log(level, func.__name__, "time ", end-start)
+            logger.log(level, logmsg)
             return f_result
         return wrapper
     return decorate
