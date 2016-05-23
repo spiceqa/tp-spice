@@ -320,7 +320,8 @@ def connect(test, ssn, env={}):
         raise RVSessionError(test)
     # client waits for user entry (authentication) if spice_password is set
     # use qemu monitor password if set, else, if set, try normal password.
-    if cfg.ticket_send:
+    if cfg.ticket_send and cfg.rv_parameters_from != "file":
+        # In case of .vv file, password supplied inside .vv file.
         # Wait for remote-viewer to launch
         try:
             test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
