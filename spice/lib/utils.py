@@ -168,7 +168,7 @@ class SpiceTestFail(exceptions.TestFail):
     """Unknow VM type."""
 
     def __init__(self, test, *args, **kwargs):
-        super(Exception, self).__init__(args, kwargs)
+        super(SpiceTestFail, self).__init__(args, kwargs)
         if test.cfg.pause_on_fail or test.cfg.pause_on_end:
             # 1 hour
             seconds = 60 * 60 * 10
@@ -338,7 +338,7 @@ class CommandsWindows(Commands):
         return os_type == 'windows'
 
     def __init__(self, *args, **kwargs):
-        super(CommandsLinux, self).__init__(*args, **kwargs)
+        super(CommandsWindows, self).__init__(*args, **kwargs)
 
 
     def service_vdagent(self, action):
@@ -486,7 +486,7 @@ class CommandsLinux(Commands):
         vm.copy_files_to(USB_POLICY_FILE_SRC, USB_POLICY_FILE)
 
 
-    @deco.retry(8, exceptions=(aexpect.ShellCmdError))
+    @deco.retry(8, exceptions=(aexpect.ShellCmdError,))
     def x_active(self):
         """Test if X session is active. Do nothing is X active. Othrerwise
         throw exception.
@@ -529,7 +529,9 @@ class CommandsLinux(Commands):
                         ",": "comma",
                         ".": "dot",
                         "/": "slash",
+                        "_": "shift-minus",
                         "?": "shift-slash",
+                        " ": "spc",
                         "=": "equal"}
         for character in string:
             if character in char_mapping:
@@ -688,7 +690,8 @@ class CommandsLinux(Commands):
             r"$(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2) "
         cmd += prop
 
-        @deco.retry(8, exceptions=(SpiceUtilsError, aexpect.ShellCmdError))
+        @deco.retry(8, exceptions=(SpiceUtilsError, aexpect.ShellCmdError,
+                                   aexpect.ShellTimeoutError))
         def is_active():
             self.vm.info("Test if window is active: %s", pattern)
             output = self.ssn.cmd(cmd)
@@ -1018,7 +1021,7 @@ class CommandsLinuxRhel7(Commands):
         return os_type == 'linux' and os_variant == 'rhel7'
 
     def __init__(self, *args, **kwargs):
-        super(CommandsLinux, self).__init__(*args, **kwargs)
+        super(CommandsLinuxRhel7, self).__init__(*args, **kwargs)
 
 
     def turn_accessibility(self, on=True):
@@ -1045,7 +1048,7 @@ class CommandsLinuxRhel6(Commands):
         return os_type == 'linux' and os_variant == 'rhel6'
 
     def __init__(self, *args, **kwargs):
-        super(CommandsLinux, self).__init__(*args, **kwargs)
+        super(CommandsLinuxRhel6, self).__init__(*args, **kwargs)
 
     def turn_accessibility(self, on=True):
         """Turn accessibility on vm.
