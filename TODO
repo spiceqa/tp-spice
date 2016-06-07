@@ -1,2 +1,38 @@
 * Import selftests from avocado.
 * Add https://coveralls.io and status to README.rst
+
+
+
+Drag-and-drop automation thoughts:
+
+https://www.redhat.com/archives/fedora-desktop-list/2009-February/msg00068.html
+http://askubuntu.com/questions/611595/gtk-message-failed-to-load-module-gtk-vector-screenshot-xubuntu-14-04/612196
+https://wiki.debian.org/accessibility-devel
+http://stackoverflow.com/questions/1586342/gobject-io-monitoring-nonblocking-reads
+https://packages.debian.org/sid/libs/libcanberra-gtk-module
+xhost - server access control program for X
+https://sourceforge.net/p/guitarix/git/ci/master/tree/trunk/tools/psup.py
+https://blogs.gnome.org/mclasen/2014/05/15/introducing-gtkinspector/
+http://unix.stackexchange.com/questions/37626/any-tool-for-inspecting-gtk3-elements
+http://askubuntu.com/questions/702762/how-to-create-a-custom-splash-screen-for-a-program
+https://github.com/chipx86/gtkparasite/tree/master/src
+https://chipx86.github.io/gtkparasite/
+https://www.x.org/archive/X11R7.5/doc/Xext/xtestlib.html
+http://tuxradar.com/content/xdotool-script-your-mouse
+http://stackoverflow.com/questions/18151670/python-how-can-two-gtk-widgets-interact-with-each-other
+http://unix.stackexchange.com/questions/37626/any-tool-for-inspecting-gtk3-elements
+http://zetcode.com/gui/pygtk/signals/
+http://www.gtk.org/tutorial1.2/gtk_tut-18.html
+https://developer.gnome.org/gtk3/stable/gtk3-General.html#gtk-get-event-widget
+http://stackoverflow.com/questions/7704017/pygobject-creating-a-drag-and-drop-source
+https://developer.gnome.org/gtkmm/stable/classGtk_1_1Widget.html
+https://developer.gnome.org/gtk3/stable/GtkGestureDrag.html#GtkGestureDrag-drag-begin
+https://developer.gnome.org/gdk3/unstable/gdk3-Event-Structures.html#GdkEventMotion
+https://developer.gnome.org/gtk3/unstable/GtkCellRenderer.html#GtkCellRenderer-struct
+http://www.pygtk.org/pygtk2tutorial/sec-DNDMethods.html
+http://www.pygtk.org/pygtk2reference/class-gdkdragcontext.html#method-gdkdragcontext--drag-drop
+http://www.pygtk.org/pygtk2tutorial/sec-DNDMethods.html
+http://www.pygtk.org/pygtk2tutorial/sec-TreeViewDragAndDrop.html
+http://www.pygtk.org/pygtk2tutorial/sec-TreeViewDragAndDrop.html
+https://github.com/GNOME/testinggtk/blob/master/tests/gdk/test_dragcontext.py
+https://anton.logvinenko.name/en/blog/emulation-of-mouse-movements-and-keystrokes.html

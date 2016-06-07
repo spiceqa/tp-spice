@@ -11,9 +11,7 @@
 #
 # See LICENSE for more details.
 
-"""Examine Xorg log in guest-VM.
-
-    - Verifying the qxl driver in Xorg logs.
+"""Examine Xorg log in guest for qxl presence.
 
 """
 
@@ -47,6 +45,8 @@ def run(vt_test, test_params, env):
     """
     test = stest.GuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    utils.reset_gui(test, test.name)
-    test_cmd = "grep -i qxl %s" % cfg.qxl_log
-    test.ssn.cmd(test_cmd)
+    test.cmd.x_active()
+    cmd = "grep -i qxl %s" % cfg.qxl_log
+    exit_code, output = test.ssn.cmd_status_output(cmd)
+    assert exit_code == 0
+    test.vm.info("Mention about qxl: %s." % output)

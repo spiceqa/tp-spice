@@ -31,9 +31,12 @@ import aexpect
 from virttest import qemu_vm
 from virttest import remote
 from virttest import utils_misc
+from virttest import asset
+from virttest import data_dir
 from virttest.staging import service
 from avocado.core import exceptions
 from spice.lib import deco
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +309,7 @@ class Commands(object):
         self.vm = test.vms[vm_name]
         self.ssn = test.sessions[vm_name]
         self.assn = test.sessions_admin[vm_name]
+        self.cfg_vm = test.cfg_vm[vm_name]
         self.kvm = test.kvm[vm_name]
         self.os_type, self.os_variant = type_variant(test, vm_name)
 
@@ -423,6 +427,16 @@ class CommandsWindows(Commands):
         self.ssn.cmd(cmd)
 
 
+    def proc_is_active(self, pname):
+        cmd = 'tasklist /FI "IMAGENAME eq %s.exe"' % pname
+        output = client_session.cmd_output(cmd)
+        if pname in output:
+            res = True
+        else:
+            res = False
+        return res
+
+
 class CommandsLinux(Commands):
 
     @classmethod
@@ -442,11 +456,16 @@ class CommandsLinux(Commands):
         action : str
             Action on vdagent-service: stop, start, restart, status, ...
 
+        Info
+        ----
+        See: avocado-vt/virttest/staging/service.py for COMMANDS
+
         """
-        runner = remote.RemoteRunner(session=self.ssn)
-        vdagentd = Factory.create_specific_service("spice-vdagentd",
+        runner = remote.RemoteRunner(session=self.assn)
+        vdagentd = service.Factory.create_specific_service("spice-vdagentd",
                                                    run=runner.run)
         func = getattr(vdagentd, action)
+        self.vm.info("spice-vdagent: %s", action)
         return func()
 
 
@@ -653,17 +672,20 @@ class CommandsLinux(Commands):
         rpm : str
             Path to RPM to be installed. It could be path to .rpm file, or RPM
             name.
+
         """
         self.vm.info("Install RPM : %s.", rpm)
         pkg = rpm
         if rpm.endswith('.rpm'):
+            pkg = os.path.split(rpm)[1]
             pkg = rpm[:-4]
         cmd = 'rpm -q %s' % pkg
-        status = self.ssn.cmd_status(cmd)
+        status = self.assn.cmd_status(cmd)
         if status == 0:
             self.vm.info("RPM %s is already installed.", pkg)
             return
-        self.ssn.cmd("yum -y install %s" % rpm, timeout=500)
+        self.vm.info("System does not have installed: %s", pkg)
+        self.assn.cmd("yum -y install %s" % rpm, timeout=500)
 
 
     def wait_for_win(self, pattern, prop="_NET_WM_NAME"):
@@ -702,6 +724,16 @@ class CommandsLinux(Commands):
             self.vm.info("Found active window: %s.", pattern)
 
         is_active()
+
+
+    def proc_is_active(self, pname):
+        try:
+            cmd = "pgrep %s" % pname
+            self.ssn.cmd(cmd)
+            res = True
+        except aexpect.ShellCmdError:
+            res = False
+        return res
 
 
     def deploy_epel_repo(self):
@@ -1012,6 +1044,146 @@ class CommandsLinux(Commands):
             ret = ""
         self.vm.info("var %s = %s", var_name, ret)
         return ret
+
+
+    def dst_dir(self):
+        dst_dir = self.cfg_vm.dst_dir
+        if not dst_dir:
+            cmd = 'getent passwd %s | cut -d: -f6' % self.cfg_vm.username
+            dst_dir = self.ssn.cmd_output(cmd).rstrip('\r\n')
+            self.cfg_vm.dst_dir = dst_dir
+        return dst_dir
+        #cmd = 'test -e %s' % dst_dir
+        #if self.ssn.cmd_status(cmd) != 0:
+        #    cmd = 'mkdir -p "%s"' % dst_dir
+        #    self.ssn.cmd(cmd)
+
+
+    def cp_deps(self, src, dst):
+        provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
+        src_path = os.path.join(provider_dir, "deps", src)
+        self.vm.info("Copy from deps: %s to %s", src_path, dst)
+        self.vm.copy_files_to(src_path, dst)
+
+
+    def chk_deps(self, fname, dst_dir=None):
+        dst_dir = self.dst_dir()
+        dst_path = os.path.join(dst_dir, fname)
+        cmd = 'test -e %s' % dst_path
+        if self.ssn.cmd_status(cmd) != 0:
+            self.cp_deps(fname, dst_path)
+        return dst_path
+
+
+    def img2cb(self, img):
+        """Use the clipboard script to copy an image into the clipboard.
+        """
+        script = self.cfg_vm.helper
+        params = "--img2cb"
+        dst_script = self.chk_deps(script)
+        cmd = "%s %s %s" % (dst_script, params, img)
+        self.vm.info("Put image %s in clipboard.", img)
+        self.ssn.cmd(cmd)
+
+
+    def cb2img(self, img):
+        """
+
+        Parameters
+        ----------
+        img : str
+            Where to save img.
+
+        """
+        script = self.cfg_vm.helper
+        params = "--cb2img"
+        dst_script = self.chk_deps(script)
+        cmd = "%s %s %s" % (dst_script, params, img)
+        self.vm.info("Dump clipboard to image %s.", img)
+        self.ssn.cmd_output(cmd)
+
+
+    def text2cb(self, text):
+        """Use the clipboard script to copy an image into the clipboard.
+        """
+        script = self.cfg_vm.helper
+        dst_script = self.chk_deps(self.cfg_vm.helper)
+        params = "--txt2cb"
+        cmd = "%s %s %s" % (dst_script, params, text)
+        self.vm.info("Put in clipboard: %s", text)
+        self.ssn.cmd(cmd)
+
+
+    def cb2text(self):
+        script = self.cfg_vm.helper
+        dst_script = self.chk_deps(self.cfg_vm.helper)
+        params = "--cb2stdout"
+        cmd = "%s %s" % (dst_script, params)
+        text = self.ssn.cmd_output(cmd)
+        self.vm.info("Get from clipboard: %s", text)
+        return text
+
+
+    def clear_cb(self):
+        """Use the script to clear clipboard.
+        """
+        script = self.cfg_vm.helper
+        params = "--clear"
+        dst_script = self.chk_deps(script)
+        cmd = "%s %s" % (dst_script, params)
+        self.vm.info("Clear clipboard.")
+        self.ssn.cmd(cmd)
+
+
+    def gen_text2cb(self, kbytes):
+        script = self.cfg_vm.helper
+        dst_script = self.chk_deps(self.cfg_vm.helper)
+        params = "--kbytes2cb"
+        size = int(kbytes) * 1024
+        cmd = "%s %s %s" % (dst_script, params, size)
+        self.vm.info("Put %s kbytes of text to clipboard.", kbytes)
+        self.ssn.cmd(cmd)
+
+
+    def cb2file(self, fname):
+        script = self.cfg_vm.helper
+        dst_script = self.chk_deps(self.cfg_vm.helper)
+        params = "--cb2txtf"
+        cmd = "%s %s %s" % (dst_script, params, fname)
+        self.vm.info("Dump clipboard to file.", fname)
+        self.ssn.cmd(cmd, timeout=300)
+
+
+    def md5sum(self, fpath):
+        md5cmd = "md5sum %s" % fpath
+        o = self.ssn.cmd_output(md5cmd)
+        md5_sum = re.findall(r'\w+', o)[0]
+        self.vm.info("MD5 %s: %s.", fpath, md5_sum)
+        return md5_sum
+
+
+    def klogger_start(self):
+        ssn = self.test.open_ssn(self.vm_name)
+        cmd = "xev -event keyboard -name klogger"
+        self.vm.info("Start key logger. Do not forget to turn it off.")
+        ssn.sendline(cmd)
+        self.wait_for_win('klogger' ,'WM_NAME')
+        return ssn
+
+
+    def klogger_stop(self, ssn):
+        # Send ctrl+c (SIGINT) through ssh session.
+        time.sleep(1)
+        ssn.send("\003")
+        output = ssn.read_up_to_prompt()
+        a = re.findall(
+            'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)',
+            output)
+        keys = map(lambda (keycode,keysym):
+                   (int(keycode), int(keysym, base=16)), a)
+        self.vm.info("Read keys: %s" % keys)
+        # Return list of pressed: (keycode, keysym)
+        return keys
 
 
 class CommandsLinuxRhel7(Commands):

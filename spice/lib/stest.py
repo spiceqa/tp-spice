@@ -111,6 +111,7 @@ class SpiceTest(object):
         self.cfg = AttributeDict()
         self.cfg.update(parameters)
         self.vms = {}
+        self.vt_test = test
         vm_names = self.cfg.vms.split()
         """Holds all VM objects."""
         for name in vm_names:
@@ -136,6 +137,11 @@ class SpiceTest(object):
                     logger.info("VM %s spice server option %s is %s.", name,
                                  prm, self.kvm[name][prm])
         self.cmds = {}
+        """Config set per VM."""
+        self.cfg_vm = {}
+        for name in vm_names:
+            self.cfg_vm[name] = AttributeDict()
+            self.cfg_vm[name].update(self.vms[name].get_params())
         """Commands set per VM."""
         for name in vm_names:
             self.cmds[name] = utils.Commands.get(self, name)
@@ -178,7 +184,8 @@ class ClientGuestTest(SpiceTest):
         self.kvm_g = self.kvm[name_g]
         self.cmd_c = self.cmds[name_c]
         self.cmd_g = self.cmds[name_g]
-
+        self.cfg_c = self.cfg_vm[name_c]
+        self.cfg_g = self.cfg_vm[name_g]
 
 
 class OneVMTest(SpiceTest):
@@ -193,6 +200,7 @@ class OneVMTest(SpiceTest):
         self.assn = self.sessions_admin[name]
         self.kvm = self.kvm[name]
         self.cmd = self.cmds[name]
+        self.cfg = self.cfg_vm[name]
 
 
 class ClientTest(OneVMTest):
@@ -206,4 +214,4 @@ class GuestTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        super(ClientTest, self).__init__(test, parameters, env)
+        super(GuestTest, self).__init__(test, parameters, env)

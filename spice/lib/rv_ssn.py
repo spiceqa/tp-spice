@@ -466,5 +466,3 @@ def generate_vv_file(path, test):
         rv_file.write("fullscreen=1\n")
     if cfg.spice_proxy:
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)
-
-
