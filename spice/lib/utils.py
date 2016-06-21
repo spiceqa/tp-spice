@@ -796,7 +796,7 @@ class CommandsLinux(Commands):
                 raise Exception("Unsupported RHEL guest")
 
 
-    def set_resolution(self, res, display):
+    def set_resolution(self, res, display="qxl-0"):
         """Sets resolution of qxl device on a VM.
 
         Parameters
