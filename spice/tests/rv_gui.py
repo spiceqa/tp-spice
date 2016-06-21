@@ -27,9 +27,13 @@ Test is successful if all sub-tests running at VM are successful.
 """
 
 import os
+import sys
 import logging
 import aexpect
 import glob
+import tempfile
+import traceback
+import copy
 from virttest.virt_vm import VMDeadError
 from autotest.client.shared import error
 from virttest import utils_net
@@ -42,14 +46,31 @@ EXPECTED_RV_CORNERS_FS = [('+0','+0'),('-0','+0'),('-0','-0'),('+0','-0')]
 WIN_TITLE = "'vm1 (1) - Remote Viewer'"
 
 
+logger = logging.getLogger(__name__)
+
+
 class Helper(object):
     """Call-able class."""
 
     def __init__(self, test):
         self.test = test
 
-    def get_dic(self):
-        return test.cfg
+    def get_cfg(self):
+        return {v:k for v,k in self.test.cfg.iteritems()}
+
+    def get_x_var(self, var_name, vm_name):
+        var_val = self.test.cmds[vm_name].get_x_var(var_name)
+        return var_val
+
+    def get_uri(self):
+        host_ip = rv_ssn.get_host_ip(self.test)
+        port = self.test.kvm_g.spice_port
+        uri = "spice://%s?port=%s" % (host_ip, port)
+        if utils.is_yes(self.test.kvm_g.spice_ssl):
+            tls_port = self.test.kvm_g.spice_tls_port
+            uri = uri + "\\&tls-port=%s" % tls_port
+        logging.info("Reply for URI req: %s", uri)
+        return uri
 
     def bad_request(self, *args, **kargs):
         return NotImplementedError('BadRequest')
@@ -71,8 +92,8 @@ class Helper(object):
             Pickable object. Depends on request.
 
         """
-        logging.info("Query %s from VM: args=%s, kargs=%s", request, str(args),
-                     str(kargs))
+        logging.info("Query --> %s: args=%s, kargs=%s", str(request),
+                     str(args), str(kargs))
         answ = getattr(self, str(request), self.bad_request)
         return answ(*args, **kargs)
 
@@ -98,52 +119,51 @@ def run(vt_test, test_params, env):
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     ssn_c = test.ssn_c
+    cmd_c = test.cmd_c
     vm_c = test.vm_c
-    utils.turn_accessibility(test, test.name_c)
-    utils.clear_interface(test, test.name_c)
-    # 
-    utils.install_rpm(test, test.name_c, vm_c.params.get("epel_rpm"))
-    utils.install_rpm(test, test.name_c, vm_c.params.get("dogtail_rpm"))
-    utils.install_rpm(test, test.name_c, vm_c.params.get("wmctrl_rpm"))
-    mdir = os.path.dirname(os.path.realpath(__file__))
-    # Copy client tests to VM.
-    tests_dir = os.path.join(mdir, os.path.pardir, cfg.client_tests)
-    vm_c.copy_files_to(tests_dir, cfg.test_script_tgt)
-    # Copy libraries to VM.
-    libs_dir = os.path.join(mdir, os.path.pardir, "lib")
-    libs_files = " ".join((os.path.join(libs_dir, _) for _ in ("params.py",)))
-    vm_c.copy_files_to(libs_files, cfg.test_script_tgt)
+    cmd_c.x_active()
+    cmd_c.lock_scr_off()
+    cmd_c.turn_accessibility()
+    cmd_c.reset_gui()  # Activate accessibility
+    cmd_c.install_rpm(test.cfg_c.epel_rpm)
+    cmd_c.install_rpm(test.cfg_c.dogtail_rpm)
+    cmd_c.install_rpm(test.cfg_c.wmctrl_rpm)
+    cmd_c.install_rpm("xdotool")
+    # Copy tests to client VM.
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
     if cfg.make_rv_connect:
-        try:
-            rv_ssn.connect(test)
-            is_connected = True
-        except rv_ssn.RVSessionConnect as excp:
-            reason = str(excp)
-        except rv_ssn.RVSessionError as e:
-            raise exceptions.TestFail(str(e))
-    tests = cfg.rv_gui_test_list.split()
+        cmd_c.x_active()
+        test.cmd_g.x_active()
+        ssn = test.open_ssn(test.name_c)
+        rv_ssn.connect(test, ssn)
+        is_connected = True
     errors = 0
-    commander = vm_c.commander(commander_path="/tmp")
+    logging.getLogger().setLevel(logging.DEBUG)
+    try:
+        commander = vm_c.commander(commander_path=cmd_c.dst_dir())
+    except Exception as e:
+        logger.info("Failed to create commander: %s.", str(e))
+        fname = "/tmp/remote_runner.log"
+        vm_c.copy_files_from(fname, fname)
+        f = open(fname)
+        logger.info("Remote runner log: %s.", f.read())
     responder = Helper(test)
     commander.set_responder(responder)
-    for test in tests:
-        logging.info("Test: %s", test)
-        # Adding parameters to the test
-        test_path = "%s/%s/%s.py" % (cfg.test_script_tgt, cfg.client_tests,
-                                        test)
-        vm_c.info("cmdline : %s", test_path)
-        try:
-            cmd = commander.manage.python_file_run_with_helper(test_path)
-        except Exception as e:
-            logging.info("Got exception: %s", str(e))
-            result = False
-            raise exceptions.TestFail("Tests failed with %s:", str(e))
-        else:
-            result = cmd.results
-        logging.info("Test finished with result: %s", result)
-    pass
+    tdir = cmd_c.cp2vm(cfg.client_tests)
+    tpath = os.path.join(tdir, cfg.ctest)
+    vm_c.info("Client test: %s.", tpath)
+    try:
+        cmd = commander.manage.python_file_run_with_helper(tpath)
+    except Exception as e:
+        a = traceback.format_exc()
+        logger.info("Exceptio: %s: %s.", repr(e), a)
+    result = cmd.results
+    logger.info("Test %s finished with result: %s", cfg.ctest, result)
+    if cfg.make_rv_connect:
+        out = ssn.read_nonblocking()
+        logger.info("RV log: %s.", str(out))
     # Responder in commander is not pickable.
     commander.close()
     vm_c.remote_sessions.remove(commander)
+    assert result == 0

@@ -66,6 +66,15 @@ USBCLERK_DISTR_PATH = r'C:\usbclerk.msi'
 DISPLAY = "qxl-0"
 
 
+url_regex = re.compile(
+    r'^(?:http|ftp)s?://' # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+    r'localhost|' #localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+    r'(?::\d+)?' # optional port
+    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+
 def vm_is_win(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
@@ -318,12 +327,17 @@ class Commands(object):
     def get(test, vm_name):
         vm = test.vms[vm_name]
         os_type, os_variant = type_variant(test, vm_name)
-        for cls in Commands.__subclasses__():
+        cl = None
+        def all_subclasses(cls):
+            return cls.__subclasses__() + \
+                [g for s in cls.__subclasses__() for g in all_subclasses(s)]
+        for cls in all_subclasses(Commands):
             if cls.is_for(os_type, os_variant):
-                return cls(test, vm_name)
-            if cls.is_for(os_type, None):
-                return cls(test, vm_name)
-        raise ValueError
+                cl = cls
+            elif cls.is_for(os_type, None) and not cl:
+                cl = cls
+        vm.info("Pick commands class: %s.", cl.__name__)
+        return cl(test, vm_name)
 
 
     def __getattr__(self, name):
@@ -446,6 +460,8 @@ class CommandsLinux(Commands):
 
     def __init__(self, *args, **kwargs):
         super(CommandsLinux, self).__init__(*args, **kwargs)
+
+
 
 
     def service_vdagent(self, action):
@@ -643,7 +659,7 @@ class CommandsLinux(Commands):
         self.x_active()
 
 
-    def export_x2ssh(self, var, fallback=None):
+    def export_x2ssh(self, var_name, fallback=None, ssn=None):
         """Take value from X session and export it to ssh session. Useful to
         export variables such as 'DBUS_SESSION_BUS_ADDRESS', 'AT_SPI_BUS'.
 
@@ -655,13 +671,17 @@ class CommandsLinux(Commands):
             If value is absent in X session, then use this value.
 
         """
-        val = self.get_x_var(var_name)
-        if not val:
-            val = fallback
-        if val:
+        var_val = self.get_x_var(var_name)
+        if not var_val:
+            var_val = fallback
+        if not ssn:
+            ssn = self.ssn
+        if var_val:
             self.vm.info("Export %s == %s", var_name, var_val)
             cmd = r"export %s='%s'" % (var_name, var_val)
-            self.ssn.cmd(cmd)
+            ssn.cmd(cmd)
+        else:
+            self.vm.info("Do not export %s var.", var_name)
 
 
     def install_rpm(self, rpm):
@@ -671,21 +691,32 @@ class CommandsLinux(Commands):
         ----------
         rpm : str
             Path to RPM to be installed. It could be path to .rpm file, or RPM
-            name.
+            name or URL.
 
         """
         self.vm.info("Install RPM : %s.", rpm)
         pkg = rpm
         if rpm.endswith('.rpm'):
             pkg = os.path.split(rpm)[1]
-            pkg = rpm[:-4]
+            pkg = pkg[:-4]
         cmd = 'rpm -q %s' % pkg
         status = self.assn.cmd_status(cmd)
         if status == 0:
             self.vm.info("RPM %s is already installed.", pkg)
             return
-        self.vm.info("System does not have installed: %s", pkg)
-        self.assn.cmd("yum -y install %s" % rpm, timeout=500)
+        if url_regex.match(rpm):
+            self.vm.info("Download RPM: %s.", rpm)
+            self.assn.cmd("curl -s -O %s" % rpm, timeout=500)
+            rpm = os.path.split(rpm)[1]
+        self.assn.cmd("yes | yum -y install %s" % rpm, timeout=500)
+
+
+    @deco.retry(8, exceptions=(aexpect.ShellCmdError,))
+    def wait_for_prog(self, program):
+        cmd = "pgrep %s" % program
+        pids = self.ssn.cmd(cmd).split()
+        self.vm.info("Found active %s with pids: %s.", program, str(pids))
+        return pids
 
 
     def wait_for_win(self, pattern, prop="_NET_WM_NAME"):
@@ -1011,10 +1042,8 @@ class CommandsLinux(Commands):
         read var value from SSH session it could be different from X session var or
         absent. The strategy used in this function is:
 
-            1. Run terminal. Terminal will be disconnected from SSH session. The
-            parent of the terminal will be X manager. Terminal inherits variables
-            from X manager.  Dump variables to file.
-            2. Read the file for interested variable.
+            1. Find nautilus process.
+            2. Read its /proc/$PID/environ
 
         Parameters
         ----------
@@ -1027,22 +1056,16 @@ class CommandsLinux(Commands):
             Env variable value.
 
         """
-        terminal = 'gnome-terminal'
-        dump_file = tempfile.mktemp()
-        dump_env_cmd = """'sh -c "export -p > %s"'""" % dump_file
-        cmd1 = terminal + " -e " + dump_env_cmd
-        cmd2 = r'cat "%s"' % dump_file
-        pattern = "\s%s=.+" % var_name
-        self.ssn.cmd(cmd1)
-        env = self.ssn.cmd(cmd2)
-        ret = re.findall(pattern, env)
-        if ret:
-            ret = ret[0]
-            ret = ret.strip()
-            ret = ret.split('=', 1)[1]
-        else:
-            ret = ""
-        self.vm.info("var %s = %s", var_name, ret)
+        pattern = "(?<=(?:^{0}=|(?<=\n){0}=))[^\n]+".format(var_name)
+        pids = self.wait_for_prog("nautilus")
+        ret = ""
+        for pid in pids:
+            cmd = "cat /proc/%s/environ | xargs -n 1 -0 echo" % pid
+            env = self.ssn.cmd_output(cmd)
+            val = re.findall(pattern, env)
+            if val:
+                ret = val[0]
+        self.vm.info("export %s=%s", var_name, ret)
         return ret
 
 
@@ -1059,15 +1082,31 @@ class CommandsLinux(Commands):
         #    self.ssn.cmd(cmd)
 
 
-    def cp_deps(self, src, dst):
+    def cp_deps(self, src, dst_dir=None):
         provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
         src_path = os.path.join(provider_dir, "deps", src)
-        self.vm.info("Copy from deps: %s to %s", src_path, dst)
-        self.vm.copy_files_to(src_path, dst)
+        dst_dir = self.dst_dir()
+        self.vm.info("Copy from deps: %s to %s", src_path, dst_dir)
+        self.vm.copy_files_to(src_path, dst_dir)
+
+
+    def cp2vm(self, src, dst_dir=None, dst_name=None):
+        if not dst_dir:
+            dst_dir = self.dst_dir()
+        provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
+        src = os.path.normpath(src)
+        src_path = os.path.join(provider_dir, src)
+        if not dst_name:
+            dst_name = src
+        dst_path = os.path.join(dst_dir, dst_name)
+        self.vm.info("Copy: %s to %s", src_path, dst_path)
+        self.vm.copy_files_to(src_path, dst_dir)
+        return dst_path
 
 
     def chk_deps(self, fname, dst_dir=None):
-        dst_dir = self.dst_dir()
+        if not dst_dir:
+            dst_dir = self.dst_dir()
         dst_path = os.path.join(dst_dir, fname)
         cmd = 'test -e %s' % dst_path
         if self.ssn.cmd_status(cmd) != 0:
@@ -1186,7 +1225,7 @@ class CommandsLinux(Commands):
         return keys
 
 
-class CommandsLinuxRhel7(Commands):
+class CommandsLinuxRhel7(CommandsLinux):
 
     @classmethod
     def is_for(cls, os_type, os_variant):
@@ -1213,7 +1252,23 @@ class CommandsLinuxRhel7(Commands):
         self.ssn.cmd(cmd)
 
 
-class CommandsLinuxRhel6(Commands):
+    def lock_scr_off(self):
+        self.vm.info("Disable lock screen.")
+        cmd = "gsettings set org.gnome.desktop.session idle-delay 0"
+        self.ssn.cmd(cmd)
+        cmd = "gsettings set org.gnome.desktop.lockdown disable-lock-screen true"
+        self.ssn.cmd(cmd)
+        cmd = "gsettings set org.gnome.desktop.screensaver lock-delay 3600"
+        self.ssn.cmd(cmd)
+        cmd = "gsettings set org.gnome.desktop.screensaver lock-enabled false"
+        self.ssn.cmd(cmd)
+        cmd = "gsettings set org.gnome.desktop.screensaver idle-activation-enabled false"
+        self.ssn.cmd(cmd)
+        cmd = "gsettings set org.gnome.settings-daemon.plugins.power active false"
+        self.ssn.cmd(cmd)
+
+
+class CommandsLinuxRhel6(CommandsLinux):
 
     @classmethod
     def is_for(cls, os_type, os_variant):
@@ -1239,5 +1294,35 @@ class CommandsLinuxRhel6(Commands):
         # temporarily (for a single session) enable Accessibility:
         # GNOME_ACCESSIBILITY=1
         # session.cmd("gconftool-2 --shutdown")
+        self.vm.info("Turning accessibility: %s.", val)
         cmd = "gconftool-2 --set /desktop/gnome/interface/accessibility --type bool %s" % val
+        self.ssn.cmd(cmd)
+
+    def export_dbus(self, ssn=None):
+        if not ssn:
+            ssn = self.ssn
+        self.vm.info("Export DBUS info.")
+        cmd = "cat /var/lib/dbus/machine-id"
+        machine_id = ssn.cmd(cmd).rstrip('\r\n')
+        cmd = '. /home/test/.dbus/session-bus/%s-0' % machine_id
+        ssn.cmd(cmd)
+        cmd = 'export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID DBUS_SESSION_BUS_WINDOWID'
+        ssn.cmd(cmd)
+
+
+    def lock_scr_off(self):
+        self.vm.info("Disable lock screen.")
+        # https://wiki.archlinux.org/index.php/Display_Power_Management_Signaling
+        # Disable DPMS and prevent screen from blanking
+        cmd = "xset s off -dpms"
+        self.ssn.cmd(cmd)
+        cmd = "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type=bool false"
+        self.ssn.cmd(cmd)
+        cmd = "gconftool-2 -s /apps/gnome-power-manager/ac_sleep_display --type=int 0"
+        self.ssn.cmd(cmd)
+        cmd = "gconftool-2 -s /apps/gnome-power-manager/timeout/sleep_display_ac --type=int 0"
+        self.ssn.cmd(cmd)
+        cmd = "gconftool-2 --type boolean -s /apps/gnome-screensaver/lock_enabled false"
+        self.ssn.cmd(cmd)
+        cmd = "gconftool-2 --type int -s /desktop/gnome/session/idle_delay 0"
         self.ssn.cmd(cmd)

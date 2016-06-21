@@ -173,9 +173,9 @@ def connect(test, ssn, env={}):
     vm_g = test.vm_g
     kvm_g = test.kvm_g
     # Check correct invocation.
-    if cfg.display == "vnc":
+    if test.cfg_g.display == "vnc":
         raise RVSessionError(test, "remote-viewer vnc not implemeted")
-    elif cfg.display != "spice":
+    elif test.cfg_g.display != "spice":
         raise RVSessionError(test, "Unsupported display value")
     # Print remove-viewer version on client
     if vm_c.is_linux():
@@ -281,6 +281,8 @@ def connect(test, ssn, env={}):
             ssn.cmd(ccmd)
         if not test.cmd_c.check_usb_policy():
             test.cmd_c.add_usb_policy()
+    if cfg.rv_debug:
+        cmd += " --spice-debug"
     if cfg.rv_parameters_from == "cmd":
         if cfg.full_screen:
             cmd += " --full-screen"
@@ -292,8 +294,6 @@ def connect(test, ssn, env={}):
                 cmd += " --spice-smartcard-db " + cfg.certdb
             if cfg.gencerts:
                 cmd += " --spice-smartcard-certificates " + cfg.gencerts
-    if test.vm_c.is_linux():
-        cmd = cmd + " &> ~/rv.log"
     if cfg.rv_parameters_from == "file":
         host_dir = os.path.expanduser('~')
         host_vv_file = os.path.join(host_dir, cfg.rv_file)
