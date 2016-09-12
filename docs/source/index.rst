@@ -13,6 +13,7 @@ Library & tests:
    :maxdepth: 1
    :numbered:
 
+   quickstart
    api/*
 
 README

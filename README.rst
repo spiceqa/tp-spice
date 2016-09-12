@@ -34,6 +34,8 @@ This is tests provider from SPICE QE
 
 http://virt-test.readthedocs.org/en/latest/basic/TestProviders.html
 
+Test files can be at any directory. Avocado-VT will be able to find it.
+
 **********
 virtio-win
 **********

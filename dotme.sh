@@ -1,0 +1,3 @@
+PYTHONPATH="$PYTHONPATH:$HOME/git/avocado-vt"
+PYTHONPATH="$PYTHONPATH:$HOME/git/avocado"
+export PYTHONPATH

@@ -1,6 +1,10 @@
 * Import selftests from avocado.
 * Add https://coveralls.io and status to README.rst
 
+* Add tests to TCMS:
+rv_vmshutdown.shutdown_cmdline
+rv_vmshutdown.shutdown_qemu
+
 
 
 Drag-and-drop automation thoughts:

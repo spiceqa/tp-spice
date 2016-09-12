@@ -215,3 +215,23 @@ class GuestTest(OneVMTest):
     """
     def __init__(self, test, parameters, env):
         super(GuestTest, self).__init__(test, parameters, env)
+
+
+def download_asset(asset_name, ini_dir=None, section=None, ddir=None):
+    provider_dirs = asset.get_test_provider_subdirs(backend="spice")
+    if ini_dir:
+        provider_dirs.insert(0, ini_dir)
+    for d in provider_dirs:
+        ini_file = os.path.join(d, "%s.ini" % asset_name)
+        if os.path.isfile(ini_file):
+            asset_dir=d
+            break
+    assert os.path.isfile(ini_file), "Cannot find %.ini file." % asset_name
+    asset_info = asset.get_asset_info(asset_name, ini_dir=asset_dir,
+                                        section=asset_section)
+    logger.info("Asset info: %s" % asset_info)
+    if ddir:
+        dst_file=os.path.basename(asset_info['destination'])
+        asset_info['destination'] = os.path.join(ddir, dst_file)
+    asset.download_file(asset_info)
+    logger.info("Use: %s" % asset_info['destination'])
