@@ -27,6 +27,9 @@ from virttest import asset
 
 from spice.lib import stest
 
+from lib4x import driver
+from lib4x.user_portal import user_login
+
 logger = logging.getLogger(__name__)
 
 @error.context_aware
@@ -43,11 +46,13 @@ def run(vt_test, test_params, env):
         Dictionary with test environment.
 
     """
-    test = stest.ClientGuestTest(vt_test, test_params, env)
-    ssn = test.open_ssn(test.name_c)
-    test.cmd_c.run_selenium(ssn)
+    test = stest.ClientTest(vt_test, test_params, env)
+    ssn = test.open_ssn(test.name)
+    test.cmd.run_selenium(ssn)
     time.sleep(10)
     out = ssn.read_nonblocking()
     logger.info("RV log: %s.", str(out))
+    vm_addr = test.vm.get_address()
+    logger.info("VM addr: %s", vm_addr)
+    #drv = driver.DriverFactory("Firefox", vm_addr, "5555")
     time.sleep(10000)
-
