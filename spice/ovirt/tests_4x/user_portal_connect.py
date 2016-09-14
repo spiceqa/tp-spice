@@ -44,5 +44,10 @@ def run(vt_test, test_params, env):
 
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
-    selenium = stest.download_asset('selenium')
-    logging.info('Got %s', selenium)
+    ssn = test.open_ssn(test.name_c)
+    test.cmd_c.run_selenium(ssn)
+    time.sleep(10)
+    out = ssn.read_nonblocking()
+    logger.info("RV log: %s.", str(out))
+    time.sleep(10000)
+
