@@ -5,6 +5,8 @@
 rv_vmshutdown.shutdown_cmdline
 rv_vmshutdown.shutdown_qemu
 
+* Create kickstarts / templates without firewall.
+
 
 
 Drag-and-drop automation thoughts:

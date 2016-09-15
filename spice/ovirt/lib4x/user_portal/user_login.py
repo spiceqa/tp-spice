@@ -22,10 +22,11 @@ import logging
 from selenium.webdriver.common import by
 from selenium import common
 
-import elements
-import page_base
-import login_base
-import user_home
+from .. import elements
+from .. import page_base
+from .. import login_base
+from .. import excepts
+from . import user_home
 
 logger = logging.getLogger(__name__)
 
