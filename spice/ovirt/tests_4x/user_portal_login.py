@@ -18,14 +18,14 @@
 
 import logging
 
-import time
-import logging
-
 from avocado.core import exceptions
 from autotest.client.shared import error
 from virttest import asset
 
 from spice.lib import stest
+
+from lib4x import driver
+from lib4x.user_portal import user_login
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,20 @@ def run(vt_test, test_params, env):
         Dictionary with test environment.
 
     """
-    test = stest.ClientGuestTest(vt_test, test_params, env)
-    selenium = stest.download_asset('selenium')
-    logging.info('Got %s', selenium)
+    test = stest.ClientTest(vt_test, test_params, env)
+    ssn = test.open_ssn(test.name)
+    test.cmd.run_selenium(ssn)
+    time.sleep(10)
+    out = ssn.read_nonblocking()
+    logger.info("Selenium log: %s.", str(out))
+    vm_addr = test.vm.get_address()
+    logger.info("VM addr: %s", vm_addr)
+    test.assn.cmd("iptables -F")  # XXX
+    drv = driver.DriverFactory("Firefox", vm_addr, "5555")
+    drv.maximize_window()
+    login_page = user_login.UserLoginPage(drv)
+    home_page = login_page.login_user(username="auto",
+                                      password="redhat",
+                                      domain="spice.brq.redhat.com",
+                                      autoconnect=False)
+    home_page.sign_out_user()

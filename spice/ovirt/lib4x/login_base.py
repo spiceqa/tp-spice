@@ -24,6 +24,7 @@ from selenium import common
 
 import page_base
 import elements
+from . import excepts
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class LoginPageBaseModel(page_base.PageModel):
     login_btn = elements.Button(by=by.By.CLASS_NAME, locator='btn-lg')
     page_body = elements.PageElement(by.By.TAG_NAME, 'body')
     msg_login_failed = 'Login failed. Please verify your login information or contact the system administrator.'
+    msg_login_failed2 = 'The user name or password is incorrect.'
 
 
 class LoginPageBase(page_base.PageObject):
@@ -119,12 +121,8 @@ class LoginPageBase(page_base.PageObject):
         """
         try:
             if self._model.msg_login_failed in self._model.page_body.text:
-                raise exceptions.LoginError()
-        except common.exceptions.NoSuchElementException:
-            pass
-        try:
-            if (self._model.password.get_attribute('title')
-                    == self._model.msg_empty_field):
-                raise exceptions.FieldIsRequiredError("password")
+                raise excepts.LoginError()
+            if self._model.msg_login_failed2 in self._model.page_body.text:
+                raise excepts.LoginError()
         except common.exceptions.NoSuchElementException:
             pass

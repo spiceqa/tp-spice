@@ -17,12 +17,13 @@ import time
 
 from selenium.webdriver.common import by
 
-import page_base
-import dialogs
-import exceptions
-import basictab
-import extendedtab
-import elements
+from .. import page_base
+from .. import dialogs
+from .. import excepts
+from .. import elements
+
+from . import basictab
+from . import extendedtab
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +74,11 @@ class UserHomePage(page_base.PageObject):
         -------
             LoginPage page object.
         """
-        # lazy import - required to avoid circular import with loginpage module
-        import user_login
+        # Lazy import - required to avoid circular import with loginpage module.
+        from . import user_login
         self._model.username.click()
         self._model.sign_out_link.click()
-        return user_login.LoginPage(self.driver)
+        return user_login.UserLoginPage(self.driver)
 
     def get_user_portal_guide_url(self):
         """Open User Portal Guide documentation in new window/tab,
@@ -94,7 +95,7 @@ class UserHomePage(page_base.PageObject):
         window_cnt_before = len(self.driver.window_handles)
         self._model.guide_link.click()
         if len(self.driver.window_handles) == window_cnt_before:
-            raise exceptions.UserActionError(
+            raise excepts.UserActionError(
                 "failed to open User Portal Guide in new window/tab")
         self.driver.switch_to_window(self.driver.window_handles[-1])
         guide_url = self.driver.current_url

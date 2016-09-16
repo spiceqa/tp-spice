@@ -137,6 +137,31 @@ def type_variant(test, vm_name):
     return (os_type, os_variant)
 
 
+def download_asset(asset_name, ini_dir=None, section=None, ddir=None):
+    provider_dirs = asset.get_test_provider_subdirs(backend="spice")[0]
+    if ini_dir:
+        provider_dirs.insert(0, ini_dir)
+    logger.debug("Provider_dirs: %s.", repr(provider_dirs))
+    fname = "%s.ini" % asset_name
+    for d in os.walk(provider_dirs):
+        d = d[0]
+        ini_file = os.path.join(d, fname)
+        if os.path.isfile(ini_file):
+            asset_dir=d
+            break
+    assert os.path.isfile(ini_file), "Cannot find %s.ini file." % asset_name
+    logger.info("Section: %s", section)
+    asset_info = asset.get_asset_info(asset_name, ini_dir=asset_dir,
+                                        section=section)
+    if ddir:
+        dst_file=os.path.basename(asset_info['destination'])
+        asset_info['destination'] = os.path.join(ddir, dst_file)
+    asset.download_file(asset_info)
+    stored_at = asset_info['destination']
+    logger.info("Asset stored at: %s.", stored_at)
+    return stored_at
+
+
 class SpiceUtilsError(Exception):
     """Exception raised in case the lib API fails."""
 
@@ -462,8 +487,6 @@ class CommandsLinux(Commands):
         super(CommandsLinux, self).__init__(*args, **kwargs)
 
 
-
-
     def service_vdagent(self, action):
         """Start/Stop/... on the spice-vdagentd service.
 
@@ -483,6 +506,23 @@ class CommandsLinux(Commands):
         func = getattr(vdagentd, action)
         self.vm.info("spice-vdagent: %s", action)
         return func()
+
+
+    def workdir(self):
+        wdir = self.cfg.wdir or "~/tp-spice"
+        cmd = "mkdir -p %s" % wdir
+        self.ssn.cmd(cmd)
+        return wdir
+
+
+    def run_selenium(self, ssn):
+        selenium = download_asset("selenium", section=self.cfg_vm.selenium_ver)
+        fname = os.path.basename(selenium)
+        dst_fname = os.path.join(self.workdir(), fname)
+        self.vm.copy_files_to(selenium, dst_fname)
+        cmd = "java -jar {} -port 5555".format(dst_fname, )
+        self.vm.info("selenium cmd: %s", cmd)
+        ssn.sendline(cmd)
 
 
     def verify_vdagent(self):
