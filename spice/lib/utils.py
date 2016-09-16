@@ -1218,7 +1218,7 @@ class CommandsLinux(Commands):
         script = self.cfg_vm.helper
         dst_script = self.chk_deps(self.cfg_vm.helper)
         params = "--kbytes2cb"
-        size = int(kbytes) * 1024
+        size = int(kbytes)
         cmd = "%s %s %s" % (dst_script, params, size)
         self.vm.info("Put %s kbytes of text to clipboard.", kbytes)
         self.ssn.cmd(cmd)
