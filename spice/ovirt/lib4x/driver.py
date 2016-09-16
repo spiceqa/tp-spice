@@ -16,8 +16,11 @@
 """Classes difine oVirt pages models.
 """
 
-import logging
+import os
+import time
 import types
+import logging
+import tempfile
 import functools
 
 from selenium import webdriver
@@ -88,7 +91,7 @@ class FreshWebElement(object):
                     try:
                         attr = getattr(self._elem, name)
                         return attr(*args, **kwargs)
-                    except selenium_ex.StaleElementReferenceException:
+                    except common.exceptions.StaleElementReferenceException:
                         logger.debug(self.__STALE_ELEM_MSG, self._by,
                                      self._value, attempt)
                         self.__refresh_element()
@@ -200,6 +203,54 @@ class WebDriverExtension(object):
         """
         locator_type, locator_value = self._parse_ui_map_locator(locator)
         return self.find_elements(by=locator_type, value=locator_value)
+
+
+    def get_screen_filename(self, prefix=None, suffix=None, use_timestamp=True,
+                            dir_=None):
+        """Create temporary file and return its filename.
+
+        Parameters
+        ----------
+        suffix
+            File suffix.
+        prefix
+            File prefix.
+        use_timestamp
+            True/False; append timestamp to file prefix.
+        dir_ : str
+            Directory where to store file.
+
+        Returns
+        -------
+        srt
+            Filename, including full path.
+        """
+        prefix = prefix or 'selenium-screenshot'
+        suffix = suffix or '.png'
+        dir_ = dir_ or tempfile.gettempdir()
+        if use_timestamp:
+            timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
+            prefix = ''.join((prefix, '-', timestr, suffix))
+        abspath = os.path.join(dir_, prefix)
+        return abspath
+
+
+    def save_screen_as_file(self, filename=None):
+        """Save the screenshot of the current window.
+
+        Parameters
+        ----------
+        filename : str
+            The full path you wish to save your screenshot to.
+
+        Returns
+        -------
+        str
+            Filename on success.
+        """
+        filename = filename or self.get_screen_filename()
+        if self.get_screenshot_as_file(filename):
+            return filename
 
 
 class Firefox(WebDriverExtension, webdriver.Firefox):
@@ -418,38 +469,8 @@ class DriverFactory(object):
 #
 
 
-# import tempfile
-# import time
-# def get_screen_filename(self, prefix=None, suffix=None,
-#                             use_timestamp=True):
-#         """Create temporary file and return its filename.
-#
-#         Parameters
-#         ----------
-#         suffix
-#             File suffix.
-#         prefix
-#             File prefix.
-#         use_timestamp
-#             True/False; append timestamp to file prefix.
-#
-#         Returns
-#         -------
-#         srt
-#             Filename, including full path.
-#         """
-#         SCREEN_PREFIX = prefix or 'Selenium-screen'
-#         SCREEN_SUFFIX = suffix or '.png'
-#         DIRECTORY = variables.robot_variable('${OUTPUTDIR}')
-#         if use_timestamp:
-#             SCREEN_PREFIX = ''.join(
-#                 (SCREEN_PREFIX, '-%s-' % time.strftime("%Y-%m-%d_%H-%M-%S")))
-#         return tempfile.mkstemp(
-#             prefix=SCREEN_PREFIX, suffix=SCREEN_SUFFIX, dir=DIRECTORY)[1]
 
 
-# if self.get_screenshot_as_file(filename):
-#     def save_screen_as_file(self, filename):
 
 
 # import base64
