@@ -6,8 +6,7 @@ rv_vmshutdown.shutdown_cmdline
 rv_vmshutdown.shutdown_qemu
 
 * Create kickstarts / templates without firewall.
-
-
+* Create kickstarts / templates with installed RedHat/SpiceQE certs.
 
 Drag-and-drop automation thoughts:
 

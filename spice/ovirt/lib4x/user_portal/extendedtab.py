@@ -18,12 +18,12 @@ import logging
 from selenium.webdriver.common import by
 from selenium import common
 
-import page_base
-import elements
-import support
-import excepts
-import vms_base
-import dialogs
+from .. import page_base
+from .. import elements
+from .. import support
+from .. import excepts
+from .. import vms_base
+from .. import dialogs
 
 
 logger = logging.getLogger(__name__)

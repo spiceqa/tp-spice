@@ -16,13 +16,14 @@ import re
 import logging
 
 from selenium.webdriver.common import by
-from selenium.webdriver import common
+from selenium import common
 
-import page_base
-import elements
-import support
-import excepts
-import vms_base
+from .. import deco
+from .. import page_base
+from .. import elements
+from .. import support
+from .. import excepts
+from .. import vms_base
 
 logger = logging.getLogger(__name__)
 
@@ -528,6 +529,8 @@ class BasicTabCtrl(object):
         assert self.wait_until_vm_starts_booting(name, timeout)
         return self.wait_until_vm_is_up(name, timeout)
 
+
+    @deco.retry(8, exceptions=(excepts.WaitTimeoutError,))
     def _wait_for_vm_status(self, name, status_prop, timeout=None):
         """Wait until VM status property returns True.
 
@@ -551,13 +554,11 @@ class BasicTabCtrl(object):
             Failure.
         """
         vm = self._get_vm_inst(name)
-        timeout = timeout or self.VM_ACTION_TIMEOUT
-        try:
-            return support.WebDriverWait(vm, timeout).until(
-                lambda vm: getattr(vm, status_prop))
-        except common.exceptions.TimeoutException:
-            raise execpts.WaitTimeoutError("%s - status is '%s'"
-                                                 % (vm, vm.status))
+        status = getattr(vm, status_prop)
+        if not status:
+            msg = "%s - status is '%s'" % (vm, vm.status)
+            raise excepts.WaitTimeoutError(msg)
+
 
     def wait_until_vm_is_up(self, name, timeout):
         """Wait until VM is up.
