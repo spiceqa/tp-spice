@@ -116,15 +116,17 @@ elif args.cb2txtf:
     logger.info("Dump clipboard text to file %s.", args.cb2txtf)
 elif args.cb2stdout:
     targets = clipboard.wait_for_targets()
-    if 'image/png' in targets:
+    if not targets:
+        raise Exception("Clipboard is empty.")
+    elif 'image/png' in targets:
         selectiondata = clipboard.wait_for_contents('image/png')
         pixbuf = selectiondata.get_pixbuf()
         if pixbuf:
             def pixbuf_save_func(buf, data=None):
                 sys.stdout.write(buf)
             pixbuf.save_to_callback(pixbuf_save_func, "png")
-    elif 'TEXT' in targets:
-        selectiondata = clipboard.wait_for_contents('TEXT')
+    elif 'STRING' in targets:
+        selectiondata = clipboard.wait_for_contents('STRING')
         print selectiondata.get_text()
 elif args.query:
     targets = clipboard.wait_for_targets()
