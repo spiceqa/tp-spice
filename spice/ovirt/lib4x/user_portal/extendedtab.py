@@ -864,6 +864,25 @@ class VM(page_base.DynamicPageObject):
             raise excepts.UserActionError(
                 self.__ERR_ACTION_MSG % ('power_off', self, self.status))
 
+    def console_edit(self):
+        """Edit console protocol of VM
+
+        Returns
+        -------
+            Console Options dialog
+        """
+        self._model.console_opts_btn.click()
+        return vms_base.EditConsoleOptions(self.driver)
+    
+    def console(self):
+        """Invoke console for VM.
+
+        Returns
+        -------
+            Console Options dialog
+        """
+        self._model.console_btn.click()
+
 
 class RunOnce(dialogs.OkCancelDlg):
     """

@@ -50,11 +50,10 @@ class PageObjectBase(object):
     __metaclass__ = abc.ABCMeta
     _driver = None
     _location = None
-    _timeout = TIMEOUT_PAGE_OBJECT
     _model = None
     _label = None
 
-    def __init__(self, driver, **kwargs):
+    def __init__(self, driver, timeout=None, **kwargs):
         """Init, set implicit timeout for element search, load URL if one is
         given and run init validation, ensuring that we are on the right
         location.
@@ -65,13 +64,17 @@ class PageObjectBase(object):
             Webdriver instance.
         kwargs
             Additional arguments, which are passed to <init> method.
+        timeout : int, optional
+            Timeout for page initialization.
         """
         self._driver = driver
+        self._timeout = timeout or TIMEOUT_PAGE_OBJECT
         self._driver.implicitly_wait(self._timeout)
         if self._location:
             self._driver.get(self._location)
         self.init(**kwargs)
         self._initial_page_object_validation()
+        self._driver.implicitly_wait(TIMEOUT_PAGE_OBJECT)  #  Restore default.
 
     def __str__(self):
         """Return human readable page object label if available.
@@ -148,7 +151,7 @@ class PageObject(PageObjectBase):
     """New-style static page object.
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver, **kwargs):
         """Initialize the page object and check the page model class is valid.
 
         Parameters
@@ -161,7 +164,7 @@ class PageObject(PageObjectBase):
                             "%s class is not subclass of PageModel"
                             % self._model.__name__)
         self._model = self._model(driver)
-        super(PageObject, self).__init__(driver)
+        super(PageObject, self).__init__(driver, **kwargs)
 
 
 class DynamicPageObject(PageObjectBase):

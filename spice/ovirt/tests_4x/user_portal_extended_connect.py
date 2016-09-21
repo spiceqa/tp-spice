@@ -25,13 +25,20 @@ from virttest import asset
 from spice.lib import stest
 
 from lib4x import driver
+from lib4x import vms_base
 from lib4x.user_portal import user_login
 
 logger = logging.getLogger(__name__)
 
 @error.context_aware
 def run(vt_test, test_params, env):
-    """Download SeleniumHQ server, and copy it to a client.
+    """Steps:
+
+        - Download SeleniumHQ server, and copy it to a client.
+        - Open ovirt portal.
+        - Login as a user.
+        - Switch to extended tab.
+        - Connect with remote-viewer to selected VM.
 
     Parameters
     ----------
@@ -46,19 +53,29 @@ def run(vt_test, test_params, env):
     test = stest.ClientTest(vt_test, test_params, env)
     ssn = test.open_ssn(test.name)
     test.cmd.run_selenium(ssn)
-    time.sleep(10)
-    out = ssn.read_nonblocking()
-    logger.info("Selenium log: %s.", str(out))
-    vm_addr = test.vm.get_address()
-    logger.info("VM addr: %s", vm_addr)
+    test.cmd.firefox_auto_open_vv()
+    client_vm_addr = test.vm.get_address()
+    logger.info("VM addr: %s", client_vm_addr)
     test.assn.cmd("iptables -F")  # XXX
-    drv = driver.DriverFactory("Firefox", vm_addr, "5555")
+    drv = driver.DriverFactory(cfg.selenium_driver,
+                               client_vm_addr,
+                               cfg.selenium_port)
     drv.maximize_window()
     login_page = user_login.UserLoginPage(drv)
-    home_page = login_page.login_user(username="auto",
-                                      password="redhat",
-                                      domain="spice.brq.redhat.com",
+    home_page = login_page.login_user(username=cfg.ovirt_user,
+                                      password=cfg.ovirt_password,
+                                      domain=cfg.ovirt_profile,
                                       autoconnect=False)
-    tab_controller = home_page.go_to_basic_tab()
-    tab_controller.run_vm_and_wait_until_up(name, timeout=None)
+    tab_controller = home_page.go_to_extended_tab()
+    vm = tab_controller.get_vm(name)
+    if not vm.is_up():
+        tab_controller.run_vm_and_wait_until_up(name)
+    console_options_dialog = vm.console_edit()
+    console_options_dialog.select_spice()
+    console.set_open_in_fullscreen(cfg.full_screen)
+    console_options_dialog.submit_and_wait_to_disappear()
+    vm.console()
+    vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
     home_page.sign_out_user()
+    out = ssn.read_nonblocking()
+    logger.info("Selenium log: %s.", str(out))

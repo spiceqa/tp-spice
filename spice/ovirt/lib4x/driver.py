@@ -316,6 +316,23 @@ class Remote(WebDriverExtension, webdriver.Remote):
             self.__ie_confirm_cert_exception()
 
 
+class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
+    """Currently this funciton does not have any use.
+   
+    See content type at:
+
+        ~/.mozilla/firefox/<profile_name>/mimeTypes.rdf
+        application/x-virt-viewer
+    """
+    def __init__(self, *args, **kwargs):
+        super(SpiceQEFirefoxProfile, self).__init__(*args, **kwargs)
+        self.set_preference("browser.download.folderList",2)
+        self.set_preference("browser.download.manager.showWhenStarting",False)
+        self.set_preference("browser.download.dir", "~/")
+        self.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-virt-viewer")
+        self.set_preference("browser.helperApps.neverAsk.openFile", "application/x-virt-viewer")
+
+
 class DriverFactory(object):
     """WebDriver instance factory.
 

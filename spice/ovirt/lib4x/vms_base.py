@@ -18,13 +18,13 @@
 
 import logging
 
+from selenium import common
 from selenium.webdriver.common import by
 
-import page_base
-import dialogs
-import elements
-import excepts
-
+from . import page_base
+from . import dialogs
+from . import elements
+from . import excepts
 
 logger = logging.getLogger(__name__)
 TIMEOUT_TABLE_ROW = 10
@@ -209,7 +209,7 @@ class VMPopupCustPropsTabModel(page_base.PageModel):
     custom_props = elements.Select(by.By.CSS_SELECTOR, 'div[id$=PopupWidget] select')
 
 
-class NewTemplateDlgModel(dialogs.OkCancelDlg):
+class NewTemplateDlgModel(dialogs.OkCancelDlgModel):
     """ New Template dialog. """
     name = elements.TextInput(by.By.ID, 'VmMakeTemplatePopupWidget_name')
     description = elements.TextInput(by.By.ID,
@@ -253,12 +253,28 @@ class NewTemplateDiskInstModel(page_base.DynamicPageModel):
         return index
 
 
-class CloneVmDlgModel(dialogs.OkCancelDlg):
+class CloneVmDlgModel(dialogs.OkCancelDlgModel):
     name = elements.TextInput(by.By.ID, 'CloneVmWidget_cloneName')
     ok_btn = elements.Button(by.By.ID, 'CloneVmPopupView_OnClone')
     cancel_btn = elements.Button(by.By.ID, 'CloneVmPopupView_Cancel')
 
 
+class GuestAgentIsNotResponsiveDlgModel(dialogs.OkCancelDlgModel):
+    cancel_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_SpiceWithoutAgentCancel')
+    ok_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_SpiceWithoutAgentOK')
+
+
+class GuestAgentIsNotResponsiveDlg(dialogs.OkCancelDlg):
+    _model = GuestAgentIsNotResponsiveDlgModel
+    _label = 'Guest Agent is not responsive'
+
+    @classmethod
+    def ok_ignore(cls, drv):
+        try:
+            no_agent_dialog = cls(drv, timeout=0.1)
+            no_agent_dialog._model.ok_btn.click()
+        except excepts.InitPageValidationError as e:
+            logger.info("Guest Agent dialog does not exist.")
 
 
 class VMPopup(dialogs.OkCancelDlg):
@@ -811,6 +827,10 @@ class EditConsoleOptionsModel(dialogs.OkCancelDlgModel):
         by.By.ID, "ConsolePopupView_openInFullScreen")
     enable_spice_proxy = elements.Checkbox(
         by.By.ID, "ConsolePopupView_enableSpiceProxy")
+    disable_smartcard = elements.Checkbox(
+        by.By.ID, "ConsolePopupView_disableSmartcard")
+    enable_wan = elements.Checkbox(
+        by.By.ID, "ConsolePopupView_wanEnabled")
     ok_btn = elements.Button(by.By.ID, "ConsolePopupView_OnEditConsoleSave")
     cancel_btn = elements.Button(by.By.ID, "ConsolePopupView_Cancel")
 
@@ -847,21 +867,28 @@ class EditConsoleOptions(dialogs.OkCancelDlg):
 
     def fill_values(self, console=None, console_inv=None,
                     remap_ctrl_alt_del=None, enable_usb=None,
-                    open_in_fullscreen=None, spice_proxy=None):
+                    open_in_fullscreen=None, spice_proxy=None,
+                    enable_wan=None, disable_smartcard=None):
         """Fill console options dialog values.
 
-        :param console: SPICE/VNC/RD protocol
-        :type console: str
-        :param console_inv: Auto/Native/Browser/HTML5 console invocation
-        :type console_inv: str
-        :param remap_ctrl_alt_del: should ctrl+alt+del be remapped?
-        :type remap_ctrl_alt_del: bool
-        :param enable_usb: enable usb auto-share?
-        :type enable_usb: bool
-        :param open_in_fullscreen: open console in fullscreen?
-        :type open_in_fullscreen: bool
-        :param spice_proxy: enable spice proxy?
-        :type spice_proxy: bool
+        Parameters
+        ----------
+        console : str
+            SPICE/VNC/RD protocol.
+        console_inv : str
+            Auto/Native/Browser/HTML5 console invocation.
+        remap_ctrl_alt_del : bool
+            Should ctrl+alt+del be remapped?
+        enable_usb : bool
+            Enable usb auto-share?
+        open_in_fullscreen : bool
+            Open console in fullscreen?
+        enable_spice_proxy : bool
+            Enable spice proxy?
+        enable_wan : bool
+            Enable WAN?
+        disable_smartcard : bool
+            Disable smartcard?
         """
         if console is not None:
             console_protocol = {'SPICE': self._set_spice_console,
@@ -894,6 +921,10 @@ class EditConsoleOptions(dialogs.OkCancelDlg):
             self._model.open_in_fullscreen = open_in_fullscreen
         if spice_proxy is not None:
             self._model.enable_spice_proxy = spice_proxy
+        if disable_smartcard is not None:
+            self._model.enable_spice_proxy = disable_smartcard
+        if enable_wan is not None:
+            self._model.enable_spice_proxy = enable_wan
 
     @property
     def fullscreen_is_checked(self):
@@ -910,7 +941,37 @@ class EditConsoleOptions(dialogs.OkCancelDlg):
         return self._model.spice_console.is_selected()
 
     def select_rdp(self):
-        self._model.rd_console.click()
+        self._set_rd_console()
+
+    def select_vnc(self):
+        self._set_vnc_console()
 
     def select_spice(self):
-        self._model.spice_console.click()
+        self._set_spice_console()
+
+    def select_inv_auto(self):
+        self._set_auto_invocation()
+
+    def select_inv_native(self):
+        self._set_native_invocation()
+
+    def select_inv_html5(self):
+        self._set_html5_invocation()
+
+    def set_ctrl_alt_del(self, val):
+        self._model.remap_ctrl_alt_del = val
+
+    def set_usb_auto_share(self, val):
+        self._model.enable_usb_auto_share = val
+
+    def set_open_in_fullscreen(self, val):
+        self._model.open_in_fullscreen = val
+
+    def set_spice_proxy(self, val):
+        self._model.enable_spice_proxy = val
+
+    def set_disable_smartcard(self, val):
+        self._model.disable_smartcard = val
+
+    def set_enable_wan(self, val):
+        self._model.enable_wan = val
