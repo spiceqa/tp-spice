@@ -17,7 +17,10 @@
 
 import logging
 import pprint
+from spice.lib import registry
+from spice.lib import ios
 from spice.lib import utils
+from spice.lib import actions   # Include to populate actions registry.
 from virttest import virt_vm
 
 
@@ -83,6 +86,34 @@ class AttributeDict(dict):
     #    self.update(custom_dict)
 
 
+class ActionOnVm(object):
+
+    def __init__(self, test, vm_name):
+        self.test = test
+        self.cfg = test.cfg_vm[vm_name]     # VM config
+        self.ccfg = test.cfg                # Common config
+        self.vm = test.vms[vm_name]
+        self.vm_name = vm_name
+        self.kvm = test.kvm[vm_name]
+
+    def __getattr__(self, key):
+        """Find the most appropriate implementation.
+        """
+        if key in ["__getstate__", "__setstate__", "__slots__"]:
+            raise AttributeError()
+        r = registry.registry
+        os = r.lookup([], ios.IOSystem, self.cfg.os)
+        ver = r.lookup([], ios.IVersionMajor, self.cfg.ver)
+        mver = r.lookup([], ios.IVersionMajor, self.cfg.mver)
+        arch = r.lookup([], ios.IArch, self.cfg.arch)
+        action = r.lookup([os, ver, mver, arch], self.req_iface) or \
+                 r.lookup([os, ver, mver], self.req_iface) or \
+                 r.lookup([os, ver, arch], self.req_iface) or \
+                 r.lookup([os, ver], self.req_iface) or \
+                 r.lookup([os], self.req_iface)
+        return action
+
+
 class SpiceTest(object):
     """Perform some basic initialization steps.
 
@@ -136,15 +167,19 @@ class SpiceTest(object):
                 if self.kvm[name][prm]:
                     logger.info("VM %s spice server option %s is %s.", name,
                                  prm, self.kvm[name][prm])
-        self.cmds = {}
         """Config set per VM."""
         self.cfg_vm = {}
         for name in vm_names:
             self.cfg_vm[name] = AttributeDict()
             self.cfg_vm[name].update(self.vms[name].get_params())
         """Commands set per VM."""
+        self.cmds = {}
         for name in vm_names:
             self.cmds[name] = utils.Commands.get(self, name)
+        """Actions set per VM's OS."""
+        self.acts = {}
+        for name in vm_names:
+            self.acts[name] = ActionOnVm(self, name)
 
 
     def open_ssn(self, vm_name, admin=False):
@@ -186,14 +221,22 @@ class ClientGuestTest(SpiceTest):
         self.cmd_g = self.cmds[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
+        self.act_c = self.acts[name_c]
+        self.act_g = self.acts[name_g]
 
 
 class OneVMTest(SpiceTest):
     """Class for one VM.
+
+    Notes
+    -----
+    If name == None, then use a name of the first VM.
+
     """
-    def __init__(self, test, parameters, env):
+    def __init__(self, test, parameters, env, name=None):
         super(OneVMTest, self).__init__(test, parameters, env)
-        name = self.cfg.vms.split()[0]
+        if not name:
+            name = self.cfg.vms.split()[0]
         self.name = name
         self.vm = self.vms[name]
         self.ssn = self.sessions[name]
@@ -201,17 +244,24 @@ class OneVMTest(SpiceTest):
         self.kvm = self.kvm[name]
         self.cmd = self.cmds[name]
         self.cfg = self.cfg_vm[name]
+        self.act = self.acts[name]
 
 
 class ClientTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        super(ClientTest, self).__init__(test, parameters, env)
+        vm_name = None
+        if "client_vm" in parameters:
+            vm_name = parameters["client_vm"]
+        super(ClientTest, self).__init__(test, parameters, env, name=vm_name)
 
 
 class GuestTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        super(GuestTest, self).__init__(test, parameters, env)
+        vm_name = None
+        if "guest_vm" in parameters:
+            vm_name = parameters["guest_vm"]
+        super(GuestTest, self).__init__(test, parameters, env, name=vm_name)
