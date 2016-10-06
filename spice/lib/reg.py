@@ -40,3 +40,43 @@ Example
 from zope import interface
 
 registry = interface.adapter.AdapterRegistry()
+
+def add_action(req, name=None):
+    """Register an action for VM, that provides required iface.
+
+    Parameters
+    ----------
+    req : list
+        OS required interfaces.
+    name : str, optional.
+        Name of provided action. If not specified use a class/function name.
+
+    Returns
+    -------
+    Interface
+        Unmodified function/class.
+
+    """
+    def builder(action):
+        """
+        Parameters
+        ----------
+        action :
+            Something that has __call__()
+
+        """
+        if not name:
+            name = action.__name__
+        registry.register(req, IVmAction, name, action)
+        # Next code is not necessary, it stays only for informative purposes.
+        provides = list(interface.directlyProvidedBy(action))
+        provides.append(IVmAction)
+        interface.directlyProvides(action, provides)
+        return action
+    return builder
+
+
+class IVmAction(interface.Interface):
+    def __call__():
+        """Run some command on VM."""
+

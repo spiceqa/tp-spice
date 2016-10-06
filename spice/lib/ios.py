@@ -38,10 +38,10 @@ Example
 """
 
 from zope import interface
-from spice.lib import registry
+from spice.lib import reg
 
 
-registry = registry.registry
+registry = reg.registry
 
 
 def add_os_info(marker):
@@ -69,123 +69,144 @@ def add_os_info(marker):
 class IOSInfo(interface.Interface):
     """Base class for all OS variety interfaces.
     """
-    pass
 
-# OS type.
 
 class IOSystem(IOSInfo):
-    pass
+    """OS type.
+    """
+
 
 @add_os_info(marker='windows')
 class IWindows(IOSystem):
     pass
 
+
 @add_os_info(marker='linux')
 class ILinux(IOSystem):
     pass
 
-# Linux distro.
 
+# Linux distro.
 @add_os_info(marker='rhel')
 class IRhel(ILinux):
     pass
+
 
 @add_os_info(marker='fedora')
 class IFedora(ILinux):
     pass
 
+
 # Windows name.
 # https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
-
 @add_os_info(marker='Windows10')
 class IWindows10(IWindows):
     pass
+
 
 @add_os_info(marker='Windows8')
 class IWindows8(IWindows):
     pass
 
+
 @add_os_info(marker='Windows7')
 class IWindows7(IWindows):
     pass
+
 
 @add_os_info(marker='WindowsVista')
 class IWindowsVista(IWindows):
     pass
 
+
 @add_os_info(marker='WindowsXP')
 class IWindowsXP(IWindows):
     pass
 
-# Architecture.
 
+# Architecture.
 class IArch(IOSInfo):
     pass
+
 
 @add_os_info(marker='32bits')
 class IArch32(IArch):
     pass
+
 
 @add_os_info(marker='64bits')
 class IArch64(IArch):
     pass
 
 # Major version.
-
 class IVersionMajor(IOSInfo):
     pass
+
+
 @add_os_info(marker='6')
 class IVersionMajor6(IVersionMajor):
     pass
+
 
 @add_os_info(marker='7')
 class IVersionMajor7(IVersionMajor):
     pass
 
+
 @add_os_info(marker='25')
 class IVersionMajor25(IVersionMajor):
     pass
 
-# Minor version.
 
+# Minor version.
 class IVersionMinor(IOSInfo):
     pass
+
 
 @add_os_info(marker='1')
 class IVersionMinor1(IVersionMinor):
     pass
 
+
 @add_os_info(marker='2')
 class IVersionMinor2(IVersionMinor):
     pass
+
 
 @add_os_info(marker='3')
 class IVersionMinor3(IVersionMinor):
     pass
 
+
 @add_os_info(marker='4')
 class IVersionMinor4(IVersionMinor):
     pass
+
 
 @add_os_info(marker='5')
 class IVersionMinor5(IVersionMinor):
     pass
 
+
 @add_os_info(marker='6')
 class IVersionMinor6(IVersionMinor):
     pass
+
 
 @add_os_info(marker='7')
 class IVersionMinor7(IVersionMinor):
     pass
 
+
 @add_os_info(marker='8')
 class IVersionMinor8(IVersionMinor):
     pass
 
+
 @add_os_info(marker='9')
 class IVersionMinor9(IVersionMinor):
     pass
+
 
 @add_os_info(marker='10')
 class IVersionMinor10(IVersionMinor):

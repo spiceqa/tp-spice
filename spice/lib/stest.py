@@ -17,7 +17,7 @@
 
 import logging
 import pprint
-from spice.lib import registry
+from spice.lib import reg
 from spice.lib import ios
 from spice.lib import utils
 from spice.lib import actions   # Include to populate actions registry.
@@ -25,6 +25,7 @@ from virttest import virt_vm
 
 
 logger = logging.getLogger(__name__)
+registry = reg.registry
 
 
 # Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make
@@ -101,17 +102,20 @@ class ActionOnVm(object):
         """
         if key in ["__getstate__", "__setstate__", "__slots__"]:
             raise AttributeError()
-        r = registry.registry
-        os = r.lookup([], ios.IOSystem, self.cfg.os)
-        ver = r.lookup([], ios.IVersionMajor, self.cfg.ver)
-        mver = r.lookup([], ios.IVersionMajor, self.cfg.mver)
-        arch = r.lookup([], ios.IArch, self.cfg.arch)
-        action = r.lookup([os, ver, mver, arch], self.req_iface) or \
-                 r.lookup([os, ver, mver], self.req_iface) or \
-                 r.lookup([os, ver, arch], self.req_iface) or \
-                 r.lookup([os, ver], self.req_iface) or \
-                 r.lookup([os], self.req_iface)
-        return action
+        os = registry.lookup([], ios.IOSystem, self.cfg.os)
+        ver = registry.lookup([], ios.IVersionMajor, self.cfg.ver)
+        mver = registry.lookup([], ios.IVersionMajor, self.cfg.mver)
+        arch = registry.lookup([], ios.IArch, self.cfg.arch)
+        action = registry.lookup([os, ver, mver, arch], self.req_iface) or \
+                 registry.lookup([os, ver, mver], self.req_iface) or \
+                 registry.lookup([os, ver, arch], self.req_iface) or \
+                 registry.lookup([os, ver], self.req_iface) or \
+                 registry.lookup([os], self.req_iface)
+        def foo(*args, **kwargs):
+            """Add a self as a first argument).
+            """
+            action(self, *args, **kwargs)
+        return foo
 
 
 class SpiceTest(object):
