@@ -524,7 +524,7 @@ class CommandsLinux(Commands):
             application/x-virt-viewer
         """
         pdir = self.firefox_profile_dir
-        if not pdir
+        if not pdir:
             self.vm.error("Firefox profile dir is not defined")
             return
         user_js = os.path.join(pdir, "user.js")

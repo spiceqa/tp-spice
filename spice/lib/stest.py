@@ -102,17 +102,30 @@ class ActionOnVm(object):
         """
         if key in ["__getstate__", "__setstate__", "__slots__"]:
             raise AttributeError()
-        os = registry.lookup([], ios.IOSystem, self.cfg.os)
+        os = registry.lookup([], ios.IOSystem, self.cfg.os_type)
         ver = registry.lookup([], ios.IVersionMajor, self.cfg.ver)
         mver = registry.lookup([], ios.IVersionMajor, self.cfg.mver)
         arch = registry.lookup([], ios.IArch, self.cfg.arch)
-        action = registry.lookup([os, ver, mver, arch], self.req_iface) or \
-                 registry.lookup([os, ver, mver], self.req_iface) or \
-                 registry.lookup([os, ver, arch], self.req_iface) or \
-                 registry.lookup([os, ver], self.req_iface) or \
-                 registry.lookup([os], self.req_iface)
+        os_info = ",".join(map(repr,[os, ver, mver, arch]))
+        self.vm.info("OS info: %s", os_info)
+        lookup_order = [[os, ver, mver, arch],
+                        [os, ver, mver],
+                        [os, ver, arch],
+                        [os, ver],
+                        [os]]
+        for iset in lookup_order:
+            if not all(iset): continue
+            action = registry.lookup(iset, reg.IVmAction, key)
+            if action: break
+        if not action:
+            known_actions = registry.lookup([], reg.IVmAction)
+            self.vm.info("Known actions: %s") % repr(known_actions)
+            msg = "Cannot find suitable implementation for: %s." % key
+            raise utils.SpiceTestFail(self.test, msg)
+        act_reqs = ",".join(map(repr, iset))
+        msg = "Found implementation for: %s. Which comply: %s" % (key, act_reqs)
         def foo(*args, **kwargs):
-            """Add a self as a first argument).
+            """Add self as a first argument).
             """
             action(self, *args, **kwargs)
         return foo
@@ -154,7 +167,8 @@ class SpiceTest(object):
             try:
                 self.vms[name].verify_alive()
             except virt_vm.VMDeadError as excp:
-                raise utils.SpiceTestFail("Required VM is dead: %s" % excp)
+                raise utils.SpiceTestFail(self,
+                                          "Required VM is dead: %s" % excp)
         self.sessions = {}
         self.sessions_admin = {}
         """Establish session to each VM."""

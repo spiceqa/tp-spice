@@ -5,6 +5,7 @@ from zope import interface
 from zope.interface.interface import adapter_hooks
 from zope.interface import adapter
 from spice.lib import reg
+from spice.lib import ios
 
 registry = reg.registry
 
@@ -17,13 +18,18 @@ def run_cmd(act, cmd, admin=False):
     return subprocess.list2cmdline(cmd)
 
 
-@add_action(req=[ILinux])
+@reg.add_action(req=[ios.ILinux])
 def export_vars(act, ssn):
     """Export essentials variables per SSH session."""
     ssn.cmd("export DISPLAY=:0.0")
 
 
-@add_action(req=[IOSystem])
+@reg.add_action(req=[ios.IOSystem])
+def new_admin_ssn(act):
+    return act.new_ssn(admin=True)
+
+
+@reg.add_action(req=[ios.IOSystem])
 def new_ssn(act, admin=False):
     if admin:
         username = act.cfg.rootuser
@@ -36,5 +42,5 @@ def new_ssn(act, admin=False):
     ssn = act.vm.wait_for_login(username=username,
                                 password=password,
                                 timeout=int(act.cfg.login_timeout))
-    act.export_vars()
+    act.export_vars(ssn)
     return ssn

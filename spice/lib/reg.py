@@ -38,8 +38,9 @@ Example
 """
 
 from zope import interface
+from zope.interface import adapter
 
-registry = interface.adapter.AdapterRegistry()
+registry = adapter.AdapterRegistry()
 
 def add_action(req, name=None):
     """Register an action for VM, that provides required iface.
@@ -65,9 +66,10 @@ def add_action(req, name=None):
             Something that has __call__()
 
         """
-        if not name:
-            name = action.__name__
-        registry.register(req, IVmAction, name, action)
+        action_name = name
+        if not action_name:
+            action_name = action.__name__
+        registry.register(req, IVmAction, action_name, action)
         # Next code is not necessary, it stays only for informative purposes.
         provides = list(interface.directlyProvidedBy(action))
         provides.append(IVmAction)
