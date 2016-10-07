@@ -10,6 +10,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # See LICENSE for more details.
+#
+# Copyright: Red Hat Inc. 2016
+# Author: Andrei Stepanov <astepano@redhat.com>
+#
 
 """Common spice test utility functions.
 

@@ -20,7 +20,6 @@ import pprint
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import utils
-from spice.lib import actions   # Include to populate actions registry.
 from virttest import virt_vm
 
 
@@ -87,7 +86,7 @@ class AttributeDict(dict):
     #    self.update(custom_dict)
 
 
-class ActionOnVm(object):
+class VmInfo(object):
 
     def __init__(self, test, vm_name):
         self.test = test
@@ -96,39 +95,6 @@ class ActionOnVm(object):
         self.vm = test.vms[vm_name]
         self.vm_name = vm_name
         self.kvm = test.kvm[vm_name]
-
-    def __getattr__(self, key):
-        """Find the most appropriate implementation.
-        """
-        if key in ["__getstate__", "__setstate__", "__slots__"]:
-            raise AttributeError()
-        os = registry.lookup([], ios.IOSystem, self.cfg.os_type)
-        ver = registry.lookup([], ios.IVersionMajor, self.cfg.ver)
-        mver = registry.lookup([], ios.IVersionMajor, self.cfg.mver)
-        arch = registry.lookup([], ios.IArch, self.cfg.arch)
-        os_info = ",".join(map(repr,[os, ver, mver, arch]))
-        self.vm.info("OS info: %s", os_info)
-        lookup_order = [[os, ver, mver, arch],
-                        [os, ver, mver],
-                        [os, ver, arch],
-                        [os, ver],
-                        [os]]
-        for iset in lookup_order:
-            if not all(iset): continue
-            action = registry.lookup(iset, reg.IVmAction, key)
-            if action: break
-        if not action:
-            known_actions = registry.lookup([], reg.IVmAction)
-            self.vm.info("Known actions: %s") % repr(known_actions)
-            msg = "Cannot find suitable implementation for: %s." % key
-            raise utils.SpiceTestFail(self.test, msg)
-        act_reqs = ",".join(map(repr, iset))
-        msg = "Found implementation for: %s. Which comply: %s" % (key, act_reqs)
-        def foo(*args, **kwargs):
-            """Add self as a first argument).
-            """
-            action(self, *args, **kwargs)
-        return foo
 
 
 class SpiceTest(object):
@@ -195,9 +161,9 @@ class SpiceTest(object):
         for name in vm_names:
             self.cmds[name] = utils.Commands.get(self, name)
         """Actions set per VM's OS."""
-        self.acts = {}
+        self.vmi = {}
         for name in vm_names:
-            self.acts[name] = ActionOnVm(self, name)
+            self.vmi[name] = VmInfo(self, name)
 
 
     def open_ssn(self, vm_name, admin=False):
@@ -239,8 +205,8 @@ class ClientGuestTest(SpiceTest):
         self.cmd_g = self.cmds[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
-        self.act_c = self.acts[name_c]
-        self.act_g = self.acts[name_g]
+        self.vmi_c = self.vmi[name_c]
+        self.vmi_g = self.vmi[name_g]
 
 
 class OneVMTest(SpiceTest):
@@ -262,7 +228,7 @@ class OneVMTest(SpiceTest):
         self.kvm = self.kvm[name]
         self.cmd = self.cmds[name]
         self.cfg = self.cfg_vm[name]
-        self.act = self.acts[name]
+        self.vmi = self.vmi[name]
 
 
 class ClientTest(OneVMTest):
