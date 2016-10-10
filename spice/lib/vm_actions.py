@@ -60,6 +60,3 @@ def new_ssn(vmi, admin=False):
                                 timeout=int(vmi.cfg.login_timeout))
     act.export_vars(vmi, ssn)
     return ssn
-
-
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
