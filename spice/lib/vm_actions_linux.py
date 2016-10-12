@@ -51,7 +51,7 @@ def service_vdagent(vmi, action):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn)
     vdagentd = service.Factory.create_specific_service("spice-vdagentd",
-                                               run=runner.run)
+                                                       run=runner.run)
     func = getattr(vdagentd, action)
     act.info(vmi, "spice-vdagent: %s", action)
     return func()
@@ -76,10 +76,10 @@ def dst_dir(vmi):
         dst_dir = out.rstrip('\r\n')
         vmi.cfg.dst_dir = dst_dir
     return dst_dir
-    #cmd = 'test -e %s' % dst_dir
-    #if vmi.ssn.cmd_status(cmd) != 0:
-    #    cmd = 'mkdir -p "%s"' % dst_dir
-    #    vmi.ssn.cmd(cmd)
+#    cmd = 'test -e %s' % dst_dir
+#    if vmi.ssn.cmd_status(cmd) != 0:
+#        cmd = 'mkdir -p "%s"' % dst_dir
+#        vmi.ssn.cmd(cmd)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -106,7 +106,7 @@ def check_usb_policy(vmi):
         .. todo: Move USB_POLICY_FILE to cfg.
 
     """
-    cmd = utils.Cmd['grep', '<allow_any>yes', USB_POLICY_FILE] # TODO
+    cmd = utils.Cmd['grep', '<allow_any>yes', USB_POLICY_FILE]  # TODO
     status, _ = act.rstatus(vmi, cmd)
     act.info(vmi, "USB policy is: %s.", status)
     return not status
@@ -145,7 +145,7 @@ def _is_pid_alive(vmi, pid):
 
     """
     cmd = utils.Cmd("ps", "-p", pid)
-    status, _= act.run_cmd_status(vmi, cmd)
+    status, _ = act.run_cmd_status(vmi, cmd)
     return not status
 
 
@@ -378,10 +378,11 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
         act.info(vmi, "Current win name: %s", output)
         if pattern not in output:
             msg = "Can't find active window with pattern %s." % pattern
-            raise SpiceUtilsError(msg) # TODO
+            raise SpiceUtilsError(msg)  # TODO
         act.info(vmi, "Found active window: %s.", pattern)
 
     is_active()
+
 
 # TODO rewrite me
 @reg.add_action(req=[ios.ILinux])
@@ -400,13 +401,13 @@ def deploy_epel_repo(vmi):
             arch = arch[:-1]
         if "release 5" in vmi.ssn.cmd("cat /etc/redhat-release"):
             cmd = ("yum -y localinstall http://download.fedoraproject.org/"
-                "pub/epel/5/%s/epel-release-5-4.noarch.rpm 2>&1" % arch)
-            act.info(vmi, "Installing epel repository to %s", self.cfg.guest_vm)
+                   "pub/epel/5/%s/epel-release-5-4.noarch.rpm 2>&1" % arch)
+            act.info(vmi, "Installing EPEL repository.")
             vmi.ssn.cmd(cmd)
         elif "release 6" in vmi.ssn.cmd("cat /etc/redhat-release"):
             cmd = ("yum -y localinstall http://download.fedoraproject.org/"
-                "pub/epel/6/%s/epel-release-6-8.noarch.rpm 2>&1" % arch)
-            act.info(vmi, "Installing epel repository to %s", self.cfg.guest_vm)
+                   "pub/epel/6/%s/epel-release-6-8.noarch.rpm 2>&1" % arch)
+            act.info(vmi, "Installing EPEL repository.")
             vmi.ssn.cmd(cmd)
         else:
             raise Exception("Unsupported RHEL guest")
@@ -482,7 +483,8 @@ def get_open_window_ids(fltr):
     ids = [a.split()[0] for a in xwininfo.split('\n') if fltr in a]
     windows = []
     for window in ids:
-        out = subprocess.check_output('xprop -id %s' % window, shell=True) # What ? It will be localy
+        # ..todo:: What ? It will be localy
+        out = subprocess.check_output('xprop -id %s' % window, shell=True)
         for line in out.split('\n'):
             if ('NET_WM_WINDOW_TYPE' in line and
                     'ET_WM_WINDOW_TYPE_NORMAL' in line):
@@ -560,7 +562,7 @@ def kill_by_name(vmi, app_name):
         if output == 1:
             pass
         else:
-            raise SpiceUtilsError("Cannot kill it.")  #  TODO
+            raise SpiceUtilsError("Cannot kill it.")  # TODO
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -647,7 +649,7 @@ def get_corners(vmi, win_title):
     # Expected format:   Corners:  +470+187  -232+187  -232-13  +470-13
     raw_out = act.run(vmi, cmd)
     line = raw_out.strip()
-    corners = [tuple(re.findall("[+-]\d+",i)) for i in line.split()[1:]]
+    corners = [tuple(re.findall("[+-]\d+", i)) for i in line.split()[1:]]
     return corners
 
 
@@ -847,7 +849,7 @@ def klogger_start(vmi):
     cmd = utils.Cmd("xev", "-event", "keyboard", "-name", "klogger")
     act.info(vmi, "Start key logger. Do not forget to turn it off.")
     ssn.sendline(cmd)
-    act.wait_for_win('klogger' ,'WM_NAME')
+    act.wait_for_win('klogger', 'WM_NAME')
     return ssn
 
 
@@ -858,10 +860,9 @@ def klogger_stop(vmi, ssn):
     ssn.send("\003")
     output = ssn.read_up_to_prompt()
     a = re.findall(
-        'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)',
-        output)
-    keys = map(lambda (keycode,keysym):
-               (int(keycode), int(keysym, base=16)), a)
+        'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
+    keys = map(lambda (keycode, keysym): (int(keycode), int(keysym, base=16)),
+               a)
     act.info(vmi, "Read keys: %s" % keys)
     # Return list of pressed: (keycode, keysym)
     return keys
@@ -889,17 +890,24 @@ def turn_accessibility(vmi, on=True):
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
 def lock_scr_off(vmi):
     act.info(vmi, "Disable lock screen.")
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session", "idle-delay", "0")
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session",
+                    "idle-delay", "0")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.lockdown", "disable-lock-screen", "true")
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.lockdown"
+                    "disable-lock-screen", "true")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver", "lock-delay", "3600")
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+                    "lock-delay", "3600")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver", "lock-enabled", "false")
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+                    "lock-enabled", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver", "idle-activation-enabled", "false")
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+                    "idle-activation-enabled", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.settings-daemon.plugins.power", "active", "false")
+    cmd = utils.Cmd("gsettings", "set"
+                    "org.gnome.settings-daemon.plugins.power"
+                    "active", "false")
     act.run(vmi, cmd)
 
 
@@ -922,8 +930,11 @@ def turn_accessibility(vmi, on=True):
     # GNOME_ACCESSIBILITY=1
     # session.cmd("gconftool-2 --shutdown")
     act.info(vmi, "Turning accessibility: %s.", val)
-    cmd = utils.Cmd("gconftool-2", "--set", "/desktop/gnome/interface/accessibility", "--type", "bool", val)
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/desktop/gnome/interface/accessibility",
+                    "--type", "bool", val)
     act.run(vmi, cmd)
+
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
 def export_dbus(vmi, ssn=None):
@@ -934,7 +945,8 @@ def export_dbus(vmi, ssn=None):
     machine_id = ssn.cmd(cmd).rstrip('\r\n')
     cmd = '. /home/test/.dbus/session-bus/%s-0' % machine_id
     ssn.cmd(cmd)
-    cmd = 'export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID DBUS_SESSION_BUS_WINDOWID'
+    cmd = ('export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID'
+           'DBUS_SESSION_BUS_WINDOWID')
     ssn.cmd(cmd)
 
 
@@ -945,15 +957,25 @@ def lock_scr_off(vmi):
     # Disable DPMS and prevent screen from blanking
     cmd = utils.Cmd("xset", "s", "off", "-dpms")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gconftool-2", "-s", "/apps/gnome-screensaver/idle_activation_enabled", "--type=bool", "false")
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/apps/gnome-screensaver/idle_activation_enabled",
+                    "--type", "bool", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gconftool-2", "-s", "/apps/gnome-power-manager/ac_sleep_display", "--type=int", "0")
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/apps/gnome-power-manager/ac_sleep_display",
+                    "--type", "int", "0")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gconftool-2", "-s", "/apps/gnome-power-manager/timeout/sleep_display_ac", "--type=int 0")
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/apps/gnome-power-manager/timeout/sleep_display_ac",
+                    "--type", "int", "0")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gconftool-2", "--type", "boolean -s", "/apps/gnome-screensaver/lock_enabled", "false")
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/apps/gnome-screensaver/lock_enabled",
+                    "--type", "boolean", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gconftool-2", "--type", "int", "-s", "/desktop/gnome/session/idle_delay", "0")
+    cmd = utils.Cmd("gconftool-2", "--set",
+                    "/desktop/gnome/session/idle_delay",
+                    "--type", "int", "0")
     act.run(vmi, cmd)
 
 
@@ -1012,8 +1034,8 @@ def run_selenium(vmi, ssn):
             cmd = utils.Cmd("firefox", "-CreateProfile", profile)
             output = vmi.ssn.cmd(cmd)
             output = re.findall(r'\'[^\']*\'', output)[1]
-            output = output.replace("'",'')
-            output =  os.path.dirname(dirname)
+            output = output.replace("'", '')
+            output = os.path.dirname(dirname)
             vmi.firefox_profile_dir = output
             act.info(vmi, "Created a new FF profile at: %s", output)
             defs.append("-Dwebdriver.firefox.profile=%s" % profile)
@@ -1043,10 +1065,11 @@ def firefox_auto_open_vv(vmi):
     opts.append("browser.helperApps.neverAsk.openFile")
     for o in opts:
         act.info(vmi, "Remove old value %s from Firefox profile: %s", o,
-                     user_js)
+                 user_js)
         cmd = ["sed", "-i", "-e", "/%s/d" % o, user_js]
         act.run_cmd(vmi, cmd)
-    line = 'pref("browser.helperApps.neverAsk.openFile", "application/x-virt-viewer");'
+    line = ('pref("browser.helperApps.neverAsk.openFile",'
+            '"application/x-virt-viewer");')
     cmd = ["echo", line, ">>", "user_js")
     act.info(vmi, "Add new line %s to Firefox profile: %s", line, user_js)
     act.run_cmd(vmi, cmd)

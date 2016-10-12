@@ -12,9 +12,6 @@
 # See LICENSE for more details.
 
 
-WINDOW_TITLE = "'vm1 (1) - Remote Viewer'"
-
-
 """Connect with remote-viewer from client VM to guest VM.
 
 Client requires
@@ -52,13 +49,12 @@ import socket
 import time
 import aexpect
 from virttest import utils_net
-from virttest import utils_misc
 from spice.lib import utils
 from spice.lib import act
 
-
 logger = logging.getLogger(__name__)
 
+WINDOW_TITLE = "'vm1 (1) - Remote Viewer'"
 
 RV_WIN_NAME_AUTH = "Authentication required"
 """Expected window caption."""
@@ -76,7 +72,7 @@ class RVSessionError(Exception):
             # 1 hour
             seconds = 60 * 60 * 10
             logger.error("Test %s has failed. Do nothing for %s seconds.",
-                          test.cfg.id, seconds)
+                         test.cfg.id, seconds)
             time.sleep(seconds)
 
 
@@ -167,7 +163,8 @@ def connect(test, ssn, env={}):
     # Print remove-viewer version on client
     if vm_c.is_linux():
         if cfg.rv_ld_library_path:
-            cmd = utils.Cmd("export", "LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path)
+            cmd = utils.Cmd("export")
+            cmd.append("LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path)
             act.run(vmi_c, cmd, ssn=ssn)
     if cfg.spice_proxy and cfg.rv_parameters_from != "file":
         if vm_c.is_linux():
@@ -289,7 +286,7 @@ def connect(test, ssn, env={}):
         if cfg.smartcard:
             rv_cmd.append("--spice-smartcard")
             if cfg.certdb:
-                rv_cmd.append("--spice-smartcard-db"
+                rv_cmd.append("--spice-smartcard-db")
                 rv_cmd.append(cfg.certdb)
             if cfg.gencerts:
                 rv_cmd.append("--spice-smartcard-certificates")
@@ -331,7 +328,6 @@ def connect(test, ssn, env={}):
     is_connected(test)
 
 
-
 def is_connected(test):
     """Tests if connection is active.
 
@@ -369,7 +365,7 @@ def is_connected(test):
         cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % \
             (remote_ip, rv_binary)
     elif test.vm_c.is_win():
-        #.. todo: finish it
+        # .. todo: finish it
         cmd = "netstat -n"
     try:
         # Wait all RV Spice links raise UP.
@@ -416,7 +412,7 @@ def is_connected(test):
                 "Reported ipv6 address found in output from 'info spice'")
         else:
             raise RVSessionConnect("ipv6 address not found from qemu monitor"
-                            " command: 'info spice'")
+                                   " command: 'info spice'")
     logging.debug("Connection checking pass")
 
 

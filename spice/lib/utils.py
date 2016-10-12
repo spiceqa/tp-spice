@@ -26,22 +26,13 @@ that can wait.
 import logging
 import os
 import re
-import sys
 import time
 import pipes
-import tempfile
-import subprocess
 from distutils import util
-import aexpect
 from virttest import qemu_vm
-from virttest import remote
 from virttest import utils_misc
 from virttest import asset
-from virttest import data_dir
-from virttest.staging import service
 from avocado.core import exceptions
-from spice.lib import deco
-import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +62,16 @@ USBCLERK_DISTR_PATH = r'C:\usbclerk.msi'
 DISPLAY = "qxl-0"
 
 
+# http://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not
+# ..todo:: rewrite
+
 url_regex = re.compile(
-    r'^(?:http|ftp)s?://' # http:// or https://
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-    r'localhost|' #localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-    r'(?::\d+)?' # optional port
+    r'^(?:http|ftp)s?://'                   # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
+    r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain
+    r'localhost|'                           # localhost
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+    r'(?::\d+)?'                            # optional port
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
@@ -93,8 +88,9 @@ class Cmd(list):
     def append_raw(self, arg):
         return super(Cmd, self).append(arg)
 
+
 def combine(*args):
-    return " ".join(map(str,args))
+    return " ".join(map(str, args))
 
 
 def vm_is_win(self):
@@ -186,14 +182,14 @@ def download_asset(asset_name, ini_dir=None, section=None, ddir=None):
         d = d[0]
         ini_file = os.path.join(d, fname)
         if os.path.isfile(ini_file):
-            asset_dir=d
+            asset_dir = d
             break
     assert os.path.isfile(ini_file), "Cannot find %s.ini file." % asset_name
     logger.info("Section: %s", section)
     asset_info = asset.get_asset_info(asset_name, ini_dir=asset_dir,
-                                        section=section)
+                                      section=section)
     if ddir:
-        dst_file=os.path.basename(asset_info['destination'])
+        dst_file = os.path.basename(asset_info['destination'])
         asset_info['destination'] = os.path.join(ddir, dst_file)
     asset.download_file(asset_info)
     stored_at = asset_info['destination']
@@ -249,7 +245,7 @@ class SpiceTestFail(exceptions.TestFail):
             # 1 hour
             seconds = 60 * 60 * 10
             logger.error("Test %s has failed. Do nothing for %s seconds.",
-                          test.cfg.id, seconds)
+                         test.cfg.id, seconds)
             time.sleep(seconds)
 
 
@@ -259,7 +255,7 @@ def finish_test(test):
         # 1 hour
         seconds = 60 * 60
         logger.info("Test %s is finished. Do nothing for %s seconds.",
-                      test.cfg.id, seconds)
+                    test.cfg.id, seconds)
         time.sleep(seconds)
 
 
@@ -364,9 +360,10 @@ def is_eq(val, tgt, err_limit):
     sub = tgt * err_limit / 100
     bottom = tgt - sub
     up = tgt + sub
-    ret =  bottom <= val and val <= up
+    ret = bottom <= val and val <= up
     logger.info("Stating %d <= %d <= %d is %s.", bottom, val, up, str(ret))
     return ret
+
 
 def get_host_ip(test):
     """Get IP for host.

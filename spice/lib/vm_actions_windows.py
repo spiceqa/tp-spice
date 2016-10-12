@@ -18,10 +18,6 @@
 """Action on VM with Windows.
 """
 
-import zope
-from zope import interface
-from zope.interface.interface import adapter_hooks
-from zope.interface import adapter
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import act
@@ -67,7 +63,7 @@ def install_rv(vmi):
 
     """
     vm.copy_files_to(vmi.cfg.host_path, self.cfg.client_path_rv)
-    cmd = ['start', '/wait', 'msiexec', '/i', vmi.cfg.client_path_rv ]
+    cmd = ['start', '/wait', 'msiexec', '/i', vmi.cfg.client_path_rv]
     cmd.append('INSTALLDIR=%s' % vmi.cfg.client_path_rv_dst)
     act.run_cmd(vmi, cmd)
 
@@ -116,7 +112,7 @@ def kill_by_name(vmi, app_name):
 
 @reg.add_action(req=[ios.IWindows])
 def proc_is_active(vmi, pname):
-    cmd = ['tasklist', '/FI'] 
+    cmd = ['tasklist', '/FI']
     cmd.append("IMAGENAME eq %s.exe" % pname)
     output = act.run_cmd(vmi, cmd)
     if pname in output:

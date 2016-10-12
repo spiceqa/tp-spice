@@ -20,13 +20,14 @@
 
 import sys
 
+
 class RunAction(object):
 
     def __getattr__(self, key):
         if key in ["__getstate__", "__setstate__", "__slots__"]:
             raise AttributeError()
 
-        from spice.lib import act2 # There is no namespace for this module.
+        from spice.lib import act2  # There is no namespace for this module.
         return act2.Action(key)
 
 sys.modules[__name__] = RunAction()

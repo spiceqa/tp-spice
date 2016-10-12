@@ -42,6 +42,7 @@ from zope.interface import adapter
 
 registry = adapter.AdapterRegistry()
 
+
 def add_action(req, name=None):
     """Register an action for VM, that provides required iface.
 
@@ -81,4 +82,3 @@ def add_action(req, name=None):
 class IVmAction(interface.Interface):
     def __call__():
         """Run some command on VM."""
-

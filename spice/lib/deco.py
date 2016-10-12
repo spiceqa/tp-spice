@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# See LICENSE for more details.
 #
 # Copyright 2012 by Jeff Laughlin Consulting LLC
 #
@@ -24,7 +35,6 @@
 # https://wiki.python.org/moin/PythonDecoratorLibrary
 
 
-import sys
 import time
 import functools
 import logging
@@ -39,12 +49,12 @@ def exc_handler(tries_remaining, exception, delay):
     tries_remaining: The number of tries remaining.
     exception: The exception instance which was raised.
     """
-    logger.info("Caught '%s', %d tries remaining, sleeping for %s seconds", exception, tries_remaining, delay)
+    logger.info("Caught '%s', %d tries remaining, sleeping for %s seconds",
+                exception, tries_remaining, delay)
     if tries_remaining == 0:
         seconds = 60 * 60 * 10
         logger.error("Test has failed. Do nothing for %s seconds.", seconds)
         time.sleep(seconds)
-
 
 
 def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
@@ -77,7 +87,7 @@ def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
             tries.reverse()
             for tries_remaining in tries:
                 try:
-                   return func(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except exceptions as e:
                     if tries_remaining > 0:
                         if hook is not None:

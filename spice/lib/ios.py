@@ -138,6 +138,7 @@ class IArch32(IArch):
 class IArch64(IArch):
     pass
 
+
 # Major version.
 class IVersionMajor(IOSInfo):
     pass

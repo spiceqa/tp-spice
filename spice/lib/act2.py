@@ -35,10 +35,12 @@ class Action(object):
 
     def __call__(self, vmi, *args, **kwargs):
         os = registry.lookup([], ios.IOSystem, vmi.cfg.interface_os)
-        ver = registry.lookup([], ios.IVersionMajor, vmi.cfg.interface_os_version)
-        mver = registry.lookup([], ios.IVersionMinor, vmi.cfg.interface_os_mversion)
+        ver = registry.lookup([], ios.IVersionMajor,
+                              vmi.cfg.interface_os_version)
+        mver = registry.lookup([], ios.IVersionMinor,
+                               vmi.cfg.interface_os_mversion)
         arch = registry.lookup([], ios.IArch, vmi.cfg.interface_os_arch)
-        os_info = ",".join(map(repr,[os, ver, mver, arch]))
+        os_info = ",".join(map(repr, [os, ver, mver, arch]))
         vmi.vm.info("OS info: %s", os_info)
         lookup_order = [[os, ver, mver, arch],
                         [os, ver, mver],
@@ -47,9 +49,9 @@ class Action(object):
                         [os]]
         action = None
         for iset in lookup_order:
-            if not all(iset): continue
+            all(iset) or continue
             action = registry.lookup(iset, reg.IVmAction, self.name)
-            if action: break
+            action and break
         if not action:
             known_actions = registry.lookup([], reg.IVmAction)
             vmi.vm.info("Known actions: %s", repr(known_actions))

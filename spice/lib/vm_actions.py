@@ -18,10 +18,6 @@
 """Action on VM with some OS.
 """
 
-import zope
-from zope import interface
-from zope.interface.interface import adapter_hooks
-from zope.interface import adapter
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import act
@@ -104,5 +100,3 @@ def info(vmi, string, *args, **kwargs):
 @reg.add_action(req=[ios.IOSystem])
 def error(vmi, string, *args, **kwargs):
     logger.error(vmi.vm_name + " : " + string, *args, **kwargs)
-
-

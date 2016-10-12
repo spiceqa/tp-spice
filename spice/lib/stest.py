@@ -18,7 +18,6 @@
 import logging
 import pprint
 from spice.lib import reg
-from spice.lib import ios
 from spice.lib import utils
 from virttest import virt_vm
 
@@ -82,8 +81,8 @@ class AttributeDict(dict):
         for line in pprint.pformat(self).split('\n'):
                 logger.info(line)
 
-    #def __init__(self, custom_dict={}):
-    #    self.update(custom_dict)
+#    def __init__(self, custom_dict={}):
+#        self.update(custom_dict)
 
 
 class VmInfo(object):
@@ -150,7 +149,7 @@ class SpiceTest(object):
                 self.kvm[name][prm] = self.vms[name].get_spice_var(prm)
                 if self.kvm[name][prm]:
                     logger.info("VM %s spice server option %s is %s.", name,
-                                 prm, self.kvm[name][prm])
+                                prm, self.kvm[name][prm])
         """Config set per VM."""
         self.cfg_vm = {}
         for name in vm_names:
@@ -164,7 +163,6 @@ class SpiceTest(object):
         self.vmi = {}
         for name in vm_names:
             self.vmi[name] = VmInfo(self, name)
-
 
     def open_ssn(self, vm_name, admin=False):
         vm_obj = self.vms[vm_name]
