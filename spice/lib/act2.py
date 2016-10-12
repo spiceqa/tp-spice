@@ -49,9 +49,11 @@ class Action(object):
                         [os]]
         action = None
         for iset in lookup_order:
-            all(iset) or continue
+            if not all(iset):
+                continue
             action = registry.lookup(iset, reg.IVmAction, self.name)
-            action and break
+            if action:
+                break
         if not action:
             known_actions = registry.lookup([], reg.IVmAction)
             vmi.vm.info("Known actions: %s", repr(known_actions))

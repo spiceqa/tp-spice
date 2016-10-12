@@ -18,13 +18,29 @@
 """Action on VM with some Linux.
 """
 
-import zope
-from zope import interface
-from zope.interface.interface import adapter_hooks
-from zope.interface import adapter
+import os
+import re
+import aexpect
+import time
+import subprocess
+
+from virttest import asset
+from virttest import remote
+from virttest.staging import service
+
+from spice.lib import utils
+from spice.lib import deco
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import act
+
+
+USB_POLICY_FILE = \
+    "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
+"""USB policy file. Location on client."""
+USB_POLICY_FILE_SRC = os.path.join(utils.DEPS_DIR,
+                                   "org.spice-space.lowlevelusbaccess.policy")
+"""USB policy file source."""
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -69,7 +85,7 @@ def workdir(vmi):
 def dst_dir(vmi):
     dst_dir = vmi.cfg_vm.dst_dir
     cmd1 = utils.Cmd("getent", "passwd", vmi.cfg.username)
-    cmd1 = utils.Cmd("cut", "-d:", "-f6")
+    cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
     if not dst_dir:
         out = act.run_cmd(vmi, cmd)
@@ -106,7 +122,7 @@ def check_usb_policy(vmi):
         .. todo: Move USB_POLICY_FILE to cfg.
 
     """
-    cmd = utils.Cmd['grep', '<allow_any>yes', USB_POLICY_FILE]  # TODO
+    cmd = utils.Cmd('grep', '<allow_any>yes', USB_POLICY_FILE)  # TODO
     status, _ = act.rstatus(vmi, cmd)
     act.info(vmi, "USB policy is: %s.", status)
     return not status
@@ -221,8 +237,8 @@ def x_turn_off(vmi):
     runner = remote.RemoteRunner(session=ssn)
     srv_mng = service.Factory.create_service(run=runner.run)
     srv_mng.set_target("multi-user.target")  # pylint: disable=no-member
-    cmd1 = utils.Cmd["ss", "-x", "src", "*X11-unix*"]
-    cmd2 = utils.Cmd["grep", "-q", "-s", "X11"]
+    cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
+    cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
     cmd = utils.combine(cmd1, "|", cmd2)
     status, _ = act.rstatus(vmi, cmd)
     assert not status, "X is: on. But it should not."
@@ -236,11 +252,11 @@ def x_turn_on(vmi):
     runner = remote.RemoteRunner(session=ssn)
     srv_mng = service.Factory.create_service(run=runner.run)
     srv_mng.set_target("graphical.target")  # pylint: disable=no-member
-    cmd1 = utils.Cmd["ss", "-x", "src", "*X11-unix*"]
-    cmd2 = utils.Cmd["grep", "-q", "-s", "X11"]
+    cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
+    cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
     cmd = utils.combine(cmd1, "|", cmd2)
     status, _ = act.rstatus(vmi, cmd)
-    assert active, "X is: off. But it should not."  # TODO
+    assert status == 0, "X is: off. But it should not."  # TODO
     act.info(vmi, "X is: on.")
 
 
@@ -314,7 +330,7 @@ def install_rpm(vmi, rpm):
     if status == 0:
         act.info(vmi, "RPM %s is already installed.", pkg)
         return
-    if url_regex.match(rpm):
+    if utils.url_regex.match(rpm):
         act.info(vmi, "Download RPM: %s.", rpm)
         cmd = ["curl", "-s", "-O", rpm]
         act.cmd(cmd, admin=True, timeout=500)
@@ -366,11 +382,11 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
     """
     cmd1 = utils.Cmd("xprop", "-root", "32x", r"\t$0", "_NET_ACTIVE_WINDOW")
     cmd2 = utils.Cmd("cut", "-f", "2")
-    cmd = combine(cmd1, "|", cmd2)
+    cmd = utils.combine(cmd1, "|", cmd2)
     win_id = act.run_cmd(vmi, cmd)
     cmd = utils.Cmd("xprop", "-notype", "-id", win_id, prop)
 
-    @deco.retry(8, exceptions=(SpiceUtilsError, aexpect.ShellCmdError,
+    @deco.retry(8, exceptions=(utils.SpiceUtilsError, aexpect.ShellCmdError,
                                aexpect.ShellTimeoutError))
     def is_active():
         act.info(vmi, "Test if window is active: %s", pattern)
@@ -378,7 +394,7 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
         act.info(vmi, "Current win name: %s", output)
         if pattern not in output:
             msg = "Can't find active window with pattern %s." % pattern
-            raise SpiceUtilsError(msg)  # TODO
+            raise utils.SpiceUtilsError(msg)  # TODO
         act.info(vmi, "Found active window: %s.", pattern)
 
     is_active()
@@ -465,7 +481,7 @@ def get_display_resolution(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
-def get_open_window_ids(fltr):
+def get_open_window_ids(vmi, fltr):
     """Get X server window ids of active windows matching filter.
 
     Parameters
@@ -493,7 +509,7 @@ def get_open_window_ids(fltr):
 
 
 @reg.add_action(req=[ios.ILinux])
-def get_window_props(win_id):
+def get_window_props(vmi, win_id):
     """Get full properties of a window with speficied ID.
 
     Parameters
@@ -562,7 +578,7 @@ def kill_by_name(vmi, app_name):
         if output == 1:
             pass
         else:
-            raise SpiceUtilsError("Cannot kill it.")  # TODO
+            raise utils.SpiceUtilsError("Cannot kill it.")  # TODO
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -590,7 +606,7 @@ def is_fullscreen_xprop(vmi, win_name, window=0):
 
 
 @reg.add_action(req=[ios.ILinux])
-def window_resolution(vmi, in_name, window=0):
+def window_resolution(vmi, win_name, window=0):
     """ ..todo:: write me
     """
     win_id = act.get_open_window_ids(vmi, win_name)[window]
@@ -676,7 +692,7 @@ def get_geom(vmi, win_title):
     out = act.run(vmi, cmd)
     res = re.findall('\d+x\d+', out)[0]
     act.info(vmi, "Window %s has geometry: %s", win_title, res)
-    return utils.str2res(rv_res)
+    return utils.str2res(res)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -787,7 +803,7 @@ def text2cb(vmi, text):
     """Use the clipboard script to copy an image into the clipboard.
     """
     script = vmi.cfg_vm.helper
-    dst_script = vmi.chk_deps(self.cfg_vm.helper)
+    dst_script = vmi.chk_deps(vmi.cfg.helper)
     params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
     act.info(vmi, "Put in clipboard: %s", text)
@@ -797,7 +813,7 @@ def text2cb(vmi, text):
 @reg.add_action(req=[ios.ILinux])
 def cb2text(vmi):
     script = vmi.cfg_vm.helper
-    dst_script = vmi.chk_deps(self.cfg_vm.helper)
+    dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
     act.info(vmi, "Get from clipboard: %s", text)
@@ -818,7 +834,7 @@ def clear_cb(vmi):
 @reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg_vm.helper
-    dst_script = vmi.chk_deps(self.cfg_vm.helper)
+    dst_script = vmi.chk_deps(vmi.cfg.helper)
     size = int(kbytes)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
     act.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
@@ -828,7 +844,7 @@ def gen_text2cb(vmi, kbytes):
 @reg.add_action(req=[ios.ILinux])
 def cb2file(vmi, fname):
     script = vmi.cfg_vm.helper
-    dst_script = vmi.chk_deps(self.cfg_vm.helper)
+    dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     act.info(vmi, "Dump clipboard to file.", fname)
     act.run(vmi, cmd, timeout=300)
@@ -838,7 +854,7 @@ def cb2file(vmi, fname):
 def md5sum(vmi, fpath):
     cmd = utils.Cmd("md5sum", fpath)
     out = act.run(vmi, cmd, timeout=300)
-    md5_sum = re.findall(r'\w+', o)[0]
+    md5_sum = re.findall(r'\w+', out)[0]
     act.info(vmi, "MD5 %s: %s.", fpath, md5_sum)
     return md5_sum
 
@@ -861,7 +877,7 @@ def klogger_stop(vmi, ssn):
     output = ssn.read_up_to_prompt()
     a = re.findall(
         'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
-    keys = map(lambda (keycode, keysym): (int(keycode), int(keysym, base=16)),
+    keys = map(lambda keycode, keysym: (int(keycode), int(keysym, base=16)),
                a)
     act.info(vmi, "Read keys: %s" % keys)
     # Return list of pressed: (keycode, keysym)
@@ -878,7 +894,7 @@ def turn_accessibility(vmi, on=True):
         Spice test object.
 
     """
-    if is_yes(on):
+    if utils.is_yes(on):
         val = 'true'
     else:
         val = 'false'
@@ -921,7 +937,7 @@ def turn_accessibility(vmi, on=True):
         Spice test object.
 
     """
-    if is_yes(on):
+    if utils.is_yes(on):
         val = 'true'
     else:
         val = 'false'
@@ -1026,16 +1042,16 @@ def run_selenium(vmi, ssn):
     defs = utils.Cmd()
     opts = utils.Cmd()
     opts.append("-port")
-    opts.append(cfg.selenium_port)
+    opts.append(vmi.cfg.selenium_port)
     opts.append("-trustAllSSLcertificates")
     if vmi.cfg.selenium_driver == 'Firefox':
         profile = vmi.cfg.firefox_profile
         if profile:
             cmd = utils.Cmd("firefox", "-CreateProfile", profile)
-            output = vmi.ssn.cmd(cmd)
+            output = ssn.cmd(cmd)
             output = re.findall(r'\'[^\']*\'', output)[1]
             output = output.replace("'", '')
-            output = os.path.dirname(dirname)
+            output = os.path.dirname(output)
             vmi.firefox_profile_dir = output
             act.info(vmi, "Created a new FF profile at: %s", output)
             defs.append("-Dwebdriver.firefox.profile=%s" % profile)
@@ -1070,6 +1086,8 @@ def firefox_auto_open_vv(vmi):
         act.run_cmd(vmi, cmd)
     line = ('pref("browser.helperApps.neverAsk.openFile",'
             '"application/x-virt-viewer");')
-    cmd = ["echo", line, ">>", "user_js")
+    cmd1 = utils.Cmd("echo", line)
+    cmd2 = utils.Cmd(user_js)
+    cmd = utils.combine(cmd1, ">>", cmd2)
     act.info(vmi, "Add new line %s to Firefox profile: %s", line, user_js)
     act.run_cmd(vmi, cmd)

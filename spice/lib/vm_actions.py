@@ -18,9 +18,13 @@
 """Action on VM with some OS.
 """
 
+import logging
+
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import act
+
+logger = logging.getLogger(__name__)
 
 
 @reg.add_action(req=[ios.IOSystem])
@@ -39,7 +43,7 @@ def run(vmi, cmd, ssn=None, admin=False, timeout=None):
     if not ssn:
         ssn = act.new_ssn(vmi, admin)
     cmdline = str(cmd)
-    kwargs = []
+    kwargs = {}
     if timeout:
         kwargs['timeout'] = timeout
     out = ssn.cmd(cmdline, **kwargs)
@@ -62,7 +66,7 @@ def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
     if not ssn:
         ssn = act.new_ssn(vmi, admin)
     cmdline = str(cmd)
-    kwargs = []
+    kwargs = {}
     if timeout:
         kwargs['timeout'] = timeout
     status, out = ssn.cmd_status_output(cmdline)

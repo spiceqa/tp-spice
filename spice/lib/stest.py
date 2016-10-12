@@ -108,10 +108,6 @@ class SpiceTest(object):
     env : virttest.utils_env.Env
         Dictionary with test environment.
 
-    Todo
-    ----
-        Add root sessions.
-
     Raises
     ------
         utils.SpiceTestFail
@@ -134,13 +130,6 @@ class SpiceTest(object):
             except virt_vm.VMDeadError as excp:
                 raise utils.SpiceTestFail(self,
                                           "Required VM is dead: %s" % excp)
-        self.sessions = {}
-        self.sessions_admin = {}
-        """Establish session to each VM."""
-        for name in vm_names:
-            vm_obj = self.vms[name]
-            self.sessions[name] = self.open_ssn(name)
-            self.sessions_admin[name] = self.open_ssn(name, admin=True)
         self.kvm = {}
         """Spice KVM options per VM."""
         for name in vm_names:
@@ -155,31 +144,10 @@ class SpiceTest(object):
         for name in vm_names:
             self.cfg_vm[name] = AttributeDict()
             self.cfg_vm[name].update(self.vms[name].get_params())
-        """Commands set per VM."""
-        self.cmds = {}
-        for name in vm_names:
-            self.cmds[name] = utils.Commands.get(self, name)
         """Actions set per VM's OS."""
         self.vmi = {}
         for name in vm_names:
             self.vmi[name] = VmInfo(self, name)
-
-    def open_ssn(self, vm_name, admin=False):
-        vm_obj = self.vms[vm_name]
-        if admin:
-            username = self.cfg.rootuser
-            password = self.cfg.rootpassword
-            vm_obj.info("Open new admin session.")
-        else:
-            username = self.cfg.username
-            password = self.cfg.password
-            vm_obj.info("Open new user session.")
-        ssn = vm_obj.wait_for_login(username=username,
-                                    password=password,
-                                    timeout=int(self.cfg.login_timeout))
-        """Export essentials variables per SSH session."""
-        ssn.cmd("export DISPLAY=:0.0")
-        return ssn
 
 
 class ClientGuestTest(SpiceTest):
@@ -193,14 +161,8 @@ class ClientGuestTest(SpiceTest):
         self.name_g = name_g
         self.vm_c = self.vms[name_c]
         self.vm_g = self.vms[name_g]
-        self.ssn_c = self.sessions[name_c]
-        self.ssn_g = self.sessions[name_g]
-        self.assn_c = self.sessions_admin[name_c]
-        self.assn_g = self.sessions_admin[name_g]
         self.kvm_c = self.kvm[name_c]
         self.kvm_g = self.kvm[name_g]
-        self.cmd_c = self.cmds[name_c]
-        self.cmd_g = self.cmds[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
         self.vmi_c = self.vmi[name_c]
@@ -221,10 +183,7 @@ class OneVMTest(SpiceTest):
             name = self.cfg.vms.split()[0]
         self.name = name
         self.vm = self.vms[name]
-        self.ssn = self.sessions[name]
-        self.assn = self.sessions_admin[name]
         self.kvm = self.kvm[name]
-        self.cmd = self.cmds[name]
         self.cfg = self.cfg_vm[name]
         self.vmi = self.vmi[name]
 

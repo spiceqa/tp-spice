@@ -121,7 +121,7 @@ def log(level=logging.DEBUG, name=None, message=None):
         def wrapper(*args, **kwargs):
             logger.info('Entering {}'.format(logmsg))
             start = time.time()
-            f_result = func(*args, **kwds)
+            f_result = func(*args, **kwargs)
             end = time.time()
             logger.info('Exiting {}'.format(logmsg))
             logger.log(level, func.__name__, "time ", end-start)

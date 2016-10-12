@@ -32,6 +32,7 @@ from distutils import util
 from virttest import qemu_vm
 from virttest import utils_misc
 from virttest import asset
+from virttest import utils_net
 from avocado.core import exceptions
 
 logger = logging.getLogger(__name__)
@@ -46,14 +47,8 @@ SSL_TYPE_EXPLICIT_INVALID = "invalid_explicit_hs"
 """SSL type - invalid explicit host name."""
 PTRN_QEMU_SSL_ACCEPT_FAILED = "SSL_accept failed"
 """Pattern for qemu log - failed to accept SSL."""
-USB_POLICY_FILE = \
-    "/usr/share/polkit-1/actions/org.spice-space.lowlevelusbaccess.policy"
-"""USB policy file. Location on client."""
 DEPS_DIR = "deps"
 """Dir with useful files."""
-USB_POLICY_FILE_SRC = os.path.join(DEPS_DIR,
-                                   "org.spice-space.lowlevelusbaccess.policy")
-"""USB policy file source."""
 
 VV_DISTR_PATH = r'C:\virt-viewer.msi'
 USBCLERK_DISTR_PATH = r'C:\usbclerk.msi'
@@ -77,7 +72,7 @@ url_regex = re.compile(
 
 class Cmd(list):
     def __init__(self, *args):
-        return super(Cmd, self).__init__(map(pipes.quote, args))
+        super(Cmd, self).__init__(map(pipes.quote, args))
 
     def __str__(self):
         return " ".join(self)
@@ -313,7 +308,7 @@ def res_gt(res1, res2):
         res1 > res2
 
     """
-    return h2 > h1 and w2 > w1
+    return res2[0] > res1[0] and res2[1] > res1[1]
 
 
 def res_eq(res1, res2):
@@ -353,7 +348,7 @@ def is_eq(val, tgt, err_limit):
     """
     if not isinstance(tgt, int):
         tgt = int(tgt)
-    if not isinstance(post, int):
+    if not isinstance(val, int):
         val = int(val)
     if not isinstance(err_limit, int):
         err_limit = int(err_limit)
