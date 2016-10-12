@@ -39,7 +39,7 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.reset_gui()
-    test.cmd_g.reset_gui()
+    act.reset_gui(test.vmi_c)
+    act.reset_gui(test.vmi_g)
     ssn = test.open_ssn(test.name_c)
     rv_ssn.connect(test, ssn)

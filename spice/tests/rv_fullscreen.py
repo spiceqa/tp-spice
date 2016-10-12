@@ -42,16 +42,16 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.x_active()
-    test.cmd_g.x_active()
+    act.x_active(test.vmi_c)
+    act.x_active(test.vmi_g)
     res_target = "1920x1080"
     res_reset = "640x480"
-    test.cmd_c.set_resolution(res_target)
-    test.cmd_g.set_resolution(res_reset)
+    act.set_resolution(test.vmi_c, res_target)
+    act.set_resolution(test.vmi_g, res_reset)
     ssn = test.open_ssn(test.name_c)
     rv_ssn.connect(test, ssn)
-    res_g = test.cmd_g.get_display_resolution()[0]
-    res_c = test.cmd_c.get_display_resolution()[0]
+    res_g = act.get_display_resolution(test.vmi_g)[0]
+    res_c = act.get_display_resolution(test.vmi_c)[0]
     logger.info("Target: %s, client: %s, guest: %s.", res_target, res_c, res_g)
     err_info = "Guest res should have adjusted to client, but it hasn't."
     assert res_target == res_c == res_g, err_info

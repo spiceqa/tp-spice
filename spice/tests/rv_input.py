@@ -29,6 +29,7 @@ from avocado.core import exceptions
 from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
+from spice.lib import act
 from virttest import utils_misc
 
 
@@ -83,10 +84,10 @@ logger = logging.getLogger(__name__)
 
 
 def test_seq(test, send_keys, expected_keysyms):
-    ssn = test.cmd_g.klogger_start()
+    ssn = act.klogger_start(test.vmi_g)
     for i in send_keys:
         test.vm_c.send_key(i)
-    logged_keys = test.cmd_g.klogger_stop(ssn)
+    logged_keys = act.klogger_stop(test.vmi_g, ssn)
     keysyms = map(lambda (ignore, keysym): keysym, logged_keys)
     assert keysyms == expected_keysyms
     ssn.close
@@ -108,8 +109,8 @@ def run(vt_test, test_params, env):
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     #test.cmd_g.install_rpm(cfg.xev)
-    test.cmd_c.x_active()
-    test.cmd_g.x_active()
+    act.x_active(test.vmi_c)
+    act.x_active(test.vmi_g)
     ssn = test.open_ssn(test.name_c)
     rv_ssn.connect(test, ssn)
 
@@ -167,13 +168,13 @@ def run(vt_test, test_params, env):
         keys2 = ['a', 'kp_1', 'caps_lock', 'num_lock']
         expected_keysyms = ['97', '65457', '65509', '65407', '65', '65436',
                             '65', '65436', '65509', '65407']
-        ssn = test.cmd_g.klogger_start()
+        ssn = act.klogger_start(test.vmi_g)
         for i in keys1:
             test.vm_c.send_key(i)
         test.vm_g.migrate()
         for i in keys2:
             test.vm_c.send_key(i)
-        logged_keys = test.cmd_g.klogger_stop(ssn)
+        logged_keys = act.klogger_stop(test.vmi_g, ssn)
         ssn.close
         keysyms = map(lambda (ignore, keysym): keysym, logged_keys)
         assert keysyms == expected_keysyms

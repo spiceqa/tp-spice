@@ -54,6 +54,7 @@ import aexpect
 from virttest import utils_net
 from virttest import utils_misc
 from spice.lib import utils
+from spice.lib import act
 
 
 logger = logging.getLogger(__name__)
@@ -87,21 +88,6 @@ class RVSessionNotImplemented(RVSessionError):
 class RVSessionConnect(RVSessionError):
     """Exception for remote-viewer session.
     """
-
-
-def get_host_ip(test):
-    """Get IP for host.
-
-    Parameters
-    ----------
-    test : SpiceTest
-        Spice test object.
-
-    """
-    ip = utils_net.get_host_ip_address(test.cfg)
-    if test.kvm_g.listening_addr == "ipv6":
-        ip = "[" + utils_misc.convert_ipv4_to_ipv6(ip) + "]"
-    return ip
 
 
 def get_cacert_path_host(test):
@@ -138,7 +124,7 @@ def get_host_subj(test):
             # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
             subj = test.kvm_g.spice_x509_server_subj
             subj = subj.replace('/', ',')[1:]
-            subj += get_host_ip(test)
+            subj += utils.get_host_ip(test)
     return subj
 
 
@@ -172,6 +158,7 @@ def connect(test, ssn, env={}):
     vm_c = test.vm_c
     vm_g = test.vm_g
     kvm_g = test.kvm_g
+    vmi_c = test.vmi_c
     # Check correct invocation.
     if test.cfg_g.display == "vnc":
         raise RVSessionError(test, "remote-viewer vnc not implemeted")
@@ -180,19 +167,23 @@ def connect(test, ssn, env={}):
     # Print remove-viewer version on client
     if vm_c.is_linux():
         if cfg.rv_ld_library_path:
-            cmd = "export LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path
-            ssn.cmd(cmd)
+            cmd = utils.Cmd("export", "LD_LIBRARY_PATH=%s" % cfg.rv_ld_library_path)
+            act.run(vmi_c, cmd, ssn=ssn)
     if cfg.spice_proxy and cfg.rv_parameters_from != "file":
         if vm_c.is_linux():
-            ssn.cmd("export SPICE_PROXY=%s" % cfg.spice_proxy)
+            cmd = utils.Cmd("export", "SPICE_PROXY=%s" % cfg.spice_proxy)
+            act.run(vmi_c, cmd, ssn=ssn)
         elif vm_c.is_win():
-            ssn.cmd_output("SET SPICE_PROXY=%s" % cfg.spice_proxy)
+            cmd = utils.Cmd("SET SPICE_PROXY=%s", cfg.spice_proxy)
+            act.run(vmi_c, cmd, ssn=ssn)
     for key in env:
         if vm_c.is_linux():
-            ssn.cmd("export %s=%s" % (key, env[key]))
+            cmd = utils.Cmd("export", "%s=%s" % (key, env[key]))
+            act.run(vmi_c, cmd, ssn=ssn)
         elif vm_c.is_win():
-            ssn.cmd_output("SET %s=%s" % (key, env[key]))
-    test.cmd_c.print_rv_version()
+            cmd = utils.Cmd("SET %s=%s" % (key, env[key]))
+            act.run(vmi_c, cmd, ssn=ssn)
+    act.print_rv_version(test.vmi_c)
     # Set the password of the VM using the qemu-monitor.
     if cfg.ticket_set:
         logging.info("Guest qemu monitor: set_password spice %s",
@@ -200,19 +191,22 @@ def connect(test, ssn, env={}):
         cmd = "set_password spice %s" % cfg.ticket_set
         vm_g.monitor.cmd(cmd)
     # Command line parameters for RV
-    cmd = ""
+    rv_cmd = utils.Cmd()
     # URL for RV
     url = ""
     # Make cmd for client.
-    cmd += cfg.rv_binary
+    rv_cmd.append(cfg.rv_binary)
     if vm_c.is_linux():
-        cmd = cmd + " --display=:0.0"
+        rv_cmd.append("--display=:0.0")
     if cfg.rv_parameters_from == 'file':
-        dcmd = 'getent passwd %s | cut -d: -f6' % cfg.username
-        client_dir = test.ssn_c.cmd_output(dcmd).rstrip('\r\n')
+        cmd1 = utils.Cmd("getent", "passwd", cfg.username)
+        cmd2 = utils.Cmd("cut", "-d:", "-f6")
+        cmd = utils.combine(cmd1, "|", cmd2)
+        out = act.run(vmi_c, cmd)
+        client_dir = out.rstrip('\r\n')
         client_vv_file = os.path.join(client_dir, cfg.rv_file)
-        cmd += " " + client_vv_file
-    host_ip = get_host_ip(test)
+        rv_cmd.append(client_vv_file)
+    host_ip = utils.get_host_ip(test)
     if utils.is_yes(test.kvm_g.spice_ssl):
         # Copy cacert file to client.
         # cacert file on the host
@@ -224,10 +218,10 @@ def connect(test, ssn, env={}):
             cacert_client = r"C:\%s" % cfg.spice_x509_cacert_file
         # Remove previous cacert on the client
         if vm_c.is_linux():
-            xcmd = "rm -rf %s" % cfg.spice_x509_prefix
-            ssn.cmd(xcmd)
-            xcmd = "mkdir -p %s" % cfg.spice_x509_prefix
-            ssn.cmd(xcmd)
+            cmd = utils.Cmd("rm", "-rf", cfg.spice_x509_prefix)
+            act.run(vmi_c, cmd, ssn=ssn)
+            cmd = utils.Cmd("mkdir", "-p", cfg.spice_x509_prefix)
+            act.run(vmi_c, cmd, ssn=ssn)
         vm_c.copy_files_to(cacert_host, cacert_client)
         # Cacert subj is in format for create certificate(with '/'
         # delimiter) remote-viewer needs ',' delimiter. And also is needed
@@ -238,26 +232,28 @@ def connect(test, ssn, env={}):
         # If it's invalid implicit, a remote-viewer connection will be
         # attempted with the hostname, since ssl certs were generated with
         # the ip address.
-        escape_char = vm_c.params.get("shell_escape_char", '\\')
+        escape_char = test.cfg_c.shell_escape_char or '\\'
         if cfg.ssltype == "invalid_implicit_hs" or \
                 "explicit" in cfg.ssltype:
             hostname = socket.gethostname()
-            url = " spice://%s?tls-port=%s%s&port=%s" % (
+            url = "spice://%s?tls-port=%s%s&port=%s" % (
                 hostname, tls_port, escape_char, port)
         else:
-            url = " spice://%s?tls-port=%s%s&port=%s" % (
+            url = "spice://%s?tls-port=%s%s&port=%s" % (
                 host_ip, tls_port, escape_char, port)
         if cfg.rv_parameters_from == "cmd":
-            cmd += url
+            rv_cmd.append(url)
         elif cfg.rv_parameters_from == "menu":
             pass
         elif cfg.rv_parameters_from == "file":
             pass
         if cfg.rv_parameters_from != "file":
-            cmd += " --spice-ca-file=%s" % cacert_client
+            opt = "--spice-ca-file=%s" % cacert_client
+            rv_cmd.append(opt)
         if cfg.spice_client_host_subject and \
                 cfg.rv_parameters_from != "file":
-            cmd += ' --spice-host-subject="%s"' % host_subj
+            opt = '--spice-host-subject="%s"' % host_subj
+            rv_cmd.append(opt)
     else:
         # Not spice_ssl.
         port = kvm_g.spice_port
@@ -268,54 +264,58 @@ def connect(test, ssn, env={}):
         elif cfg.rv_parameters_from == "file":
             pass
         else:
-            cmd += " spice://%s?port=%s" % (host_ip, port)
+            opt = "spice://%s?port=%s" % (host_ip, port)
+            rv_cmd.append(opt)
     # Usbredirection support.
     if cfg.usb_redirection_add_device:
         logging.info("USB redirection set auto redirect on connect for device"
                      "class 0x08")
-        cmd += ' --spice-usbredir-redirect-on-connect="0x08,-1,-1,-1,1"'
+        opt = r'--spice-usbredir-redirect-on-connect="0x08,-1,-1,-1,1"'
+        rv_cmd.append(opt)
         # USB was created by qemu (root). This prevents right issue.
         # ..todo:: must be root session
         if vm_c.is_linux():
-            ccmd = "chown {0}:{0} {1}".format(cfg.username, cfg.file_path)
-            ssn.cmd(ccmd)
-        if not test.cmd_c.check_usb_policy():
-            test.cmd_c.add_usb_policy()
+            cmd = utils.Cmd("chown", cfg.username, cfg.file_path)
+            act.run(vmi_c, cmd, ssn=ssn)
+        if not act.check_usb_policy(test.vmi_c):
+            act.add_usb_policy(test.vmi_c)
     if cfg.rv_debug:
-        cmd += " --spice-debug"
+        rv_cmd.append("--spice-debug")
     if cfg.rv_parameters_from == "cmd":
         if cfg.full_screen:
-            cmd += " --full-screen"
+            rv_cmd.append("--full-screen")
         if cfg.disable_audio:
-            cmd += " --spice-disable-audio"
+            rv_cmd.append("--spice-disable-audio")
         if cfg.smartcard:
-            cmd += " --spice-smartcard"
+            rv_cmd.append("--spice-smartcard")
             if cfg.certdb:
-                cmd += " --spice-smartcard-db " + cfg.certdb
+                rv_cmd.append("--spice-smartcard-db"
+                rv_cmd.append(cfg.certdb)
             if cfg.gencerts:
-                cmd += " --spice-smartcard-certificates " + cfg.gencerts
+                rv_cmd.append("--spice-smartcard-certificates")
+                rv_cmd.append(cfg.gencerts)
     if cfg.rv_parameters_from == "file":
         host_dir = os.path.expanduser('~')
         host_vv_file = os.path.join(host_dir, cfg.rv_file)
         generate_vv_file(host_vv_file, test)
-        logger.info("Copy from host: %s to client: %s", host_vv_file,
-                    client_vv_file)
+        act.info(vmi_c, "Copy from host: %s to %s", host_vv_file,
+                 client_vv_file)
         test.vm_c.copy_files_to(host_vv_file, client_vv_file)
-    logging.info("Final cmd for client is: %s", cmd)
+    logging.info(vmi_c, "Final cmd for client is: %s", rv_cmd)
     try:
         pid = ssn.get_pid()
         logger.info("shell pid id: %s", pid)
-        ssn.sendline(cmd)
+        ssn.sendline(rv_cmd)
     except aexpect.ShellStatusError:
         logging.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
     # Send command line through monitor since url was not provided
     if cfg.rv_parameters_from == "menu":
-        test.cmd_c.str_input(url)
+        act.str_input(test.vmi_c, url)
     # At this step remote-viewer application window must exist.  It can be any
     # remote-viewer window: main, pop-up, menu, etc.
     try:
-        test.cmd_c.wait_for_win(RV_WM_CLASS, "WM_CLASS")
+        act.wait_for_win(vmi_c, RV_WM_CLASS, "WM_CLASS")
     except utils.SpiceUtilsError:
         raise RVSessionError(test)
     # client waits for user entry (authentication) if spice_password is set
@@ -324,8 +324,8 @@ def connect(test, ssn, env={}):
         # In case of .vv file, password supplied inside .vv file.
         # Wait for remote-viewer to launch
         try:
-            test.cmd_c.wait_for_win(RV_WIN_NAME_AUTH)
-            test.cmd_c.str_input(cfg.ticket_send)
+            act.wait_for_win(vmi_c, RV_WIN_NAME_AUTH)
+            act.str_input(vmi_c, cfg.ticket_send)
         except utils.SpiceUtilsError:
             raise RVSessionConnect(test)
     is_connected(test)
@@ -350,7 +350,7 @@ def is_connected(test):
         Something goes wrong.
     """
     cfg = test.cfg
-    remote_ip = get_host_ip(test)
+    remote_ip = utils.get_host_ip(test)
     proxy_port = ""
     if cfg.spice_proxy:
         # ..todo:: add spice_proxy_port
@@ -410,7 +410,7 @@ def is_connected(test):
     # Check to see if ipv6 address is reported back from qemu monitor
     if cfg.spice_info == "ipv6":
         # Remove brackets from ipv6 host ip
-        host_ip = get_host_ip(test)
+        host_ip = utils.get_host_ip(test)
         if host_ip[1:len(host_ip) - 1] in output:
             logging.info(
                 "Reported ipv6 address found in output from 'info spice'")
@@ -430,7 +430,7 @@ def disconnect(test):
 
     :return: None
     """
-    test.cmd_c.kill_by_name(test.cfg.rv_binary)
+    act.kill_by_name(test.vmi_c, test.cfg.rv_binary)
 
 
 def generate_vv_file(path, test):

@@ -119,29 +119,31 @@ def run(vt_test, test_params, env):
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     ssn_c = test.ssn_c
-    cmd_c = test.cmd_c
+    vmi_c = test.vmi_c
+    vmi_g = test.vmi_g
     vm_c = test.vm_c
-    cmd_c.x_active()
-    cmd_c.lock_scr_off()
-    cmd_c.turn_accessibility()
-    cmd_c.reset_gui()  # Activate accessibility
-    cmd_c.install_rpm(test.cfg_c.epel_rpm)
-    cmd_c.install_rpm(test.cfg_c.dogtail_rpm)
-    cmd_c.install_rpm(test.cfg_c.wmctrl_rpm)
-    cmd_c.install_rpm("xdotool")
+    act.x_active(vmi_c)
+    act.lock_scr_off(vmi_c)
+    act.turn_accessibility(vmi_c)
+    act.reset_gui(vmi_c)  # Activate accessibility
+    act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
+    act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
+    act.install_rpm(vmi_c, test.cfg_c.wmctrl_rpm)
+    act.install_rpm(vmi_c, "xdotool")
     # Copy tests to client VM.
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
     if cfg.make_rv_connect:
-        cmd_c.x_active()
-        test.cmd_g.x_active()
+        act.x_active(vmi_c)
+        act.x_active(vmi_g)
         ssn = test.open_ssn(test.name_c)
         rv_ssn.connect(test, ssn)
         is_connected = True
     errors = 0
     logging.getLogger().setLevel(logging.DEBUG)
     try:
-        commander = vm_c.commander(commander_path=cmd_c.dst_dir())
+        ddrir = act.dst_dir(vmi_c)
+        commander = vm_c.commander(commander_path=ddir)
     except Exception as e:
         logger.info("Failed to create commander: %s.", str(e))
         fname = "/tmp/remote_runner.log"
@@ -150,7 +152,7 @@ def run(vt_test, test_params, env):
         logger.info("Remote runner log: %s.", f.read())
     responder = Helper(test)
     commander.set_responder(responder)
-    tdir = cmd_c.cp2vm(cfg.client_tests)
+    tdir = act.cp2vm(vmi_c, cfg.client_tests)
     tpath = os.path.join(tdir, cfg.ctest)
     vm_c.info("Client test: %s.", tpath)
     try:

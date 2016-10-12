@@ -212,8 +212,8 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.reset_gui()
-    test.cmd_g.reset_gui()
+    act.reset_gui(test.vmi_c)
+    act.reset_gui(test.vmi_g)
     # Get default sink at the client.
     cmd = r"pacmd stat | grep 'Default sink name' | " \
         r"sed -e 's/^.*[[:space:]]//'"

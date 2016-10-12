@@ -27,21 +27,55 @@ from spice.lib import ios
 from spice.lib import act
 
 
-def run_cmd(act, cmd, admin=False):
-    ssn = act.open_ssn()
-    cmdline = act.mk_cmd()
-    return subprocess.list2cmdline(cmd)
+@reg.add_action(req=[ios.IOSystem])
+def run(vmi, cmd, ssn=None, admin=False, timeout=None):
+    """
+    Raises
+    ------
+        If the command's exit status is nonzero, raise an exception.
+        See: /usr/lib/python2.7/site-packages/aexpect/client.py
 
-
-@reg.add_action(req=[ios.ILinux])
-def export_vars(vmi, ssn):
-    """Export essentials variables per SSH session."""
-    vmi.vm.info("Export vars for session.")
-    ssn.cmd("export DISPLAY=:0.0")
+    Returns
+    -------
+    str
+        Command output.
+    """
+    if not ssn:
+        ssn = act.new_ssn(vmi, admin)
+    cmdline = str(cmd)
+    kwargs = []
+    if timeout:
+        kwargs['timeout'] = timeout
+    out = ssn.cmd(cmdline, **kwargs)
+    act.info(vmi, "cmd: %s, out: %s", cmdline, out)
+    return out
 
 
 @reg.add_action(req=[ios.IOSystem])
-def new_admin_ssn(vmi, act):
+def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
+    """
+    Raises
+    ------
+        See: /usr/lib/python2.7/site-packages/aexpect/client.py
+
+    Returns
+    -------
+    str
+        Command output + exit status.
+    """
+    if not ssn:
+        ssn = act.new_ssn(vmi, admin)
+    cmdline = str(cmd)
+    kwargs = []
+    if timeout:
+        kwargs['timeout'] = timeout
+    status, out = ssn.cmd_status_output(cmdline)
+    act.info(vmi, "cmd: %s, status: %s, output: %", cmdline, status, out)
+    return (status, out)
+
+
+@reg.add_action(req=[ios.IOSystem])
+def new_admin_ssn(vmi):
     return act.new_ssn(vmi, admin=True)
 
 
@@ -60,3 +94,15 @@ def new_ssn(vmi, admin=False):
                                 timeout=int(vmi.cfg.login_timeout))
     act.export_vars(vmi, ssn)
     return ssn
+
+
+@reg.add_action(req=[ios.IOSystem])
+def info(vmi, string, *args, **kwargs):
+    logger.info(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
+@reg.add_action(req=[ios.IOSystem])
+def error(vmi, string, *args, **kwargs):
+    logger.error(vmi.vm_name + " : " + string, *args, **kwargs)
+
+

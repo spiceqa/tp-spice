@@ -22,6 +22,7 @@ from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import deco
+from spice.lib import act
 import time
 import aexpect
 from virttest import utils_misc
@@ -45,14 +46,14 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.x_active()
-    test.cmd_g.x_active()
+    act.x_active(test.vmi_c)
+    act.x_active(test.vmi_g)
     ssn = test.open_ssn(test.name_c)
     rv_ssn.connect(test, ssn)
-    test.cmd_g.clear_cb()
-    test.cmd_c.clear_cb()
+    act.clear_cb(test.vmi_g)
+    act.clear_cb(test.vmi_c)
     if cfg.vdagent_action:
-        test.cmd_g.service_vdagent(cfg.vdagent_action)
+        act.service_vdagent(test.vmi_g, cfg.vdagent_action)
     if cfg.guest2client:
         src = test.name_g
         dst = test.name_c

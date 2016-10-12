@@ -57,8 +57,8 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.x_active()
-    test.cmd_g.x_active()
+    act.x_active(test.vmi_c)
+    act.x_active(test.vmi_g)
     ssn = test.open_ssn(test.name_c)
     rv_ssn.connect(test, ssn)
     if test.cfg.shutdown_cmdline:
@@ -86,5 +86,5 @@ def run(vt_test, test_params, env):
     else:
         raise utils.SpiceTestFail(test, "RV still connected.")
     # Test: no RV proccess on client.
-    if test.cmd_c.proc_is_active('remote-viewer'):
+    if act.proc_is_active(test.vmi_c, 'remote-viewer'):
         raise utils.SpiceTestFail(test, "RV is still running on the client.")
