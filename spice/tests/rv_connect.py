@@ -19,6 +19,7 @@ from avocado.core import exceptions
 from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
+from spice.lib import act
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd_c.reset_gui()
-    test.cmd_g.reset_gui()
-    ssn = test.open_ssn(test.name_c)
+    act.reset_gui(test.vmi_c)
+    act.reset_gui(test.vmi_g)
+    ssn = act.new_ssn(test.vmi_c)
     rv_ssn.connect(test, ssn)

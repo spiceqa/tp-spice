@@ -15,6 +15,19 @@
 # Author: Andrei Stepanov <astepano@redhat.com>
 #
 
-# Populate zope registry
-from . import vm_actions
-from . import vm_actions_linux
+"""Implements __getattr__ for module.
+"""
+
+import sys
+
+
+class RunAction(object):
+
+    def __getattr__(self, key):
+        if key in ["__getstate__", "__setstate__", "__slots__"]:
+            raise AttributeError()
+
+        from spice.lib import act2  # There is no namespace for this module.
+        return act2.Action(key)
+
+sys.modules[__name__] = RunAction()

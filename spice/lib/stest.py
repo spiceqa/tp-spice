@@ -17,11 +17,13 @@
 
 import logging
 import pprint
+from spice.lib import reg
 from spice.lib import utils
 from virttest import virt_vm
 
 
 logger = logging.getLogger(__name__)
+registry = reg.registry
 
 
 # Complete list is defined at avocado-vt/virttest/qemu_vm.py spice_keys=, make
@@ -79,8 +81,19 @@ class AttributeDict(dict):
         for line in pprint.pformat(self).split('\n'):
                 logger.info(line)
 
-    #def __init__(self, custom_dict={}):
-    #    self.update(custom_dict)
+#    def __init__(self, custom_dict={}):
+#        self.update(custom_dict)
+
+
+class VmInfo(object):
+
+    def __init__(self, test, vm_name):
+        self.test = test
+        self.cfg = test.cfg_vm[vm_name]     # VM config
+        self.ccfg = test.cfg                # Common config
+        self.vm = test.vms[vm_name]
+        self.vm_name = vm_name
+        self.kvm = test.kvm[vm_name]
 
 
 class SpiceTest(object):
@@ -94,10 +107,6 @@ class SpiceTest(object):
         Dictionary with the test parameters.
     env : virttest.utils_env.Env
         Dictionary with test environment.
-
-    Todo
-    ----
-        Add root sessions.
 
     Raises
     ------
@@ -119,14 +128,8 @@ class SpiceTest(object):
             try:
                 self.vms[name].verify_alive()
             except virt_vm.VMDeadError as excp:
-                raise utils.SpiceTestFail("Required VM is dead: %s" % excp)
-        self.sessions = {}
-        self.sessions_admin = {}
-        """Establish session to each VM."""
-        for name in vm_names:
-            vm_obj = self.vms[name]
-            self.sessions[name] = self.open_ssn(name)
-            self.sessions_admin[name] = self.open_ssn(name, admin=True)
+                raise utils.SpiceTestFail(self,
+                                          "Required VM is dead: %s" % excp)
         self.kvm = {}
         """Spice KVM options per VM."""
         for name in vm_names:
@@ -135,34 +138,16 @@ class SpiceTest(object):
                 self.kvm[name][prm] = self.vms[name].get_spice_var(prm)
                 if self.kvm[name][prm]:
                     logger.info("VM %s spice server option %s is %s.", name,
-                                 prm, self.kvm[name][prm])
-        self.cmds = {}
+                                prm, self.kvm[name][prm])
         """Config set per VM."""
         self.cfg_vm = {}
         for name in vm_names:
             self.cfg_vm[name] = AttributeDict()
             self.cfg_vm[name].update(self.vms[name].get_params())
-        """Commands set per VM."""
+        """Actions set per VM's OS."""
+        self.vmi = {}
         for name in vm_names:
-            self.cmds[name] = utils.Commands.get(self, name)
-
-
-    def open_ssn(self, vm_name, admin=False):
-        vm_obj = self.vms[vm_name]
-        if admin:
-            username = self.cfg.rootuser
-            password = self.cfg.rootpassword
-            vm_obj.info("Open new admin session.")
-        else:
-            username = self.cfg.username
-            password = self.cfg.password
-            vm_obj.info("Open new user session.")
-        ssn = vm_obj.wait_for_login(username=username,
-                                    password=password,
-                                    timeout=int(self.cfg.login_timeout))
-        """Export essentials variables per SSH session."""
-        ssn.cmd("export DISPLAY=:0.0")
-        return ssn
+            self.vmi[name] = VmInfo(self, name)
 
 
 class ClientGuestTest(SpiceTest):
@@ -176,42 +161,48 @@ class ClientGuestTest(SpiceTest):
         self.name_g = name_g
         self.vm_c = self.vms[name_c]
         self.vm_g = self.vms[name_g]
-        self.ssn_c = self.sessions[name_c]
-        self.ssn_g = self.sessions[name_g]
-        self.assn_c = self.sessions_admin[name_c]
-        self.assn_g = self.sessions_admin[name_g]
         self.kvm_c = self.kvm[name_c]
         self.kvm_g = self.kvm[name_g]
-        self.cmd_c = self.cmds[name_c]
-        self.cmd_g = self.cmds[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
+        self.vmi_c = self.vmi[name_c]
+        self.vmi_g = self.vmi[name_g]
 
 
 class OneVMTest(SpiceTest):
     """Class for one VM.
+
+    Notes
+    -----
+    If name == None, then use a name of the first VM.
+
     """
-    def __init__(self, test, parameters, env):
+    def __init__(self, test, parameters, env, name=None):
         super(OneVMTest, self).__init__(test, parameters, env)
-        name = self.cfg.vms.split()[0]
+        if not name:
+            name = self.cfg.vms.split()[0]
         self.name = name
         self.vm = self.vms[name]
-        self.ssn = self.sessions[name]
-        self.assn = self.sessions_admin[name]
         self.kvm = self.kvm[name]
-        self.cmd = self.cmds[name]
         self.cfg = self.cfg_vm[name]
+        self.vmi = self.vmi[name]
 
 
 class ClientTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        super(ClientTest, self).__init__(test, parameters, env)
+        vm_name = None
+        if "client_vm" in parameters:
+            vm_name = parameters["client_vm"]
+        super(ClientTest, self).__init__(test, parameters, env, name=vm_name)
 
 
 class GuestTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        super(GuestTest, self).__init__(test, parameters, env)
+        vm_name = None
+        if "guest_vm" in parameters:
+            vm_name = parameters["guest_vm"]
+        super(GuestTest, self).__init__(test, parameters, env, name=vm_name)
