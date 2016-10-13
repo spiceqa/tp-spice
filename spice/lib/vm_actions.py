@@ -23,6 +23,7 @@ import logging
 from spice.lib import reg
 from spice.lib import ios
 from spice.lib import act
+from spice.lib import utils
 
 logger = logging.getLogger(__name__)
 
@@ -84,11 +85,11 @@ def new_ssn(vmi, admin=False):
     if admin:
         username = vmi.cfg.rootuser
         password = vmi.cfg.rootpassword
-        vmi.vm.info("Open a new session for: admin.")
+        utils.debug(vmi, "Open a new session for: admin.")
     else:
         username = vmi.cfg.username
         password = vmi.cfg.password
-        vmi.vm.info("Open a new session for: user.")
+        utils.debug(vmi, "Open a new session for: user.")
     ssn = vmi.vm.wait_for_login(username=username,
                                 password=password,
                                 timeout=int(vmi.cfg.login_timeout))
@@ -104,3 +105,17 @@ def info(vmi, string, *args, **kwargs):
 @reg.add_action(req=[ios.IOSystem])
 def error(vmi, string, *args, **kwargs):
     logger.error(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
+@reg.add_action(req=[ios.ILinux])
+def cp_file(vmi, src_fpath, dst_fpath=None, dst_dir=None, dst_fname=None):
+    """Copy file from host system to VM's workdir.
+    """
+    if not dst_fpath:
+        if not dst_dir:
+            dst_dir = act.dst_dir(vmi)
+        fname = ntpath.basename(src_fpath)
+        dst_fpath = os.path.join(dst_dir, fname)
+    act.info(vmi_c, "Copy from host: %s to %s", src_fpath, dst_fpath)
+    vmi.vm.copy_files_to(src_fpath, dst_fpath)
+    return dst_fpath

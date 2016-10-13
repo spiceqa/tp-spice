@@ -183,7 +183,7 @@ def connect(test, ssn, env={}):
     act.print_rv_version(test.vmi_c)
     # Set the password of the VM using the qemu-monitor.
     if cfg.ticket_set:
-        logging.info("Guest qemu monitor: set_password spice %s",
+        logger.info("Guest qemu monitor: set_password spice %s",
                      cfg.ticket_set)
         cmd = "set_password spice %s" % cfg.ticket_set
         vm_g.monitor.cmd(cmd)
@@ -265,7 +265,7 @@ def connect(test, ssn, env={}):
             rv_cmd.append(opt)
     # Usbredirection support.
     if cfg.usb_redirection_add_device:
-        logging.info("USB redirection set auto redirect on connect for device"
+        logger.info("USB redirection set auto redirect on connect for device"
                      "class 0x08")
         opt = r'--spice-usbredir-redirect-on-connect="0x08,-1,-1,-1,1"'
         rv_cmd.append(opt)
@@ -298,13 +298,13 @@ def connect(test, ssn, env={}):
         act.info(vmi_c, "Copy from host: %s to %s", host_vv_file,
                  client_vv_file)
         test.vm_c.copy_files_to(host_vv_file, client_vv_file)
-    logging.info(vmi_c, "Final cmd for client is: %s", rv_cmd)
+    utils.info(vmi_c, "Final cmd for client is: %s", str(rv_cmd))
     try:
         pid = ssn.get_pid()
         logger.info("shell pid id: %s", pid)
-        ssn.sendline(rv_cmd)
+        ssn.sendline(str(rv_cmd))
     except aexpect.ShellStatusError:
-        logging.debug("Ignoring a status exception, will check connection"
+        logger.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
     # Send command line through monitor since url was not provided
     if cfg.rv_parameters_from == "menu":
@@ -358,7 +358,7 @@ def is_connected(test):
         remote_ip = split[0]
         if len(split) > 1:
             proxy_port = split[1]
-        logging.info("Proxy port to inspect: %s", proxy_port)
+        logger.info("Proxy port to inspect: %s", proxy_port)
     rv_binary = test.vm_c.params.get("rv_binary")
     rv_binary = os.path.basename(rv_binary)
     if test.vm_c.is_linux():
@@ -368,9 +368,9 @@ def is_connected(test):
         # .. todo: finish it
         cmd = "netstat -n"
     try:
-        # Wait all RV Spice links raise UP.
+        # Wait all RV Spice links raise up.
         time.sleep(5)
-        netstat_out = test.ssn_c.cmd_output(cmd)
+        netstat_out = act.run(test.vmi_c, cmd)
     except aexpect.ShellCmdError as info:
         raise RVSessionError(test, info)
     proxy_port_count = 0
@@ -408,12 +408,12 @@ def is_connected(test):
         # Remove brackets from ipv6 host ip
         host_ip = utils.get_host_ip(test)
         if host_ip[1:len(host_ip) - 1] in output:
-            logging.info(
+            logger.info(
                 "Reported ipv6 address found in output from 'info spice'")
         else:
             raise RVSessionConnect("ipv6 address not found from qemu monitor"
                                    " command: 'info spice'")
-    logging.debug("Connection checking pass")
+    logger.debug("Connection checking pass")
 
 
 def disconnect(test):

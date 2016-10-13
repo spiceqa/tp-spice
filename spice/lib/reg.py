@@ -37,10 +37,19 @@ Example
 
 """
 
+import logging
 from zope import interface
 from zope.interface import adapter
 
+logger = logging.getLogger(__name__)
+
+logger.info("Create a new Zope registry.")
 registry = adapter.AdapterRegistry()
+
+
+class IVmAction(interface.Interface):
+    def __call__():
+        """Run some command on VM."""
 
 
 def add_action(req, name=None):
@@ -71,14 +80,10 @@ def add_action(req, name=None):
         if not action_name:
             action_name = action.__name__
         registry.register(req, IVmAction, action_name, action)
+        logger.info("Add VM action: %s for %s.", action_name, repr(req))
         # Next code is not necessary, it stays only for informative purposes.
         provides = list(interface.directlyProvidedBy(action))
         provides.append(IVmAction)
         interface.directlyProvides(action, provides)
         return action
     return builder
-
-
-class IVmAction(interface.Interface):
-    def __call__():
-        """Run some command on VM."""

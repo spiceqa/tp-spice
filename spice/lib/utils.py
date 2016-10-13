@@ -149,6 +149,18 @@ def vm_error(self, string, *args, **kwargs):
     logger.error(self.name + " : " + string, *args, **kwargs)
 
 
+def info(vmi, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logger.info(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
+def debug(vmi, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logger.debug(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
 def extend_api_vm():
     """Extend qemu.VM(virt_vm.BaseVM) with useful methods.
     """
@@ -373,3 +385,54 @@ def get_host_ip(test):
     if test.kvm_g.listening_addr == "ipv6":
         ip = "[" + utils_misc.convert_ipv4_to_ipv6(ip) + "]"
     return ip
+
+
+def cacert_path_host(test):
+    """Cacert file path on host system.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+
+    Returns
+    -------
+    str
+        Cacert file path on host system.
+
+    """
+    path = None
+    if utils.is_yes(test.kvm_g.spice_ssl):
+        path = "%s/%s" % (test.cfg.spice_x509_prefix,
+                          test.cfg.spice_x509_cacert_file)
+    logger.info("CA cert file on host: %s", path)
+    return path
+
+
+def get_host_subj(test):
+    """Host subject.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+
+        if test.cfg.ssltype == "invalid_explicit_hs":
+            subj = "Invalid Explicit HS"
+
+    """
+    subj = None
+    if utils.is_yes(test.kvm_g.spice_ssl):
+        # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
+        subj = test.kvm_g.spice_x509_server_subj
+        subj = subj.replace('/', ',')[1:]
+        subj += get_host_ip(test)
+    return subj
+
+
+def set_ticket(test):
+    cfg = test.cfg
+    if cfg.ticket_set:
+        logger.info("Set guest ticket: set_password spice %s", cfg.ticket_set)
+        cmd = "set_password spice %s" % cfg.ticket_set
+        test.vm_g.monitor.cmd(cmd)

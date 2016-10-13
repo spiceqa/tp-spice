@@ -46,7 +46,7 @@ USB_POLICY_FILE_SRC = os.path.join(utils.DEPS_DIR,
 @reg.add_action(req=[ios.ILinux])
 def export_vars(vmi, ssn):
     """Export essentials variables per SSH session."""
-    act.info(vmi, "Export vars for session.")
+    utils.debug(vmi, "Export vars for session.")
     ssn.cmd("export DISPLAY=:0.0")
 
 
@@ -69,7 +69,7 @@ def service_vdagent(vmi, action):
     vdagentd = service.Factory.create_specific_service("spice-vdagentd",
                                                        run=runner.run)
     func = getattr(vdagentd, action)
-    act.info(vmi, "spice-vdagent: %s", action)
+    utils.info(vmi, "spice-vdagent: %s", action)
     return func()
 
 
@@ -77,7 +77,7 @@ def service_vdagent(vmi, action):
 def workdir(vmi):
     wdir = vmi.cfg.wdir or "~/tp-spice"
     cmd = ["mkdir", "-p", wdir]
-    act.run_cmd(vmi, cmd)
+    act.run(vmi, cmd)
     return wdir
 
 
@@ -88,7 +88,7 @@ def dst_dir(vmi):
     cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
     if not dst_dir:
-        out = act.run_cmd(vmi, cmd)
+        out = act.run(vmi, cmd)
         dst_dir = out.rstrip('\r\n')
         vmi.cfg.dst_dir = dst_dir
     return dst_dir
@@ -124,7 +124,7 @@ def check_usb_policy(vmi):
     """
     cmd = utils.Cmd('grep', '<allow_any>yes', USB_POLICY_FILE)  # TODO
     status, _ = act.rstatus(vmi, cmd)
-    act.info(vmi, "USB policy is: %s.", status)
+    utils.info(vmi, "USB policy is: %s.", status)
     return not status
 
 
@@ -135,19 +135,19 @@ def add_usb_policy(vmi):
     .. todo:: USB_POLICY_FILE_SRC, USB_POLICY_FILE to cfg
 
     """
-    act.info(vmi, "Sending: %s.", USB_POLICY_FILE_SRC)
+    utils.info(vmi, "Sending: %s.", USB_POLICY_FILE_SRC)
     vmi.vm.copy_files_to(USB_POLICY_FILE_SRC, USB_POLICY_FILE)
 
 
-@reg.add_action(req=[ios.ILinux])
-@deco.retry(8, exceptions=(aexpect.ShellCmdError,))
+@reg.add_action(req=[ios.ILinux], name="x_active")
+@deco.retry(9, exceptions=(aexpect.ShellCmdError,))
 def x_active(vmi):
     """Test if X session is active. Do nothing is X active. Othrerwise
     throw exception.
     """
     cmd = utils.Cmd("gnome-terminal", "-e", "/bin/true")
-    act.run_cmd(cmd)
-    act.info(vmi, "X session is present.")
+    act.run(vmi, cmd)
+    utils.info(vmi, "X session is present.")
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -180,7 +180,7 @@ def str_input(vmi, string):
         Arbitrary string to be send to VM as keyboard events.
 
     """
-    act.info(vmi, "Passing string '%s' as kbd events.", string)
+    utils.info(vmi, "Passing string '%s' as kbd events.", string)
     char_mapping = {":": "shift-semicolon",
                     ",": "comma",
                     ".": "dot",
@@ -216,8 +216,8 @@ def print_rv_version(vmi):
     rv_ver = act.run(vmi, cmd)
     cmd = utils.Cmd(vmi.cfg.rv_binary, "--spice-gtk-version")
     spice_gtk_ver = act.run(vmi, cmd)
-    act.info(vmi, "remote-viewer version: %s", rv_ver)
-    act.info(vmi, "spice-gtk version: %s", spice_gtk_ver)
+    utils.info(vmi, "remote-viewer version: %s", rv_ver)
+    utils.info(vmi, "spice-gtk version: %s", spice_gtk_ver)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -227,10 +227,10 @@ def verify_virtio(vmi):
     """
     cmd = ["lsmod", "|", "grep", "virtio_console"]
     cmd = ["ls", "/dev/virtio-ports/"]
-    act.run_cmd(vmi, cmd)
+    act.run(vmi, cmd)
 
 
-@reg.add_action(req=[ios.ILinux])
+@reg.add_action(req=[ios.ILinux], name="x_turn_off")
 @deco.retry(8, exceptions=(AssertionError,))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
@@ -241,11 +241,11 @@ def x_turn_off(vmi):
     cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
     cmd = utils.combine(cmd1, "|", cmd2)
     status, _ = act.rstatus(vmi, cmd)
-    assert not status, "X is: on. But it should not."
-    act.info(vmi, "X is: off.")
+    assert status != 0, "X is: on. But it should not."
+    utils.info(vmi, "X is: off.")
 
 
-@reg.add_action(req=[ios.ILinux])
+@reg.add_action(req=[ios.ILinux], name="x_turn_on")
 @deco.retry(8, exceptions=(AssertionError,))
 def x_turn_on(vmi):
     ssn = act.new_admin_ssn(vmi)
@@ -257,7 +257,7 @@ def x_turn_on(vmi):
     cmd = utils.combine(cmd1, "|", cmd2)
     status, _ = act.rstatus(vmi, cmd)
     assert status == 0, "X is: off. But it should not."  # TODO
-    act.info(vmi, "X is: on.")
+    utils.info(vmi, "X is: on.")
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -302,11 +302,11 @@ def export_x2ssh(vmi, var_name, fallback=None, ssn=None):
     if not ssn:
         ssn = act.new_ssn(vmi)
     if var_val:
-        act.info(vmi, "Export %s == %s", var_name, var_val)
+        utils.info(vmi, "Export %s == %s", var_name, var_val)
         cmd = utils.Cmd("export", "%s=%s" % (var_name, var_val))
         act.run(vmi, cmd, ssn=ssn)
     else:
-        act.info(vmi, "Do not export %s var.", var_name)
+        utils.info(vmi, "Do not export %s var.", var_name)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -320,7 +320,7 @@ def install_rpm(vmi, rpm):
         name or URL.
 
     """
-    act.info(vmi, "Install RPM : %s.", rpm)
+    utils.info(vmi, "Install RPM : %s.", rpm)
     pkg = rpm
     if rpm.endswith('.rpm'):
         pkg = os.path.split(rpm)[1]
@@ -328,23 +328,23 @@ def install_rpm(vmi, rpm):
     cmd = ["rpm", "-q", "pkg"]
     status, _ = act.scmd(vmi, cmd)
     if status == 0:
-        act.info(vmi, "RPM %s is already installed.", pkg)
+        utils.info(vmi, "RPM %s is already installed.", pkg)
         return
     if utils.url_regex.match(rpm):
-        act.info(vmi, "Download RPM: %s.", rpm)
+        utils.info(vmi, "Download RPM: %s.", rpm)
         cmd = ["curl", "-s", "-O", rpm]
         act.cmd(cmd, admin=True, timeout=500)
         rpm = os.path.split(rpm)[1]
     act.cmd("yes | yum -y install %s" % rpm, admin=True, timeout=500)
 
 
-@reg.add_action(req=[ios.ILinux])
+@reg.add_action(req=[ios.ILinux], name="wait_for_prog")
 @deco.retry(8, exceptions=(aexpect.ShellCmdError,))
 def wait_for_prog(vmi, program):
     cmd = ["pgrep", program]
-    out = act.run(cmd)
+    out = act.run(vmi, cmd)
     pids = out.split()
-    act.info(vmi, "Found active %s with pids: %s.", program, str(pids))
+    utils.info(vmi, "Found active %s with pids: %s.", program, str(pids))
     return pids
 
 
@@ -383,19 +383,19 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
     cmd1 = utils.Cmd("xprop", "-root", "32x", r"\t$0", "_NET_ACTIVE_WINDOW")
     cmd2 = utils.Cmd("cut", "-f", "2")
     cmd = utils.combine(cmd1, "|", cmd2)
-    win_id = act.run_cmd(vmi, cmd)
+    win_id = act.run(vmi, cmd)
     cmd = utils.Cmd("xprop", "-notype", "-id", win_id, prop)
 
     @deco.retry(8, exceptions=(utils.SpiceUtilsError, aexpect.ShellCmdError,
                                aexpect.ShellTimeoutError))
     def is_active():
-        act.info(vmi, "Test if window is active: %s", pattern)
+        utils.info(vmi, "Test if window is active: %s", pattern)
         output = act.run(vmi, cmd)
-        act.info(vmi, "Current win name: %s", output)
+        utils.info(vmi, "Current win name: %s", output)
         if pattern not in output:
             msg = "Can't find active window with pattern %s." % pattern
             raise utils.SpiceUtilsError(msg)  # TODO
-        act.info(vmi, "Found active window: %s.", pattern)
+        utils.info(vmi, "Found active window: %s.", pattern)
 
     is_active()
 
@@ -418,12 +418,12 @@ def deploy_epel_repo(vmi):
         if "release 5" in vmi.ssn.cmd("cat /etc/redhat-release"):
             cmd = ("yum -y localinstall http://download.fedoraproject.org/"
                    "pub/epel/5/%s/epel-release-5-4.noarch.rpm 2>&1" % arch)
-            act.info(vmi, "Installing EPEL repository.")
+            utils.info(vmi, "Installing EPEL repository.")
             vmi.ssn.cmd(cmd)
         elif "release 6" in vmi.ssn.cmd("cat /etc/redhat-release"):
             cmd = ("yum -y localinstall http://download.fedoraproject.org/"
                    "pub/epel/6/%s/epel-release-6-8.noarch.rpm 2>&1" % arch)
-            act.info(vmi, "Installing EPEL repository.")
+            utils.info(vmi, "Installing EPEL repository.")
             vmi.ssn.cmd(cmd)
         else:
             raise Exception("Unsupported RHEL guest")
@@ -441,7 +441,7 @@ def set_resolution(vmi, res, display="qxl-0"):
         Target display.
 
     """
-    act.info(vmi, "Seeting resolution to %s.", res)
+    utils.info(vmi, "Seeting resolution to %s.", res)
     cmd = utils.Cmd("xrandr", "--output", display, "--mode", res)
     act.run(vmi, cmd)
 
@@ -691,7 +691,7 @@ def get_geom(vmi, win_title):
     # Expected '  -geometry 898x700+470-13'
     out = act.run(vmi, cmd)
     res = re.findall('\d+x\d+', out)[0]
-    act.info(vmi, "Window %s has geometry: %s", win_title, res)
+    utils.info(vmi, "Window %s has geometry: %s", win_title, res)
     return utils.str2res(res)
 
 
@@ -730,7 +730,7 @@ def get_x_var(vmi, var_name):
         val = re.findall(pattern, out)
         if val:
             ret = val[0]
-    act.info(vmi, "export %s=%s", var_name, ret)
+    utils.info(vmi, "export %s=%s", var_name, ret)
     return ret
 
 
@@ -739,7 +739,7 @@ def cp_deps(vmi, src, dst_dir=None):
     provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
     src_path = os.path.join(provider_dir, "deps", src)
     dst_dir = vmi.dst_dir()
-    act.info(vmi, "Copy from deps: %s to %s", src_path, dst_dir)
+    utils.info(vmi, "Copy from deps: %s to %s", src_path, dst_dir)
     vmi.vm.copy_files_to(src_path, dst_dir)
 
 
@@ -753,7 +753,7 @@ def cp2vm(vmi, src, dst_dir=None, dst_name=None):
     if not dst_name:
         dst_name = src
     dst_path = os.path.join(dst_dir, dst_name)
-    act.info(vmi, "Copy: %s to %s", src_path, dst_path)
+    utils.info(vmi, "Copy: %s to %s", src_path, dst_path)
     vmi.vm.copy_files_to(src_path, dst_dir)
     return dst_path
 
@@ -777,7 +777,7 @@ def img2cb(vmi, img):
     script = vmi.cfg_vm.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
-    act.info(vmi, "Put image %s in clipboard.", img)
+    utils.info(vmi, "Put image %s in clipboard.", img)
     act.run(vmi, cmd)
 
 
@@ -794,7 +794,7 @@ def cb2img(vmi, img):
     script = vmi.cfg_vm.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
-    act.info(vmi, "Dump clipboard to image %s.", img)
+    utils.info(vmi, "Dump clipboard to image %s.", img)
     act.run(vmi, cmd)
 
 
@@ -806,7 +806,7 @@ def text2cb(vmi, text):
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
-    act.info(vmi, "Put in clipboard: %s", text)
+    utils.info(vmi, "Put in clipboard: %s", text)
     act.run(vmi, cmd)
 
 
@@ -816,7 +816,7 @@ def cb2text(vmi):
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
-    act.info(vmi, "Get from clipboard: %s", text)
+    utils.info(vmi, "Get from clipboard: %s", text)
     return text
 
 
@@ -827,7 +827,7 @@ def clear_cb(vmi):
     script = vmi.cfg_vm.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--clear")
-    act.info(vmi, "Clear clipboard.")
+    utils.info(vmi, "Clear clipboard.")
     act.run(vmi, cmd)
 
 
@@ -837,7 +837,7 @@ def gen_text2cb(vmi, kbytes):
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     size = int(kbytes)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
-    act.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
+    utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
     act.run(vmi, cmd)
 
 
@@ -846,7 +846,7 @@ def cb2file(vmi, fname):
     script = vmi.cfg_vm.helper
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
-    act.info(vmi, "Dump clipboard to file.", fname)
+    utils.info(vmi, "Dump clipboard to file.", fname)
     act.run(vmi, cmd, timeout=300)
 
 
@@ -855,7 +855,7 @@ def md5sum(vmi, fpath):
     cmd = utils.Cmd("md5sum", fpath)
     out = act.run(vmi, cmd, timeout=300)
     md5_sum = re.findall(r'\w+', out)[0]
-    act.info(vmi, "MD5 %s: %s.", fpath, md5_sum)
+    utils.info(vmi, "MD5 %s: %s.", fpath, md5_sum)
     return md5_sum
 
 
@@ -863,7 +863,7 @@ def md5sum(vmi, fpath):
 def klogger_start(vmi):
     ssn = act.new_ssn(vmi)
     cmd = utils.Cmd("xev", "-event", "keyboard", "-name", "klogger")
-    act.info(vmi, "Start key logger. Do not forget to turn it off.")
+    utils.info(vmi, "Start key logger. Do not forget to turn it off.")
     ssn.sendline(cmd)
     act.wait_for_win('klogger', 'WM_NAME')
     return ssn
@@ -879,7 +879,7 @@ def klogger_stop(vmi, ssn):
         'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
     keys = map(lambda keycode, keysym: (int(keycode), int(keysym, base=16)),
                a)
-    act.info(vmi, "Read keys: %s" % keys)
+    utils.info(vmi, "Read keys: %s" % keys)
     # Return list of pressed: (keycode, keysym)
     return keys
 
@@ -905,7 +905,7 @@ def turn_accessibility(vmi, on=True):
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
 def lock_scr_off(vmi):
-    act.info(vmi, "Disable lock screen.")
+    utils.info(vmi, "Disable lock screen.")
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session",
                     "idle-delay", "0")
     act.run(vmi, cmd)
@@ -927,7 +927,7 @@ def lock_scr_off(vmi):
     act.run(vmi, cmd)
 
 
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
 def turn_accessibility(vmi, on=True):
     """Turn accessibility on vm.
 
@@ -945,18 +945,18 @@ def turn_accessibility(vmi, on=True):
     # temporarily (for a single session) enable Accessibility:
     # GNOME_ACCESSIBILITY=1
     # session.cmd("gconftool-2 --shutdown")
-    act.info(vmi, "Turning accessibility: %s.", val)
+    utils.info(vmi, "Turning accessibility: %s.", val)
     cmd = utils.Cmd("gconftool-2", "--set",
                     "/desktop/gnome/interface/accessibility",
                     "--type", "bool", val)
     act.run(vmi, cmd)
 
 
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
 def export_dbus(vmi, ssn=None):
     if not ssn:
         ssn = vmi.ssn
-    act.info(vmi, "Export DBUS info.")
+    utils.info(vmi, "Export DBUS info.")
     cmd = "cat /var/lib/dbus/machine-id"
     machine_id = ssn.cmd(cmd).rstrip('\r\n')
     cmd = '. /home/test/.dbus/session-bus/%s-0' % machine_id
@@ -966,9 +966,9 @@ def export_dbus(vmi, ssn=None):
     ssn.cmd(cmd)
 
 
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
 def lock_scr_off(vmi):
-    act.info(vmi, "Disable lock screen.")
+    utils.info(vmi, "Disable lock screen.")
     # https://wiki.archlinux.org/index.php/Display_Power_Management_Signaling
     # Disable DPMS and prevent screen from blanking
     cmd = utils.Cmd("xset", "s", "off", "-dpms")
@@ -1053,12 +1053,12 @@ def run_selenium(vmi, ssn):
             output = output.replace("'", '')
             output = os.path.dirname(output)
             vmi.firefox_profile_dir = output
-            act.info(vmi, "Created a new FF profile at: %s", output)
+            utils.info(vmi, "Created a new FF profile at: %s", output)
             defs.append("-Dwebdriver.firefox.profile=%s" % profile)
     defs = " ".join(defs)
     opts = " ".join(opts)
     cmd = "java {} -jar {} {}".format(defs, dst_fname, opts)
-    act.info(vmi, "selenium cmd: %s", cmd)
+    utils.info(vmi, "selenium cmd: %s", cmd)
     ssn.sendline(cmd)
 
 
@@ -1080,14 +1080,14 @@ def firefox_auto_open_vv(vmi):
     opts.append("browser.helperApps.neverAsk.saveToDisk")
     opts.append("browser.helperApps.neverAsk.openFile")
     for o in opts:
-        act.info(vmi, "Remove old value %s from Firefox profile: %s", o,
+        utils.info(vmi, "Remove old value %s from Firefox profile: %s", o,
                  user_js)
         cmd = ["sed", "-i", "-e", "/%s/d" % o, user_js]
-        act.run_cmd(vmi, cmd)
+        act.run(vmi, cmd)
     line = ('pref("browser.helperApps.neverAsk.openFile",'
             '"application/x-virt-viewer");')
     cmd1 = utils.Cmd("echo", line)
     cmd2 = utils.Cmd(user_js)
     cmd = utils.combine(cmd1, ">>", cmd2)
-    act.info(vmi, "Add new line %s to Firefox profile: %s", line, user_js)
-    act.run_cmd(vmi, cmd)
+    utils.info(vmi, "Add new line %s to Firefox profile: %s", line, user_js)
+    act.run(vmi, cmd)

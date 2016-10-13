@@ -41,7 +41,8 @@ class Action(object):
                                vmi.cfg.interface_os_mversion)
         arch = registry.lookup([], ios.IArch, vmi.cfg.interface_os_arch)
         os_info = ",".join(map(repr, [os, ver, mver, arch]))
-        vmi.vm.info("OS info: %s", os_info)
+        msg = "OS info: %s" % os_info
+        utils.debug(vmi, msg)
         lookup_order = [[os, ver, mver, arch],
                         [os, ver, mver],
                         [os, ver, arch],
@@ -55,12 +56,9 @@ class Action(object):
             if action:
                 break
         if not action:
-            known_actions = registry.lookup([], reg.IVmAction)
-            vmi.vm.info("Known actions: %s", repr(known_actions))
             msg = "Cannot find suitable implementation for: %s." % self.name
             raise utils.SpiceTestFail(vmi.test, msg)
         act_reqs = ",".join(map(repr, iset))
-        msg = "Found implementation for: %s. Which comply: %s" % (
-            self.name, act_reqs)
-        vmi.vm.info(msg)
+        msg = "Call: %s, for OS interface: %s" % (self.name, act_reqs)
+        utils.debug(vmi, msg)
         return action(vmi, *args, **kwargs)
