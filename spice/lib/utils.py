@@ -149,6 +149,18 @@ def vm_error(self, string, *args, **kwargs):
     logger.error(self.name + " : " + string, *args, **kwargs)
 
 
+def info(vmi, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logger.info(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
+def debug(vmi, string, *args, **kwargs):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    logger.debug(vmi.vm_name + " : " + string, *args, **kwargs)
+
+
 def extend_api_vm():
     """Extend qemu.VM(virt_vm.BaseVM) with useful methods.
     """
