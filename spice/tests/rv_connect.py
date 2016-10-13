@@ -43,4 +43,5 @@ def run(vt_test, test_params, env):
     act.reset_gui(test.vmi_c)
     act.reset_gui(test.vmi_g)
     ssn = act.new_ssn(test.vmi_c)
-    rv_ssn.connect(test, ssn)
+    act.rv_connect(test.vmi_c, ssn)
+    act.rv_chk_con(test.vmi_c)
