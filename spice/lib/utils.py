@@ -385,3 +385,89 @@ def get_host_ip(test):
     if test.kvm_g.listening_addr == "ipv6":
         ip = "[" + utils_misc.convert_ipv4_to_ipv6(ip) + "]"
     return ip
+
+
+def cacert_path_host(test):
+    """Cacert file path on host system.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+
+    Returns
+    -------
+    str
+        Cacert file path on host system.
+
+    """
+    path = None
+    if utils.is_yes(test.kvm_g.spice_ssl):
+        path = "%s/%s" % (test.cfg.spice_x509_prefix,
+                          test.cfg.spice_x509_cacert_file)
+    logger.info("CA cert file on host: %s", path)
+    return path
+
+
+def get_host_subj(test):
+    """Host subject.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+
+        if test.cfg.ssltype == "invalid_explicit_hs":
+            subj = "Invalid Explicit HS"
+
+    """
+    subj = None
+    if utils.is_yes(test.kvm_g.spice_ssl):
+        # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
+        subj = test.kvm_g.spice_x509_server_subj
+        subj = subj.replace('/', ',')[1:]
+        subj += get_host_ip(test)
+    return subj
+
+
+def set_ticket(test):
+    if cfg.ticket_set:
+        logger.info("Set guest ticket: set_password spice %s",
+                        cfg.ticket_set)
+        cmd = "set_password spice %s" % cfg.ticket_set
+        test.vm_g.monitor.cmd(cmd)
+
+
+def generate_vv_file(path, test):
+    """Generates vv file for remote-viewer.
+
+    Parameters
+    ----------
+    test : SpiceTest
+        Spice test object.
+
+    """
+    cfg = test.cfg
+    rv_file = open(path, 'w')
+    rv_file.write("[virt-viewer]\n")
+    rv_file.write("type=%s\n" % cfg.display)
+    rv_file.write("host=%s\n" % utils_net.get_host_ip_address(cfg))
+    rv_file.write("port=%s\n" % test.kvm_g.spice_port)
+    if cfg.ticket_send:
+        rv_file.write("password=%s\n" % cfg.ticket_send)
+    if utils.is_yes(test.kvm_g.spice_ssl):
+        rv_file.write("tls-port=%s\n" % test.kvm_g.spice_tls_port)
+        rv_file.write("tls-ciphers=DEFAULT\n")
+    host_subj = utils.get_host_subj(test)
+    if host_subj:
+        rv_file.write("host-subject=%s\n" % host_subj)
+    cacert_host = utils.cacert_path_host(test)
+    if cacert_host:
+        cert = open(cacert_host)
+        cert_auth = cert.read()
+        cert_auth = cert_auth.replace('\n', r'\n')
+        rv_file.write("ca=%s\n" % cert_auth)
+    if cfg.full_screen:
+        rv_file.write("fullscreen=1\n")
+    if cfg.spice_proxy:
+        rv_file.write("proxy=%s\n" % cfg.spice_proxy)
