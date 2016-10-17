@@ -140,7 +140,7 @@ def add_usb_policy(vmi):
 
 
 @reg.add_action(req=[ios.ILinux], name="x_active")
-@deco.retry(8, exceptions=(aexpect.ShellCmdError,))
+@deco.retry(9, exceptions=(aexpect.ShellCmdError,))
 def x_active(vmi):
     """Test if X session is active. Do nothing is X active. Othrerwise
     throw exception.
