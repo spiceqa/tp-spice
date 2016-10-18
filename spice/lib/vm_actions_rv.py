@@ -135,6 +135,7 @@ def rv_connect_cmd(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
     url = act.rv_url(vmi)
     cmd.append(url)
+    cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", cmd)
     utils.set_ticket(vmi.test)
     act.rv_run(vmi, cmd, ssn)
@@ -145,6 +146,7 @@ def rv_connect_cmd(vmi, ssn, env):
 def rv_connect_menu(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
     utils.set_ticket(vmi.test)
+    cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", rv_cmd)
     act.rv_run(vmi, cmd, ssn)
     url = act.rv_url(vmi)
@@ -159,6 +161,7 @@ def rv_connect_file(vmi, ssn, env):
     vv_file_client = act.cp_file(vmi, vv_file_host)
     cmd.append(fpath)
     utils.set_ticket(vmi.test)
+    cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", rv_cmd)
     act.rv_run(vmi, cmd, ssn)
 
@@ -189,7 +192,7 @@ def rv_basic_opts(vmi):
         logger.info("Auto USB redirect for devices class == 0x08.")
         opt = r'--spice-usbredir-redirect-on-connect="0x08,-1,-1,-1,1"'
         rv_cmd.append(opt)
-    if utils.is_yes(vmi.kvm.spice_ssl):
+    if utils.is_yes(vmi.test.kvm_g.spice_ssl):
         cacert_host = utils.cacert_path_host(vmi.test)
         cacert_client = act.cp_file(vmi, cacert_host)
         opt = "--spice-ca-file=%s" % cacert_client
@@ -214,18 +217,20 @@ def rv_url(vmi):
     test = vmi.test
     port = test.kvm_g.spice_port
     tls_port = test.kvm_g.spice_tls_port
-    escape_char = test.cfg_c.shell_escape_char or '\\'
+    #escape_char = test.cfg_c.shell_escape_char or '\\'
     host_ip = utils.get_host_ip(test)
     # SSL
-    if vmi.cfg.ssltype == "invalid_implicit_hs" or \
-            "explicit" in vmi.cfg.ssltype:
-        hostname = socket.gethostname()
-        url = "spice://%s?tls-port=%s%s&port=%s" % (hostname, tls_port,
-                                                        escape_char, port)
-    else:
-        url = "spice://%s?tls-port=%s%s&port=%s" % (host_ip, tls_port,
-                                                        escape_char, port)
-    # No SSL.
+    if utils.is_yes(vmi.test.kvm_g.spice_ssl):
+        if vmi.cfg.ssltype == "invalid_implicit_hs" or \
+                "explicit" in vmi.cfg.ssltype:
+            hostname = socket.gethostname()
+            url = "spice://%s?tls-port=%s&port=%s" % (hostname, tls_port,
+                                                        port)
+        else:
+            url = "spice://%s?tls-port=%s&port=%s" % (host_ip, tls_port,
+                                                        port)
+        return url
+    # No SSL
     url = "spice://%s?port=%s" % (host_ip, port)
     return url
 
@@ -241,7 +246,7 @@ def rv_auth(vmi):
     if vmi.cfg.ticket_send:
         # Wait for remote-viewer to launch.
         act.wait_for_win(vmi, RV_WIN_NAME_AUTH)
-        act.str_input(vmi, cfg.ticket_send)
+        act.str_input(vmi, vmi.cfg.ticket_send)
 
 
 @reg.add_action(req=[ios.IOSystem])
@@ -350,7 +355,9 @@ def rv_chk_con(vmi):
     cmd = '(netstat -pn 2>&1| grep "^tcp.*:.*%s.*ESTABLISHED.*%s.*")' % (
         remote_ip, rv_binary)
     time.sleep(5)  # Wait all RV Spice links raise up.
-    netstat_out = act.run(test.vmi_c, cmd)
+    status, netstat_out = act.rstatus(test.vmi_c, cmd)
+    if status:
+        raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
     if cfg.spice_proxy:
         proxy_port_count = netstat_out.count(proxy_port)

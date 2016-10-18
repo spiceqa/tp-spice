@@ -18,7 +18,10 @@
 """Action on VM with some OS.
 """
 
+import os
+import ntpath
 import logging
+import contextlib
 
 from spice.lib import reg
 from spice.lib import ios
@@ -80,6 +83,20 @@ def new_admin_ssn(vmi):
     return act.new_ssn(vmi, admin=True)
 
 
+@reg.add_action(req=[ios.IOSystem], name="new_ssnc")
+@contextlib.contextmanager
+def new_ssnc(vmi, admin=False, name=""):
+    ssn = act.new_ssn(vmi, admin)
+    try:
+        yield ssn
+    finally:
+        out = ssn.read_nonblocking(internal_timeout=20)
+        logger.info("'%s' session log:\n%s.", name, str(out))
+        import time
+        time.sleep(10000)
+        ssn.close()
+
+
 @reg.add_action(req=[ios.IOSystem])
 def new_ssn(vmi, admin=False):
     if admin:
@@ -116,6 +133,5 @@ def cp_file(vmi, src_fpath, dst_fpath=None, dst_dir=None, dst_fname=None):
             dst_dir = act.dst_dir(vmi)
         fname = ntpath.basename(src_fpath)
         dst_fpath = os.path.join(dst_dir, fname)
-    act.info(vmi_c, "Copy from host: %s to %s", src_fpath, dst_fpath)
     vmi.vm.copy_files_to(src_fpath, dst_fpath)
     return dst_fpath

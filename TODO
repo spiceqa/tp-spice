@@ -1,5 +1,6 @@
 * Import selftests from avocado.
 * Add https://coveralls.io and status to README.rst
+* Print URL to a test's description.
 
 * Add tests to TCMS:
 rv_vmshutdown.shutdown_cmdline
@@ -7,6 +8,9 @@ rv_vmshutdown.shutdown_qemu
 
 * Create kickstarts / templates without firewall.
 * Create kickstarts / templates with installed RedHat/SpiceQE certs.
+
+FIX: 283972 --- pasword set only once!
+https://tcms.engineering.redhat.com/case/174368/?from_plan=20864  -- FIX test description, remove RHVM
 
 Drag-and-drop automation thoughts:
 

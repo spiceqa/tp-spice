@@ -119,6 +119,12 @@ Certificates are generated at VM start. Place is::
  utils_misc.create_x509_dir(prefix, c_subj, s_subj, passwd,  
                                                secure)
 
+To check subject of cert::
+
+ openssl x509 -in /tmp/spice_x509d/server-cert.pem -noout -text | grep Subject
+         Subject: C=CZ, L=BRNO, O=SPICE, CN=10.34.72.94
+
+
 ============
 Client tests
 ============
