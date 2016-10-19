@@ -83,7 +83,7 @@ def workdir(vmi):
 
 @reg.add_action(req=[ios.ILinux])
 def dst_dir(vmi):
-    dst_dir = vmi.cfg_vm.dst_dir
+    dst_dir = vmi.cfg.dst_dir
     cmd1 = utils.Cmd("getent", "passwd", vmi.cfg.username)
     cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
@@ -140,13 +140,15 @@ def add_usb_policy(vmi):
 
 
 @reg.add_action(req=[ios.ILinux], name="x_active")
-@deco.retry(8, exceptions=(aexpect.ShellCmdError,))
+@deco.retry(8, exceptions=(utils.SpiceUtilsError,))
 def x_active(vmi):
     """Test if X session is active. Do nothing is X active. Othrerwise
     throw exception.
     """
     cmd = utils.Cmd("gnome-terminal", "-e", "/bin/true")
-    act.run(vmi, cmd)
+    status, _ = act.rstatus(vmi, cmd)
+    if status:
+        raise utils.SpiceUtilsError("X session is not present.")
     utils.info(vmi, "X session is present.")
 
 
@@ -234,7 +236,7 @@ def verify_virtio(vmi):
 @deco.retry(8, exceptions=(AssertionError,))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
-    runner = remote.RemoteRunner(session=ssn)
+    runner = remote.RemoteRunner(session=ssn, timeout=600)
     srv_mng = service.Factory.create_service(run=runner.run)
     srv_mng.set_target("multi-user.target")  # pylint: disable=no-member
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
@@ -382,14 +384,14 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
     """
     cmd1 = utils.Cmd("xprop", "-root", "32x", r"\t$0", "_NET_ACTIVE_WINDOW")
     cmd2 = utils.Cmd("cut", "-f", "2")
-    cmd = utils.combine(cmd1, "|", cmd2)
-    win_id = act.run(vmi, cmd)
-    cmd = utils.Cmd("xprop", "-notype", "-id", win_id, prop)
+    cmd_win_id = utils.combine(cmd1, "|", cmd2)
 
     @deco.retry(8, exceptions=(utils.SpiceUtilsError, aexpect.ShellCmdError,
                                aexpect.ShellTimeoutError))
     def is_active():
         utils.info(vmi, "Test if window is active: %s", pattern)
+        win_id = act.run(vmi, cmd_win_id)  # Active windows ID.
+        cmd = utils.Cmd("xprop", "-notype", "-id", win_id, prop)
         output = act.run(vmi, cmd)
         utils.info(vmi, "Current win name: %s", output)
         if pattern not in output:
@@ -774,7 +776,7 @@ def chk_deps(vmi, fname, dst_dir=None):
 def img2cb(vmi, img):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
@@ -791,7 +793,7 @@ def cb2img(vmi, img):
         Where to save img.
 
     """
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
@@ -802,7 +804,7 @@ def cb2img(vmi, img):
 def text2cb(vmi, text):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
@@ -812,7 +814,7 @@ def text2cb(vmi, text):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2text(vmi):
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
@@ -824,7 +826,7 @@ def cb2text(vmi):
 def clear_cb(vmi):
     """Use the script to clear clipboard.
     """
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(script)
     cmd = utils.Cmd(dst_script, "--clear")
     utils.info(vmi, "Clear clipboard.")
@@ -833,7 +835,7 @@ def clear_cb(vmi):
 
 @reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     size = int(kbytes)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
@@ -843,7 +845,7 @@ def gen_text2cb(vmi, kbytes):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2file(vmi, fname):
-    script = vmi.cfg_vm.helper
+    script = vmi.cfg.helper
     dst_script = vmi.chk_deps(vmi.cfg.helper)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     utils.info(vmi, "Dump clipboard to file.", fname)
@@ -1035,7 +1037,7 @@ def run_selenium(vmi, ssn):
         firefox -CreateProfile <profile name>
 
     """
-    selenium = download_asset("selenium", section=vmi.cfg_vm.selenium_ver)
+    selenium = download_asset("selenium", section=vmi.cfg.selenium_ver)
     fname = os.path.basename(selenium)
     dst_fname = os.path.join(vmi.workdir(), fname)
     vmi.vm.copy_files_to(selenium, dst_fname)

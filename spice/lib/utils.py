@@ -402,7 +402,7 @@ def cacert_path_host(test):
 
     """
     path = None
-    if utils.is_yes(test.kvm_g.spice_ssl):
+    if is_yes(test.kvm_g.spice_ssl):
         path = "%s/%s" % (test.cfg.spice_x509_prefix,
                           test.cfg.spice_x509_cacert_file)
     logger.info("CA cert file on host: %s", path)
@@ -422,7 +422,7 @@ def get_host_subj(test):
 
     """
     subj = None
-    if utils.is_yes(test.kvm_g.spice_ssl):
+    if is_yes(test.kvm_g.spice_ssl):
         # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
         subj = test.kvm_g.spice_x509_server_subj
         subj = subj.replace('/', ',')[1:]
