@@ -233,7 +233,8 @@ def verify_virtio(vmi):
 
 
 @reg.add_action(req=[ios.ILinux], name="x_turn_off")
-@deco.retry(8, exceptions=(AssertionError,))
+@deco.retry(8, exceptions=(AssertionError,
+                           aexpect.exceptions.ShellTimeoutError))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn, timeout=600)
@@ -280,6 +281,7 @@ def reset_gui(vmi):
         Fails to restart Graphical session.
 
     """
+    act.x_active(vmi)
     act.x_turn_off(vmi)
     act.x_turn_on(vmi)
     act.x_active(vmi)

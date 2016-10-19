@@ -147,7 +147,7 @@ def rv_connect_menu(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
     utils.set_ticket(vmi.test)
     cmd = utils.combine(cmd, "2>&1")
-    act.info(vmi, "Final RV command: %s", rv_cmd)
+    act.info(vmi, "Final RV command: %s", cmd)
     act.rv_run(vmi, cmd, ssn)
     url = act.rv_url(vmi)
     act.str_input(vmi, url)
@@ -156,13 +156,16 @@ def rv_connect_menu(vmi, ssn, env):
 
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_file(vmi, ssn, env):
-    cmd = act.rv_basic_opts(vmi)
+    cmd = utils.Cmd(vmi.cfg.rv_binary)
     vv_file_host = act.gen_vv_file(vmi)
+    with open(vv_file_host, 'r') as rvfile:
+        file_contents = rvfile.read()
+        act.info(vmi, "RV file contents:\n%s", file_contents)
     vv_file_client = act.cp_file(vmi, vv_file_host)
-    cmd.append(fpath)
+    cmd.append(vv_file_client)
     utils.set_ticket(vmi.test)
     cmd = utils.combine(cmd, "2>&1")
-    act.info(vmi, "Final RV command: %s", rv_cmd)
+    act.info(vmi, "Final RV command: %s", cmd)
     act.rv_run(vmi, cmd, ssn)
 
 
@@ -259,7 +262,8 @@ def gen_vv_file(vmi):
         Spice test object.
 
     """
-    cfg = test.cfg
+    test = vmi.test
+    cfg = vmi.cfg
     host_dir = os.path.expanduser('~')
     fpath = os.path.join(host_dir, cfg.rv_file)
     rv_file = open(fpath, 'w')
@@ -272,10 +276,10 @@ def gen_vv_file(vmi):
     if utils.is_yes(test.kvm_g.spice_ssl):
         rv_file.write("tls-port=%s\n" % test.kvm_g.spice_tls_port)
         rv_file.write("tls-ciphers=DEFAULT\n")
-    host_subj = utils.get_host_subj(vmi.test)
+    host_subj = utils.get_host_subj(test)
     if host_subj:
         rv_file.write("host-subject=%s\n" % host_subj)
-    cacert_host = utils.cacert_path_host(vmi.test)
+    cacert_host = utils.cacert_path_host(test)
     if cacert_host:
         cert = open(cacert_host)
         cert_auth = cert.read()
@@ -285,12 +289,15 @@ def gen_vv_file(vmi):
         rv_file.write("fullscreen=1\n")
     if cfg.spice_proxy:
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)
+    if cfg.rv_debug:
+        """TODO"""
+        # rv_cmd.append("--spice-debug")  ..todo:: XXX TODO
     rv_file.close()
     return fpath
 
 
 @reg.add_action(req=[ios.ILinux])
-def rv_run(vmi, cmd, ssn, env={}):
+def rv_run(vmi, rcmd, ssn, env={}):
     cfg = vmi.cfg
     if cfg.rv_ld_library_path:
         cmd = utils.Cmd("export")
@@ -313,7 +320,7 @@ def rv_run(vmi, cmd, ssn, env={}):
     try:
         pid = ssn.get_pid()
         logger.info("shell pid id: %s", pid)
-        ssn.sendline(str(cmd))
+        ssn.sendline(str(rcmd))
     except aexpect.ShellStatusError:
         logger.debug("Ignoring a status exception, will check connection"
                       "of remote-viewer later")
@@ -339,6 +346,7 @@ def rv_chk_con(vmi):
     """
     test = vmi.test
     cfg = test.cfg
+    proxy_port = None
     if vmi.cfg.ssltype == "invalid_implicit_hs" or \
             "explicit" in vmi.cfg.ssltype:
         hostname = socket.gethostname()    # See rv_url() function
@@ -355,7 +363,6 @@ def rv_chk_con(vmi):
         logger.info("Proxy port to inspect: %s", proxy_port)
     else:
         remote_ip = utils.get_host_ip(test)
-    proxy_port = None
     rv_binary = os.path.basename(cfg.rv_binary)
     cmd1 = utils.Cmd("netstat", "-p", "-n")
     grep_regex = "^tcp.*:.*%s.*ESTABLISHED.*%s.*" % (remote_ip, rv_binary)
@@ -364,6 +371,7 @@ def rv_chk_con(vmi):
     time.sleep(5)  # Wait all RV Spice links raise up.
     status, netstat_out = act.rstatus(vmi, cmd)
     if status:
+        time.sleep(100000)
         raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
     if cfg.spice_proxy:

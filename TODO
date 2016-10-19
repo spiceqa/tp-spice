@@ -11,6 +11,7 @@ rv_vmshutdown.shutdown_qemu
 
 FIX: 283972 --- pasword set only once!
 https://tcms.engineering.redhat.com/case/174368/?from_plan=20864  -- FIX test description, remove RHVM
+https://tcms.engineering.redhat.com/case/174365/?from_plan=20864 -- WRONG description. Not this test at all.
 
 Drag-and-drop automation thoughts:
 
