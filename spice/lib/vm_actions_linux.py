@@ -236,7 +236,7 @@ def verify_virtio(vmi):
 @deco.retry(8, exceptions=(AssertionError,))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
-    runner = remote.RemoteRunner(session=ssn)
+    runner = remote.RemoteRunner(session=ssn, timeout=600)
     srv_mng = service.Factory.create_service(run=runner.run)
     srv_mng.set_target("multi-user.target")  # pylint: disable=no-member
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")

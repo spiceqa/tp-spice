@@ -74,7 +74,7 @@ def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
     if timeout:
         kwargs['timeout'] = timeout
     status, out = ssn.cmd_status_output(cmdline)
-    act.info(vmi, "cmd: %s, status: %s, output: %", cmdline, status, out)
+    act.info(vmi, "cmd: %s, status: %s, output: %s", cmdline, status, out)
     return (status, out)
 
 
@@ -92,8 +92,6 @@ def new_ssnc(vmi, admin=False, name=""):
     finally:
         out = ssn.read_nonblocking(internal_timeout=20)
         logger.info("'%s' session log:\n%s.", name, str(out))
-        import time
-        time.sleep(10000)
         ssn.close()
 
 
