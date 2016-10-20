@@ -233,8 +233,7 @@ def verify_virtio(vmi):
 
 
 @reg.add_action(req=[ios.ILinux], name="x_turn_off")
-@deco.retry(8, exceptions=(AssertionError,
-                           aexpect.exceptions.ShellTimeoutError))
+@deco.retry(8, exceptions=(AssertionError, aexpect.exceptions.ShellTimeoutError))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn, timeout=600)
@@ -412,7 +411,7 @@ def deploy_epel_repo(vmi):
     """
     # Check existence of epel repository
     cmd = utils.Cmd("test", "-f", "/etc/yum.repos.d/epel.repo")
-    status, _ = act.rstatus(cmd)
+    status, _ = act.rstatus(vmi, cmd)
     if status:
         arch = vmi.ssn.cmd("arch")
         if "i686" in arch:
@@ -742,7 +741,7 @@ def get_x_var(vmi, var_name):
 def cp_deps(vmi, src, dst_dir=None):
     provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
     src_path = os.path.join(provider_dir, "deps", src)
-    dst_dir = vmi.dst_dir()
+    dst_dir = act.dst_dir(vmi)
     utils.info(vmi, "Copy from deps: %s to %s", src_path, dst_dir)
     vmi.vm.copy_files_to(src_path, dst_dir)
 
@@ -750,7 +749,7 @@ def cp_deps(vmi, src, dst_dir=None):
 @reg.add_action(req=[ios.ILinux])
 def cp2vm(vmi, src, dst_dir=None, dst_name=None):
     if not dst_dir:
-        dst_dir = vmi.dst_dir()
+        dst_dir = act.dst_dir(vmi)
     provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
     src = os.path.normpath(src)
     src_path = os.path.join(provider_dir, src)
@@ -765,12 +764,12 @@ def cp2vm(vmi, src, dst_dir=None, dst_name=None):
 @reg.add_action(req=[ios.ILinux])
 def chk_deps(vmi, fname, dst_dir=None):
     if not dst_dir:
-        dst_dir = vmi.dst_dir()
+        dst_dir = act.dst_dir(vmi)
     dst_path = os.path.join(dst_dir, fname)
     cmd = utils.Cmd("test", "-e", dst_path)
-    status, _ = act.rstatus(cmd)
+    status, _ = act.rstatus(vmi, cmd)
     if status != 0:
-        vmi.cp_deps(fname, dst_path)
+        act.cp_deps(vmi, fname, dst_path)
     return dst_path
 
 
@@ -779,7 +778,7 @@ def img2cb(vmi, img):
     """Use the clipboard script to copy an image into the clipboard.
     """
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(script)
+    dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
     act.run(vmi, cmd)
@@ -796,7 +795,7 @@ def cb2img(vmi, img):
 
     """
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(script)
+    dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
     act.run(vmi, cmd)
@@ -807,7 +806,7 @@ def text2cb(vmi, text):
     """Use the clipboard script to copy an image into the clipboard.
     """
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(vmi.cfg.helper)
+    dst_script = act.chk_deps(vmi, script)
     params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
     utils.info(vmi, "Put in clipboard: %s", text)
@@ -817,7 +816,7 @@ def text2cb(vmi, text):
 @reg.add_action(req=[ios.ILinux])
 def cb2text(vmi):
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(vmi.cfg.helper)
+    dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
     utils.info(vmi, "Get from clipboard: %s", text)
@@ -829,7 +828,7 @@ def clear_cb(vmi):
     """Use the script to clear clipboard.
     """
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(script)
+    dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--clear")
     utils.info(vmi, "Clear clipboard.")
     act.run(vmi, cmd)
@@ -838,7 +837,7 @@ def clear_cb(vmi):
 @reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(vmi.cfg.helper)
+    dst_script = act.chk_deps(vmi, script)
     size = int(kbytes)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
@@ -848,7 +847,7 @@ def gen_text2cb(vmi, kbytes):
 @reg.add_action(req=[ios.ILinux])
 def cb2file(vmi, fname):
     script = vmi.cfg.helper
-    dst_script = vmi.chk_deps(vmi.cfg.helper)
+    dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     utils.info(vmi, "Dump clipboard to file.", fname)
     act.run(vmi, cmd, timeout=300)
