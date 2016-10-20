@@ -48,30 +48,31 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
+    ssn = act.new_ssn(test.vmi_c)
+    act.rv_connect(test.vmi_c, ssn)
     act.clear_cb(test.vmi_g)
     act.clear_cb(test.vmi_c)
     if cfg.vdagent_action:
         act.service_vdagent(test.vmi_g, cfg.vdagent_action)
     if cfg.guest2client:
-        src = test.name_g
-        dst = test.name_c
+        src = test.vmi_g
+        dst = test.vmi_c
     elif cfg.client2guest:
-        src = test.name_c
-        dst = test.name_g
+        src = test.vmi_c
+        dst = test.vmi_g
     success = False
     if cfg.copy_text:
-        test.cmds[src].text2cb(cfg.text)
-        text = test.cmds[dst].cb2text()
+        time.sleep(3600)
+        act.text2cb(src, cfg.text)
+        text = act.cb2text(dst)
         if cfg.text in text:
             success = True
     elif cfg.copy_text_big:
-        test.cmds[src].gen_text2cb(cfg.kbytes)
-        test.cmds[src].cb2file(cfg.dump_file)
-        md5src = test.cmds[src].md5sum(cfg.dump_file)
-        test.cmds[dst].cb2file(cfg.dump_file)
-        md5dst = test.cmds[dst].md5sum(cfg.dump_file)
+        act.gen_text2cb(src, cfg.kbytes)
+        act.cb2file(src, cfg.dump_file)
+        md5src = act.md5sum(src, cfg.dump_file)
+        act.cb2file(dst, cfg.dump_file)
+        md5dst = act.md5sum(dst, cfg.dump_file)
         if md5src == md5dst:
             success = True
     elif cfg.copy_img:
