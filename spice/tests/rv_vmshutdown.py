@@ -19,11 +19,13 @@
 import os
 import logging
 import aexpect
+
 from avocado.core import exceptions
-from spice.lib import rv_ssn
+
+from spice.lib import act
+from spice.lib import deco
 from spice.lib import stest
 from spice.lib import utils
-from spice.lib import deco
 
 
 logger = logging.getLogger(__name__)
@@ -59,17 +61,20 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
+    ssn = act.new_ssn(test.vmi_c)
+    act.rv_connect(test.vmi_c, ssn)
+    act.rv_chk_con(test.vmi_c)
     if test.cfg.shutdown_cmdline:
         test.vm_g.info("Shutting down from command line.")
         try:
-            test.assn_g.cmd_output(test.cfg_g.shutdown_command)
+            cmd = test.cfg_g.shutdown_command
+            act.run(test.vmi_g, cmd, admin=True)
         except aexpect.ShellProcessTerminatedError:
             pass
     elif test.cfg.shutdown_qemu:
         test.vm_g.info("Shutting down from qemu monitor.")
-        test.vm_g.monitor.cmd(test.cfg.cmd_qemu_shutdown)
+        cmd = test.cfg.cmd_qemu_shutdown
+        test.vm_g.monitor.cmd(cmd)
     else:
         raise utils.SpiceTestFail(test, "Bad config.")
     # Test: guest VM is dead.
@@ -80,8 +85,8 @@ def run(vt_test, test_params, env):
     test.vm_g.info("VM is dead.")
     # Test: no network connection.
     try:
-        rv_ssn.is_connected(test)
-    except rv_ssn.RVSessionConnect:
+        act.rv_chk_con(test.vmi_c)
+    except utils.SpiceUtilsError:
         pass
     else:
         raise utils.SpiceTestFail(test, "RV still connected.")

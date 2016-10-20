@@ -16,16 +16,17 @@ vdagent daemon.
 
 
 import os
+import time
+import aexpect
 import logging
+
 from avocado.core import exceptions
-from spice.lib import rv_ssn
+from virttest import utils_misc
+
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import deco
 from spice.lib import act
-import time
-import aexpect
-from virttest import utils_misc
 
 
 logger = logging.getLogger(__name__)

@@ -369,7 +369,7 @@ def rv_chk_con(vmi):
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
     time.sleep(5)  # Wait all RV Spice links raise up.
-    status, netstat_out = act.rstatus(vmi, cmd)
+    status, netstat_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
