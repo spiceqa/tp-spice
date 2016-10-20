@@ -46,8 +46,9 @@ USB_POLICY_FILE_SRC = os.path.join(utils.DEPS_DIR,
 @reg.add_action(req=[ios.ILinux])
 def export_vars(vmi, ssn):
     """Export essentials variables per SSH session."""
-    utils.debug(vmi, "Export vars for session.")
-    ssn.cmd("export DISPLAY=:0.0")
+    act.info(vmi, "Export vars for session.")
+    cmd = utils.Cmd("export", "DISPLAY=:0.0")
+    act.run(vmi, cmd, ssn=ssn)
 
 
 @reg.add_action(req=[ios.ILinux])

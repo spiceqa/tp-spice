@@ -417,16 +417,16 @@ def get_host_subj(test):
     test : SpiceTest
         Spice test object.
 
-        if test.cfg.ssltype == "invalid_explicit_hs":
-            subj = "Invalid Explicit HS"
-
     """
     subj = None
     if is_yes(test.kvm_g.spice_ssl):
-        # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
-        subj = test.kvm_g.spice_x509_server_subj
-        subj = subj.replace('/', ',')[1:]
-        subj += get_host_ip(test)
+        if test.cfg.ssltype == "invalid_explicit_hs":
+            subj = "Invalid Explicit HS"
+        else:
+            # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
+            subj = test.kvm_g.spice_x509_server_subj
+            subj = subj.replace('/', ',')[1:]
+            subj += get_host_ip(test)
     return subj
 
 

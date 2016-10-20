@@ -16,7 +16,6 @@
 
 import logging
 from avocado.core import exceptions
-from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act
@@ -37,22 +36,18 @@ def run(vt_test, test_params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
 
-    Raises
-    ------
-    TestFail
-        Test fails for expected behaviour.
-
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
     act.reset_gui(test.vmi_c)
     act.reset_gui(test.vmi_g)
-    ssn = test.open_ssn(test.name_c)
-    try:
-        rv_ssn.connect(test, ssn)
-    except rv_ssn.RVSessionConnect as e:
-        logger.info("Test failed as expected. Reason: %s", e)
-        pass
-    else:
-        raise exceptions.TestFail(
-            "RV connection was established when it was supposed to fail.")
+    ssn = act.new_ssn(test.vmi_c)
+    with act.new_ssnc(test.vmi_c, name="Remote Viewer") as ssn:
+        act.rv_connect(test.vmi_c, ssn)
+        try:
+            act.rv_chk_con(test.vmi_c)
+        except utils.SpiceUtilsError as e:
+            logger.info("Test failed as expected. Reason: %s", e)
+        else:
+            raise exceptions.TestFail(
+                "RV connection was established when it was supposed to fail.")
