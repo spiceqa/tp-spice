@@ -62,9 +62,12 @@ args = parser.parse_args()
 clipboard = gtk.clipboard_get()
 
 if args.clear:
-    clipboard.clear()
-    clipboard.set_text("")
-    clipboard.store()
+    """We can clear only owned clipboard. Before clear clipboard we must own
+    it. .clear() method can be called only on owned clipboard.
+    """
+    clipboard.set_text("")  # Grab clipboard. Become owner of it.
+    clipboard.store()       # Apply
+    clipboard.clear()       # Now we can clear it.
     logger.info("Clear clipboard.")
 elif args.txt2cb:
     clipboard.clear()
