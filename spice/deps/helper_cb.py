@@ -65,9 +65,9 @@ if args.clear:
     """We can clear only owned clipboard. Before clear clipboard we must own
     it. .clear() method can be called only on owned clipboard.
     """
-    clipboard.set_text("")  # Grab clipboard. Become owner of it.
-    clipboard.store()       # Apply
-    clipboard.clear()       # Now we can clear it.
+    clipboard.set_text("Anything.")  # Grab clipboard. Become owner of it.
+    clipboard.store()                # Apply
+    clipboard.clear()                # Now we can clear it.
     logger.info("Clear clipboard.")
 elif args.txt2cb:
     clipboard.clear()

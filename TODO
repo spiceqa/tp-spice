@@ -9,6 +9,8 @@ rv_vmshutdown.shutdown_qemu
 * Create kickstarts / templates without firewall.
 * Create kickstarts / templates with installed RedHat/SpiceQE certs.
 
+* Add to vdagent.py tests copy-paste step. According to TCMS test cases.
+
 FIX: 283972 --- pasword set only once!
 https://tcms.engineering.redhat.com/case/174368/?from_plan=20864  -- FIX test description, remove RHVM
 https://tcms.engineering.redhat.com/case/174365/?from_plan=20864 -- WRONG description. Not this test at all.

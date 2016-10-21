@@ -20,6 +20,7 @@ import os
 import logging
 import aexpect
 from avocado.core import exceptions
+from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils
 
@@ -42,41 +43,42 @@ def run(vt_test, test_params, env):
     """
     test = stest.GuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd.x_active()
+    vmi = test.vmi
+    act.x_active(vmi)
 
-    active = test.cmd.service_vdagent("status")
+    active = act.service_vdagent(vmi, "status")
 
     if cfg.ttype == "start":
         if active:
-            test.cmd.service_vdagent("stop")
-            active = test.cmd.service_vdagent("status")
+            act.service_vdagent(vmi, "stop")
+            active = act.service_vdagent(vmi, "status")
         assert not active
-        test.cmd.service_vdagent("start")
-        active = test.cmd.service_vdagent("status")
+        act.service_vdagent(vmi, "start")
+        active = act.service_vdagent(vmi, "status")
         assert active
     elif cfg.ttype == "stop":
         if not active:
-            test.cmd.service_vdagent("start")
-            active = test.cmd.service_vdagent("status")
+            act.service_vdagent(vmi, "start")
+            active = act.service_vdagent(act, "status")
         assert active
-        test.cmd.service_vdagent("stop")
-        active = test.cmd.service_vdagent("status")
+        act.service_vdagent(vmi, "stop")
+        active = act.service_vdagent(vmi, "status")
         assert not active
     elif cfg.ttype == "restart_running":
         if not active:
-            test.cmd.service_vdagent("start")
-            active = test.cmd.service_vdagent("status")
+            act.service_vdagent(vmi, "start")
+            active = act.service_vdagent(vmi, "status")
         assert active
-        test.cmd.service_vdagent("restart")
-        active = test.cmd.service_vdagent("status")
+        act.service_vdagent(vmi, "restart")
+        active = act.service_vdagent(vmi, "status")
         assert active
     elif cfg.ttype == "restart_stopped":
         if active:
-            test.cmd.service_vdagent("stop")
-            active = test.cmd.service_vdagent("status")
+            act.service_vdagent(vmi, "stop")
+            active = act.service_vdagent(vmi, "status")
         assert not active
-        test.cmd.service_vdagent("restart")
-        active = test.cmd.service_vdagent("status")
+        act.service_vdagent(vmi, "restart")
+        active = act.service_vdagent(vmi, "status")
         assert active
     else:
         raise utils.SpiceTestFail(test, "Bad config.")

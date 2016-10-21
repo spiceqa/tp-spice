@@ -63,7 +63,6 @@ def run(vt_test, test_params, env):
         dst = test.vmi_g
     success = False
     if cfg.copy_text:
-        time.sleep(3600)
         act.text2cb(src, cfg.text)
         text = act.cb2text(dst)
         if cfg.text in text:
