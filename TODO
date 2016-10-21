@@ -6,10 +6,6 @@
 rv_vmshutdown.shutdown_cmdline
 rv_vmshutdown.shutdown_qemu
 
-Put as a default
-listening_addr = (all interfaces/addresses)
-and specify listening_addr fot specific cases
-
 * Create kickstarts / templates without firewall.
 * Create kickstarts / templates with installed RedHat/SpiceQE certs.
 
