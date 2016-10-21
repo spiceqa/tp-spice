@@ -25,12 +25,13 @@ Presumes the numlock state at startup is 'OFF'.
 
 
 import logging
+
+from virttest import utils_misc
 from avocado.core import exceptions
-from spice.lib import rv_ssn
+
+from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils
-from spice.lib import act
-from virttest import utils_misc
 
 
 logger = logging.getLogger(__name__)
@@ -111,8 +112,9 @@ def run(vt_test, test_params, env):
     #test.cmd_g.install_rpm(cfg.xev)
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
+    ssn = act.new_ssn(test.vmi_c)
+    act.rv_connect(test.vmi_c, ssn)
+    act.rv_chk_con(test.vmi_c)
 
     if cfg.ttype == 'type_and_func_keys':
         """Test typewriter and functional keys."""
@@ -148,19 +150,19 @@ def run(vt_test, test_params, env):
         expected_keysyms = [97, 65509, 65, 65509, 65407, 65457, 65407, 65436]
         test_seq(test, leds, expected_keysyms)
     if cfg.ttype == 'nonus_layout':
-        cmd = "setxkbmap cz"
-        test.ssn_g.cmd(cmd)
+        cmd = utils.Cmd("setxkbmap", "cz")
+        act.run(test.vmi_g, cmd)
         keys = ['7', '8', '9', '0', 'alt_r-x', 'alt_r-c', 'alt_r-v']
         expected_keysyms = [253, 225, 237, 233, 65027, 35, 65027, 38, 65027,
                             64]
         test_seq(test, keys, expected_keysyms)
-        cmd = "setxkbmap de"
-        test.ssn_g.cmd(cmd)
+        cmd = utils.Cmd("setxkbmap", "de")
+        act.run(test.vmi_g, cmd)
         keys = ['minus', '0x1a', 'alt_r-q', 'alt_r-m']
         expected_keysyms = [223, 252, 65027, 64, 65027, 181]
         test_seq(test, keys, expected_keysyms)
-        cmd = "setxkbmap us"
-        test.ssn_g.cmd(cmd)
+        cmd = utils.Cmd("setxkbmap", "us")
+        act.run(test.vmi_g, cmd)
     if cfg.ttype == "leds_migration":
         if test.vm_c.is_rhel6():
             test.vm_c.send_key('num_lock')

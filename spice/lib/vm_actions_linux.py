@@ -868,8 +868,8 @@ def klogger_start(vmi):
     ssn = act.new_ssn(vmi)
     cmd = utils.Cmd("xev", "-event", "keyboard", "-name", "klogger")
     utils.info(vmi, "Start key logger. Do not forget to turn it off.")
-    ssn.sendline(cmd)
-    act.wait_for_win('klogger', 'WM_NAME')
+    ssn.sendline(str(cmd))
+    act.wait_for_win(vmi, 'klogger', 'WM_NAME')
     return ssn
 
 
@@ -881,8 +881,8 @@ def klogger_stop(vmi, ssn):
     output = ssn.read_up_to_prompt()
     a = re.findall(
         'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
-    keys = map(lambda keycode, keysym: (int(keycode), int(keysym, base=16)),
-               a)
+    act.info(vmi, "Keyboard logger out: %r", a)
+    keys = map(lambda (keycode, keysym): (int(keycode), int(keysym, base=16)), a)
     utils.info(vmi, "Read keys: %s" % keys)
     # Return list of pressed: (keycode, keysym)
     return keys
