@@ -18,7 +18,7 @@
 import logging
 from avocado.core import exceptions
 from virttest import utils_misc
-from spice.lib import rv_ssn
+from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils
 
@@ -45,8 +45,8 @@ def run(vt_test, test_params, env):
     """
     test = stest.GuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    test.cmd.x_active()
-    cmd = "grep -i qxl %s" % cfg.qxl_log
-    exit_code, output = test.ssn.cmd_status_output(cmd)
+    act.x_active(test.vmi)
+    cmd = utils.Cmd("grep", "-i", "qxl", cfg.qxl_log)
+    exit_code, output = act.rstatus(test.vmi, cmd)
     assert exit_code == 0
-    test.vm.info("Mention about qxl: %s." % output)
+    act.info(test.vmi, "Mention about qxl: %s." % output)
