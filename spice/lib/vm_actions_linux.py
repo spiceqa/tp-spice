@@ -839,8 +839,7 @@ def clear_cb(vmi):
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg.helper
     dst_script = act.chk_deps(vmi, script)
-    size = int(kbytes)
-    cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
+    cmd = utils.Cmd(dst_script, "--kbytes2cb", kbytes)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
     act.run(vmi, cmd)
 

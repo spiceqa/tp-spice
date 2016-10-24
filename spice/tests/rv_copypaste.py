@@ -76,12 +76,12 @@ def run(vt_test, test_params, env):
         if md5src == md5dst:
             success = True
     elif cfg.copy_img:
-        dst_img = test.cmds[src].chk_deps(cfg.test_image)
-        test.cmds[src].img2cb(dst_img)
-        test.cmds[src].cb2img(cfg.dump_img)
-        test.cmds[dst].cb2img(cfg.dump_img)
-        md5src = test.cmds[src].md5sum(cfg.dump_img)
-        md5dst = test.cmds[dst].md5sum(cfg.dump_img)
+        dst_img = act.chk_deps(src, cfg.test_image)
+        act.img2cb(src, dst_img)
+        act.cb2img(src, cfg.dump_img)
+        act.cb2img(dst, cfg.dump_img)
+        md5src = act.md5sum(src, cfg.dump_img)
+        md5dst = act.md5sum(dst, cfg.dump_img)
         if md5src == md5dst:
             success = True
 
