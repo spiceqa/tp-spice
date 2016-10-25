@@ -83,9 +83,9 @@ def new_admin_ssn(vmi):
     return act.new_ssn(vmi, admin=True)
 
 
-@reg.add_action(req=[ios.IOSystem], name="new_ssnc")
+@reg.add_action(req=[ios.IOSystem], name="new_ssn_cntxt")
 @contextlib.contextmanager
-def new_ssnc(vmi, admin=False, name=""):
+def new_ssn_cntxt(vmi, admin=False, name=""):
     ssn = act.new_ssn(vmi, admin)
     try:
         yield ssn

@@ -58,7 +58,7 @@ class Helper(object):
         return {v:k for v,k in self.test.cfg.iteritems()}
 
     def get_x_var(self, var_name, vm_name):
-        var_val = self.test.cmds[vm_name].get_x_var(var_name)
+        var_val = act.get_x_var(self.test.vmi[vm_name], var_name)
         return var_val
 
     def get_uri(self):
@@ -134,13 +134,14 @@ def run(vt_test, test_params, env):
     if cfg.make_rv_connect:
         act.x_active(vmi_c)
         act.x_active(vmi_g)
-        ssn = test.open_ssn(test.name_c)
-        act.rv_connect(vmi_c, ssn)
-        is_connected = True
+        with act.new_ssn_cntxt(vmi_c, name="Remote Viewer") as ssn:
+            act.rv_connect(vmi_c, ssn)
+            act.rv_chk_con(vmi_c)
+            is_connected = True
     errors = 0
     logging.getLogger().setLevel(logging.DEBUG)
     try:
-        ddrir = act.dst_dir(vmi_c)
+        ddir = act.dst_dir(vmi_c)
         commander = vm_c.commander(commander_path=ddir)
     except Exception as e:
         logger.info("Failed to create commander: %s.", str(e))
