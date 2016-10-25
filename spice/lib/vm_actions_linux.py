@@ -330,7 +330,7 @@ def install_rpm(vmi, rpm):
         pkg = os.path.split(rpm)[1]
         pkg = pkg[:-4]
     cmd = ["rpm", "-q", "pkg"]
-    status, _ = act.scmd(vmi, cmd)
+    status, _ = act.rstatus(vmi, cmd)
     if status == 0:
         utils.info(vmi, "RPM %s is already installed.", pkg)
         return
@@ -839,7 +839,7 @@ def clear_cb(vmi):
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg.helper
     dst_script = act.chk_deps(vmi, script)
-    cmd = utils.Cmd(dst_script, "--kbytes2cb", kbytes)
+    cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
     act.run(vmi, cmd)
 
@@ -902,7 +902,7 @@ def turn_accessibility(vmi, on=True):
     else:
         val = 'false'
     cmd = utils.Cmd("gsettings", "set",
-                    "org.gnome.desktop.interface toolkit-accessibility", val)
+                    "org.gnome.desktop.interface", "toolkit-accessibility", val)
     act.run(vmi, cmd)
 
 
@@ -912,20 +912,20 @@ def lock_scr_off(vmi):
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session",
                     "idle-delay", "0")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.lockdown"
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.lockdown",
                     "disable-lock-screen", "true")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
                     "lock-delay", "3600")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
                     "lock-enabled", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver"
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
                     "idle-activation-enabled", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set"
-                    "org.gnome.settings-daemon.plugins.power"
+    cmd = utils.Cmd("gsettings", "set",
+                    "org.gnome.settings-daemon.plugins.power",
                     "active", "false")
     act.run(vmi, cmd)
 

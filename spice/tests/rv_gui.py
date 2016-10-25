@@ -37,10 +37,9 @@ import copy
 from virttest.virt_vm import VMDeadError
 from autotest.client.shared import error
 from virttest import utils_net
-from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
-
+from spice.lib import act
 
 EXPECTED_RV_CORNERS_FS = [('+0','+0'),('-0','+0'),('-0','-0'),('+0','-0')]
 WIN_TITLE = "'vm1 (1) - Remote Viewer'"
@@ -63,7 +62,7 @@ class Helper(object):
         return var_val
 
     def get_uri(self):
-        host_ip = rv_ssn.get_host_ip(self.test)
+        host_ip = utils.get_host_ip(self.test)
         port = self.test.kvm_g.spice_port
         uri = "spice://%s?port=%s" % (host_ip, port)
         if utils.is_yes(self.test.kvm_g.spice_ssl):
@@ -118,7 +117,6 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    ssn_c = test.ssn_c
     vmi_c = test.vmi_c
     vmi_g = test.vmi_g
     vm_c = test.vm_c
@@ -137,7 +135,7 @@ def run(vt_test, test_params, env):
         act.x_active(vmi_c)
         act.x_active(vmi_g)
         ssn = test.open_ssn(test.name_c)
-        rv_ssn.connect(test, ssn)
+        act.rv_connect(vmi_c, ssn)
         is_connected = True
     errors = 0
     logging.getLogger().setLevel(logging.DEBUG)
