@@ -381,7 +381,12 @@ def get_host_ip(test):
         Spice test object.
 
     """
-    ip = utils_net.get_host_ip_address(test.cfg)
+    try:
+        ip = utils_net.get_host_ip_address(test.cfg)
+    except utils_net.NetError:
+        ips = utils_net.get_all_ips()
+        ip = ips[0]
+        logger.info("Take as a host IP: %s", ip)
     if test.kvm_g.listening_addr == "ipv6":
         ip = "[" + utils_misc.convert_ipv4_to_ipv6(ip) + "]"
     return ip
