@@ -76,22 +76,23 @@ def service_vdagent(vmi, action):
 
 @reg.add_action(req=[ios.ILinux])
 def workdir(vmi):
-    wdir = vmi.cfg.wdir or "~/tp-spice"
-    cmd = ["mkdir", "-p", wdir]
-    act.run(vmi, cmd)
-    return wdir
+    return act.dst_dir(vmi)
 
 
 @reg.add_action(req=[ios.ILinux])
 def dst_dir(vmi):
     dst_dir = vmi.cfg.dst_dir
+    if dst_dir:
+        return dst_dir
     cmd1 = utils.Cmd("getent", "passwd", vmi.cfg.username)
     cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
-    if not dst_dir:
-        out = act.run(vmi, cmd)
-        dst_dir = out.rstrip('\r\n')
-        vmi.cfg.dst_dir = dst_dir
+    out = act.run(vmi, cmd)
+    home_dir = out.rstrip('\r\n')
+    dst_dir = os.path.join(home_dir, "tp-spice")
+    cmd = utils.Cmd("mkdir", "-p", dst_dir)
+    act.run(vmi, cmd)
+    vmi.cfg.dst_dir = dst_dir
     return dst_dir
 #    cmd = 'test -e %s' % dst_dir
 #    if vmi.ssn.cmd_status(cmd) != 0:
@@ -999,6 +1000,16 @@ def lock_scr_off(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
+def turn_firewall(vmi, state):
+    utils.info(vmi, "Turn firewall: %r.", state)
+    if utils.is_yes(state):
+        raise NotImplemented
+    else:
+        cmd = utils.Cmd("iptables", "-F")
+        act.run(vmi, cmd, admin=True)
+
+
+@reg.add_action(req=[ios.ILinux])
 def run_selenium(vmi, ssn):
     """Some general info.
     There are ways to define Firefox options globaly:
@@ -1038,9 +1049,9 @@ def run_selenium(vmi, ssn):
         firefox -CreateProfile <profile name>
 
     """
-    selenium = download_asset("selenium", section=vmi.cfg.selenium_ver)
+    selenium = utils.download_asset("selenium", section=vmi.cfg.selenium_ver)
     fname = os.path.basename(selenium)
-    dst_fname = os.path.join(vmi.workdir(), fname)
+    dst_fname = os.path.join(act.workdir(vmi), fname)
     vmi.vm.copy_files_to(selenium, dst_fname)
     defs = utils.Cmd()
     opts = utils.Cmd()
@@ -1051,13 +1062,13 @@ def run_selenium(vmi, ssn):
         profile = vmi.cfg.firefox_profile
         if profile:
             cmd = utils.Cmd("firefox", "-CreateProfile", profile)
-            output = ssn.cmd(cmd)
+            output = act.run(vmi, cmd)
             output = re.findall(r'\'[^\']*\'', output)[1]
             output = output.replace("'", '')
             output = os.path.dirname(output)
             vmi.firefox_profile_dir = output
             utils.info(vmi, "Created a new FF profile at: %s", output)
-            defs.append("-Dwebdriver.firefox.profile=%s" % profile)
+            # defs.append("-Dwebdriver.firefox.profile=%s" % profile)
     defs = " ".join(defs)
     opts = " ".join(opts)
     cmd = "java {} -jar {} {}".format(defs, dst_fname, opts)

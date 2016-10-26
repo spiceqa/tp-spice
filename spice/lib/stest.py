@@ -114,6 +114,7 @@ class SpiceTest(object):
             Something is not good.
     """
     def __init__(self, test, parameters, env):
+        # Change log level here from info to debug:
         logging.getLogger().setLevel(logging.INFO)
         utils.extend_api_vm()
         logger.info("Start test %s", test.name)
@@ -145,9 +146,9 @@ class SpiceTest(object):
             self.cfg_vm[name] = AttributeDict()
             self.cfg_vm[name].update(self.vms[name].get_params())
         """Actions set per VM's OS."""
-        self.vmi = {}
+        self.vm_info = {}
         for name in vm_names:
-            self.vmi[name] = VmInfo(self, name)
+            self.vm_info[name] = VmInfo(self, name)
 
 
 class ClientGuestTest(SpiceTest):
@@ -165,8 +166,8 @@ class ClientGuestTest(SpiceTest):
         self.kvm_g = self.kvm[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
-        self.vmi_c = self.vmi[name_c]
-        self.vmi_g = self.vmi[name_g]
+        self.vmi_c = self.vm_info[name_c]
+        self.vmi_g = self.vm_info[name_g]
 
 
 class OneVMTest(SpiceTest):
@@ -185,7 +186,7 @@ class OneVMTest(SpiceTest):
         self.vm = self.vms[name]
         self.kvm = self.kvm[name]
         self.cfg = self.cfg_vm[name]
-        self.vmi = self.vmi[name]
+        self.vmi = self.vm_info[name]
 
 
 class ClientTest(OneVMTest):

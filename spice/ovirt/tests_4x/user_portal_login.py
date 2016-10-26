@@ -18,11 +18,13 @@
 
 import logging
 
+from virttest import asset
 from avocado.core import exceptions
 from autotest.client.shared import error
-from virttest import asset
 
+from spice.lib import act
 from spice.lib import stest
+from spice.lib import utils
 
 from lib4x import driver
 from lib4x.user_portal import user_login
@@ -44,19 +46,20 @@ def run(vt_test, test_params, env):
 
     """
     test = stest.ClientTest(vt_test, test_params, env)
-    ssn = test.open_ssn(test.name)
-    test.cmd.run_selenium(ssn)
-    time.sleep(10)
-    out = ssn.read_nonblocking()
-    logger.info("Selenium log: %s.", str(out))
-    vm_addr = test.vm.get_address()
-    logger.info("VM addr: %s", vm_addr)
-    test.assn.cmd("iptables -F")  # XXX
-    drv = driver.DriverFactory("Firefox", vm_addr, "5555")
-    drv.maximize_window()
-    login_page = user_login.UserLoginPage(drv)
-    home_page = login_page.login_user(username="auto",
-                                      password="redhat",
-                                      domain="spice.brq.redhat.com",
-                                      autoconnect=False)
-    home_page.sign_out_user()
+    vmi = test.vmi
+    cfg = vmi.cfg
+    with act.new_ssnc(vmi) as ssn:
+        act.run_selenium(vmi, ssn)
+        out = ssn.read_nonblocking(internal_timeout=20)
+        logger.info("Selenium log: %s.", str(out))
+        vm_addr = test.vm.get_address()
+        logger.info("VM addr: %s", vm_addr)
+        act.turn_firewall(vmi, "no")
+        drv = driver.DriverFactory("Firefox", vm_addr, cfg.selenium_port)
+        drv.maximize_window()
+        login_page = user_login.UserLoginPage(drv)
+        home_page = login_page.login_user(username=cfg.ovirt_user,
+                                        password=cfg.ovirt_password,
+                                        domain=cfg.ovirt_profile,
+                                        autoconnect=False)
+        home_page.sign_out_user()

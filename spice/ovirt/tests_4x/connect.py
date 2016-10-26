@@ -6,11 +6,11 @@ from lib4x.user_portal import user_login
 from lib4x import vms_base
 
 # Howto run
-# export PYTHONPATH="$PYTHONPATH:/home/andrei/git/tp-spice/spice/ovirt"
+# export PYTHONPATH="$PYTHONPATH:$PWD/../"
 # $ ipython
 # $ execfile("name.py")
 
-hostname = "astepano-ws"
+hostname = "XXX"
 port = "55555"
 vm_name = "win7"
 
