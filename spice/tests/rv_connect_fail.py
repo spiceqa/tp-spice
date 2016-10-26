@@ -41,7 +41,7 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.reset_gui(test.vmi_c)
     act.reset_gui(test.vmi_g)
-    with act.new_ssn_cntxt(test.vmi_c, name="Remote Viewer") as ssn:
+    with act.new_ssn_context(test.vmi_c, name="Remote Viewer") as ssn:
         act.rv_connect(test.vmi_c, ssn)
         try:
             act.rv_chk_con(test.vmi_c)

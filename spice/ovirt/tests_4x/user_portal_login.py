@@ -48,7 +48,7 @@ def run(vt_test, test_params, env):
     test = stest.ClientTest(vt_test, test_params, env)
     vmi = test.vmi
     cfg = vmi.cfg
-    with act.new_ssnc(vmi) as ssn:
+    with act.new_ssn_context(vmi) as ssn:
         act.run_selenium(vmi, ssn)
         out = ssn.read_nonblocking(internal_timeout=20)
         logger.info("Selenium log: %s.", str(out))
