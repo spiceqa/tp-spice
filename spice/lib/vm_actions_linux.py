@@ -329,23 +329,23 @@ def install_rpm(vmi, rpm):
     if rpm.endswith('.rpm'):
         pkg = os.path.split(rpm)[1]
         pkg = pkg[:-4]
-    cmd = ["rpm", "-q", "pkg"]
+    cmd = ["rpm", "-q", pkg]
     status, _ = act.rstatus(vmi, cmd)
     if status == 0:
         utils.info(vmi, "RPM %s is already installed.", pkg)
         return
     if utils.url_regex.match(rpm):
         utils.info(vmi, "Download RPM: %s.", rpm)
-        cmd = ["curl", "-s", "-O", rpm]
-        act.cmd(cmd, admin=True, timeout=500)
+        cmd = utils.Cmd("curl", "-s", "-O", rpm)
+        act.run(vmi, cmd, admin=True, timeout=500)
         rpm = os.path.split(rpm)[1]
-    act.cmd("yes | yum -y install %s" % rpm, admin=True, timeout=500)
+    act.run(vmi, "yes | yum -y install %s" % rpm, admin=True, timeout=500)
 
 
 @reg.add_action(req=[ios.ILinux], name="wait_for_prog")
 @deco.retry(8, exceptions=(aexpect.ShellCmdError,))
 def wait_for_prog(vmi, program):
-    cmd = ["pgrep", program]
+    cmd = ["pidof", program]
     out = act.run(vmi, cmd)
     pids = out.split()
     utils.info(vmi, "Found active %s with pids: %s.", program, str(pids))
