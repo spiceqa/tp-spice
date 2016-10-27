@@ -134,10 +134,10 @@ def run(vt_test, test_params, env):
     if cfg.make_rv_connect:
         act.x_active(vmi_c)
         act.x_active(vmi_g)
-        with act.new_ssn_context(vmi_c, name="Remote Viewer") as ssn:
-            act.rv_connect(vmi_c, ssn)
-            act.rv_chk_con(vmi_c)
-            is_connected = True
+        ssn = act.new_ssn(vmi_c) 
+        act.rv_connect(vmi_c, ssn)
+        act.rv_chk_con(vmi_c)
+        is_connected = True
     errors = 0
     logging.getLogger().setLevel(logging.DEBUG)
     try:

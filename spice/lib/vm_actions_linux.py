@@ -330,7 +330,7 @@ def install_rpm(vmi, rpm):
     if rpm.endswith('.rpm'):
         pkg = os.path.split(rpm)[1]
         pkg = pkg[:-4]
-    cmd = ["rpm", "-q", pkg]
+    cmd = utils.Cmd("rpm", "-q", pkg)
     status, _ = act.rstatus(vmi, cmd)
     if status == 0:
         utils.info(vmi, "RPM %s is already installed.", pkg)
@@ -346,7 +346,7 @@ def install_rpm(vmi, rpm):
 @reg.add_action(req=[ios.ILinux], name="wait_for_prog")
 @deco.retry(8, exceptions=(aexpect.ShellCmdError,))
 def wait_for_prog(vmi, program):
-    cmd = ["pidof", program]
+    cmd = utils.Cmd("pidof", program)
     out = act.run(vmi, cmd)
     pids = out.split()
     utils.info(vmi, "Found active %s with pids: %s.", program, str(pids))
