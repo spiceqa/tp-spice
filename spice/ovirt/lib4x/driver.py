@@ -317,8 +317,7 @@ class Remote(WebDriverExtension, webdriver.Remote):
 
 
 class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
-    """Currently this funciton does not have any use.
-   
+    """
     See content type at:
 
         ~/.mozilla/firefox/<profile_name>/mimeTypes.rdf
@@ -329,7 +328,7 @@ class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
         self.set_preference("browser.download.folderList",2)
         self.set_preference("browser.download.manager.showWhenStarting",False)
         self.set_preference("browser.download.dir", "~/")
-        self.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-virt-viewer")
+        #self.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-virt-viewer")
         self.set_preference("browser.helperApps.neverAsk.openFile", "application/x-virt-viewer")
 
 
@@ -373,6 +372,12 @@ class DriverFactory(object):
         -------
             Local or remote WebDriver instance.
         """
+
+        if browser_name == 'Firefox':
+            logger.info("Add Firefox profile to Selenium webdriver.")
+            fp = SpiceQEFirefoxProfile()
+            kwargs['browser_profile'] = fp
+
         if host and port:
             return cls.__get_remote_driver(
                 browser_name, host, port, desired_capabilities, **kwargs)

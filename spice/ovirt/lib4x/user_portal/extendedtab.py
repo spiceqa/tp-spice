@@ -13,6 +13,7 @@
 # See LICENSE for more details.
 
 import re
+import time
 import logging
 
 from selenium.webdriver.common import by
@@ -873,7 +874,7 @@ class VM(page_base.DynamicPageObject):
         """
         self._model.console_opts_btn.click()
         return vms_base.EditConsoleOptions(self.driver)
-    
+
     def console(self):
         """Invoke console for VM.
 
@@ -882,6 +883,7 @@ class VM(page_base.DynamicPageObject):
             Console Options dialog
         """
         self._model.console_btn.click()
+        time.sleep(3)  # Pause to save .vv file or auto-open it.
 
 
 class RunOnce(dialogs.OkCancelDlg):

@@ -48,14 +48,13 @@ def run(vt_test, test_params, env):
     test = stest.ClientTest(vt_test, test_params, env)
     vmi = test.vmi
     cfg = vmi.cfg
-    with act.new_ssn_context(vmi) as ssn:
+    with act.new_ssn_context(vmi, name='Selenium session') as ssn:
         act.run_selenium(vmi, ssn)
-        out = ssn.read_nonblocking(internal_timeout=20)
-        logger.info("Selenium log: %s.", str(out))
         vm_addr = test.vm.get_address()
         logger.info("VM addr: %s", vm_addr)
         act.turn_firewall(vmi, "no")
-        drv = driver.DriverFactory("Firefox", vm_addr, cfg.selenium_port)
+        drv = driver.DriverFactory(cfg.selenium_driver, vm_addr,
+                                   cfg.selenium_port)
         drv.maximize_window()
         login_page = user_login.UserLoginPage(drv)
         home_page = login_page.login_user(username=cfg.ovirt_user,

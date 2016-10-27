@@ -18,10 +18,11 @@
 
 import logging
 
+from virttest import asset
 from avocado.core import exceptions
 from autotest.client.shared import error
-from virttest import asset
 
+from spice.lib import act
 from spice.lib import stest
 
 from lib4x import driver
@@ -51,31 +52,32 @@ def run(vt_test, test_params, env):
 
     """
     test = stest.ClientTest(vt_test, test_params, env)
-    ssn = test.open_ssn(test.name)
-    test.cmd.run_selenium(ssn)
-    test.cmd.firefox_auto_open_vv()
-    client_vm_addr = test.vm.get_address()
-    logger.info("VM addr: %s", client_vm_addr)
-    test.assn.cmd("iptables -F")  # XXX
-    drv = driver.DriverFactory(cfg.selenium_driver,
-                               client_vm_addr,
-                               cfg.selenium_port)
-    drv.maximize_window()
-    login_page = user_login.UserLoginPage(drv)
-    home_page = login_page.login_user(username=cfg.ovirt_user,
-                                      password=cfg.ovirt_password,
-                                      domain=cfg.ovirt_profile,
-                                      autoconnect=False)
-    tab_controller = home_page.go_to_extended_tab()
-    vm = tab_controller.get_vm(name)
-    if not vm.is_up():
-        tab_controller.run_vm_and_wait_until_up(name)
-    console_options_dialog = vm.console_edit()
-    console_options_dialog.select_spice()
-    console.set_open_in_fullscreen(cfg.full_screen)
-    console_options_dialog.submit_and_wait_to_disappear()
-    vm.console()
-    vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
-    home_page.sign_out_user()
-    out = ssn.read_nonblocking()
-    logger.info("Selenium log: %s.", str(out))
+    vmi = test.vmi
+    cfg = vmi.cfg
+    with act.new_ssn_context(vmi, name='Selenium session') as ssn:
+        act.run_selenium(vmi, ssn)
+        vm_addr = test.vm.get_address()
+        logger.info("VM addr: %s", vm_addr)
+        act.turn_firewall(vmi, "no")
+        drv = driver.DriverFactory(cfg.selenium_driver,  # Browser name.
+                                   vm_addr,
+                                   cfg.selenium_port)
+        drv.maximize_window()
+        login_page = user_login.UserLoginPage(drv)
+        home_page = login_page.login_user(username=cfg.ovirt_user,
+                                          password=cfg.ovirt_password,
+                                          domain=cfg.ovirt_profile,
+                                          autoconnect=False)
+        tab_controller = home_page.go_to_extended_tab()
+        assert cfg.ovirt_vm_name
+        vm = tab_controller.get_vm(cfg.ovirt_vm_name)
+        if not vm.is_up:
+            tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name)
+        console_options_dialog = vm.console_edit()
+        console_options_dialog.select_spice()
+        console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
+        console_options_dialog.submit_and_wait_to_disappear(timeout=2)
+        vm.console()
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
+        home_page.sign_out_user()
+        drv.close()

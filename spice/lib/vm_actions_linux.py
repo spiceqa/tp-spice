@@ -1058,27 +1058,24 @@ def run_selenium(vmi, ssn):
     opts.append("-port")
     opts.append(vmi.cfg.selenium_port)
     opts.append("-trustAllSSLcertificates")
-    if vmi.cfg.selenium_driver == 'Firefox':
-        profile = vmi.cfg.firefox_profile
-        if profile:
-            cmd = utils.Cmd("firefox", "-CreateProfile", profile)
-            output = act.run(vmi, cmd)
-            output = re.findall(r'\'[^\']*\'', output)[1]
-            output = output.replace("'", '')
-            output = os.path.dirname(output)
-            vmi.firefox_profile_dir = output
-            utils.info(vmi, "Created a new FF profile at: %s", output)
-            # defs.append("-Dwebdriver.firefox.profile=%s" % profile)
     defs = " ".join(defs)
     opts = " ".join(opts)
     cmd = "java {} -jar {} {}".format(defs, dst_fname, opts)
     utils.info(vmi, "selenium cmd: %s", cmd)
     ssn.sendline(cmd)
+    # There should be a pause to start and running selenium server.
+    # So next log reading acts like a pause.
+    out = ssn.read_nonblocking(internal_timeout=20)
+    act.info(vmi, "Selenium start log:\n%s.", out)
 
 
 @reg.add_action(req=[ios.ILinux])
 def firefox_auto_open_vv(vmi):
     """Automatically open remote-viewer for proposed .vv file.
+
+    Doesn't work as expected. See:
+
+        https://github.com/SeleniumHQ/selenium/issues/3013
 
     See content type at:
 
@@ -1093,12 +1090,15 @@ def firefox_auto_open_vv(vmi):
     opts = []
     opts.append("browser.helperApps.neverAsk.saveToDisk")
     opts.append("browser.helperApps.neverAsk.openFile")
-    for o in opts:
-        utils.info(vmi, "Remove old value %s from Firefox profile: %s", o,
-                 user_js)
-        cmd = ["sed", "-i", "-e", "/%s/d" % o, user_js]
-        act.run(vmi, cmd)
-    line = ('pref("browser.helperApps.neverAsk.openFile",'
+    cmd = utils.Cmd('test', '-e', user_js)
+    status, _ = act.rstatus(vmi, cmd)
+    if status == 0:
+        for o in opts:
+            utils.info(vmi, "Remove old value %s from Firefox profile: %s", o,
+                    user_js)
+            cmd = utils.Cmd("sed", "-i", "-e", "/%s/d" % o, user_js)
+            act.run(vmi, cmd)
+    line = ('user_pref("browser.helperApps.neverAsk.openFile",'
             '"application/x-virt-viewer");')
     cmd1 = utils.Cmd("echo", line)
     cmd2 = utils.Cmd(user_js)
