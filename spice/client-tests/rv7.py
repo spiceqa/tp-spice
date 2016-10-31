@@ -714,7 +714,7 @@ class Application(object):
             self.app = self.get()
 
     @staticmethod
-    @retries.retries(2, exceptions(GeneralError,))
+    @retries.retries(2, exceptions=(GeneralError,))
     def get():
         pred = predicate.IsAnApplicationNamed('remote-viewer')
         apps = tree.root.findChildren(pred, recursive=False)
