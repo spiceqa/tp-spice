@@ -247,6 +247,11 @@ class Display(object):
         about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
         about.keyCombo('Esc')
 
+    def confirm_quit(self):
+        if self.app.isChild(roleName='alert', name='Question'):
+            n = self.app.child(roleName='alert', name='Question').button('OK')
+            do_click(n)
+
 
 class DisplayMouse(Display):
 
@@ -611,6 +616,7 @@ class DisplayWMKey(Display):
         assert not self.app.dead
         key = self.kmap['quit']
         self.wm_send_key(key)
+        self.confirm_quit()
         assert self.app.dead
 
 
@@ -708,6 +714,7 @@ class Application(object):
             self.app = self.get()
 
     @staticmethod
+    @retries.retries(2, exceptions(GeneralError,))
     def get():
         pred = predicate.IsAnApplicationNamed('remote-viewer')
         apps = tree.root.findChildren(pred, recursive=False)

@@ -58,7 +58,7 @@ class Helper(object):
         return {v:k for v,k in self.test.cfg.iteritems()}
 
     def get_x_var(self, var_name, vm_name):
-        var_val = act.get_x_var(self.test.vmi[vm_name], var_name)
+        var_val = act.get_x_var(self.test.vm_info[vm_name], var_name)
         return var_val
 
     def get_uri(self):
@@ -124,6 +124,7 @@ def run(vt_test, test_params, env):
     act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
     act.reset_gui(vmi_c)  # Activate accessibility
+    act.reset_gui(vmi_g)
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
     act.install_rpm(vmi_c, test.cfg_c.wmctrl_rpm)
@@ -132,7 +133,6 @@ def run(vt_test, test_params, env):
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
     if cfg.make_rv_connect:
-        act.x_active(vmi_c)
         act.x_active(vmi_g)
         ssn = act.new_ssn(vmi_c) 
         act.rv_connect(vmi_c, ssn)
