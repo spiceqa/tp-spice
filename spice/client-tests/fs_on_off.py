@@ -43,10 +43,16 @@ def run(helper):
         rv_app = rv.Application(method=cfg["method"])
         # Test assumes there is only one virtual display.
         assert rv_app.dsp_count() == 1
-        rv_app.dsp1.fullscreen_on()
-        helper.info("Fs is on.")
-        rv_app.dsp1.fullscreen_off()
-        helper.info("Fs is off.")
+        if rv_app.dsp1.is_fullscreen():
+            rv_app.dsp1.fullscreen_off()
+            helper.info("Fs is off.")
+            rv_app.dsp1.fullscreen_on()
+            helper.info("Fs is on.")
+        else:
+	    rv_app.dsp1.fullscreen_on()
+            helper.info("Fs is on.")
+            rv_app.dsp1.fullscreen_off()
+            helper.info("Fs is off.")
     except Exception as e:
         helper.info("Test failed with: %s.", repr(e))
         return 1
