@@ -59,9 +59,11 @@ def run(vt_test, test_params, env):
         vm_addr = test.vm.get_address()
         logger.info("VM addr: %s", vm_addr)
         act.turn_firewall(vmi, "no")
+        port = vmi.vm.get_port(int(cfg.selenium_port))
+        act.info(vmi, "Use port to connect to selenium: %s.", port)
         drv = driver.DriverFactory(cfg.selenium_driver,  # Browser name.
                                    vm_addr,
-                                   cfg.selenium_port)
+                                   port)
         drv.maximize_window()
         login_page = user_login.UserLoginPage(drv)
         home_page = login_page.login_user(username=cfg.ovirt_user,

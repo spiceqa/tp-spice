@@ -410,6 +410,9 @@ class DriverFactory(object):
         if desired_capabilities:
             capabilities.update(desired_capabilities)
 
+        if browser_name == 'Firefox':
+            capabilities['marionette'] = False
+
         return Remote(command_executor=command_executor,
                       desired_capabilities=capabilities,
                       **kwargs)
