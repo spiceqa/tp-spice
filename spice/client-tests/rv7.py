@@ -363,11 +363,11 @@ class DisplayMouse(Display):
         do_click(n)
         n = self.dsp.menu('Help').menuItem('About')
         do_click(n)
-        scroll_panes = about.findChildren(
-            predicate.GenericPredicate(roleName='scroll pane'))
-        # See scheme. Currently widgets tree has only one `text' element.
-        l = next(i for i in scroll_panes if i.isChild(roleName='text'))
-        return l.child(roleName='text').text
+        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        n = about.child(name="License", roleName="radio button")
+        do_click(n)
+        licence_txt = about.child(roleName='text')
+        return licence_txt.text
 
 
     def help_credits(self):
@@ -446,6 +446,7 @@ class DisplayAccessKey(Display):
     def_key_mapping = {
         'File' : '<Alt>f',
         'File|Quit' : 'q',
+        'File|Screenshot' : 's',
         'Help' : '<Alt>h',
         'Help|About' : 'a',
         'View' : '<Alt>v',
@@ -540,6 +541,17 @@ class DisplayAccessKey(Display):
         return filler.children[0].text
 
 
+    def screenshot(self, filename):
+        self.menu('File', ['File|Screenshot'])
+        file_chooser = self.app.child(roleName='file chooser')
+        file_chooser.childLabelled('Name:').text = filename
+        n = file_chooser.button('Save')
+        do_click(n)
+        if self.app.isChild(roleName='alert', name='Question'):
+            n = self.app.child(roleName='alert', name='Question').button('Replace')
+            do_click(n)
+
+
 class DisplayHotKey(Display):
 
     # See dogtail/rawinput.py keyNameAliases = {..}
@@ -571,6 +583,9 @@ class DisplayHotKey(Display):
 
     def app_quit(self):
         self.key_combo(self.kmap['quit'])
+        if self.app.isChild(roleName='alert', name='Question'):
+            n = self.app.child(roleName='alert', name='Question').button('OK')
+            do_click(n)
         assert self.app.dead
 
 
