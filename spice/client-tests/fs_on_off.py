@@ -49,7 +49,7 @@ def run(helper):
             rv_app.dsp1.fullscreen_on()
             helper.info("Fs is on.")
         else:
-	    rv_app.dsp1.fullscreen_on()
+            rv_app.dsp1.fullscreen_on()
             helper.info("Fs is on.")
             rv_app.dsp1.fullscreen_off()
             helper.info("Fs is off.")
