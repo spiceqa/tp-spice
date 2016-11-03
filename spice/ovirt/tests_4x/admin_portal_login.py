@@ -27,7 +27,7 @@ from spice.lib import stest
 from spice.lib import utils
 
 from lib4x import driver
-from lib4x.user_portal import user_login
+from lib4x.admin_portal import admin_login
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,8 @@ def run(vt_test, test_params, env):
                                    vm_addr,
                                    port)
         drv.maximize_window()
-        login_page = user_login.UserLoginPage(drv)
-        home_page = login_page.login_user(username=cfg.ovirt_user,
-                                        password=cfg.ovirt_password,
-                                        domain=cfg.ovirt_profile,
-                                        autoconnect=False)
-        home_page.sign_out_user()
+        login_page = admin_login.AdminLoginPage(drv)
+        home_page = login_page.login_user(username=cfg.ovirt_admin_user,
+                                          password=cfg.ovirt_admin_password,
+                                          domain='internal')
+        home_page.sign_out()

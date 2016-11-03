@@ -13,21 +13,39 @@
 # See LICENSE for more details.
 
 import time
+import logging
 
 #from raut.lib.selenium.ui.webadmin import pages
-
-import page
-import dialogs
-import element
-import exceptions
-import basictab
-import extendedtab
 from selenium.webdriver.common import by
+
+from .. import page_base
+from .. import dialogs
+from .. import elements
 
 TIME_HOME_PAGE = 45
 
+logger = logging.getLogger(__name__)
 
-class AdminHomePage(page.PageObject):
+
+class AdminHomePageModel(page_base.PageModel):
+    """Page model for homepage & adminportal main tab.
+    """
+    logged_user = elements.PageElement(by.By.ID, 'HeaderView_userName')
+    sign_out_link = elements.PageElement(by.By.ID, 'HeaderView_logoutLink')
+    data_centers_link = elements.PageElement(by.By.LINK_TEXT, 'Data Centers')
+    clusters_link = elements.PageElement(by.By.LINK_TEXT, 'Clusters')
+    hosts_link = elements.PageElement(by.By.LINK_TEXT, 'Hosts')
+    storage_link = elements.PageElement(by.By.LINK_TEXT, 'Storage')
+    disks_link = elements.PageElement(by.By.LINK_TEXT, 'Disks')
+    vms_link = elements.PageElement(by.By.LINK_TEXT, 'Virtual Machines')
+    pools_link = elements.PageElement(by.By.LINK_TEXT, 'Pools')
+    templates_link = elements.PageElement(by.By.LINK_TEXT, 'Templates')
+    users_link = elements.PageElement(by.By.LINK_TEXT, 'Users')
+    quota_link = elements.PageElement(by.By.LINK_TEXT, 'Quota')
+    events_link = elements.PageElement(by.By.LINK_TEXT, 'Events')
+
+
+class AdminHomePage(page_base.PageObject):
     """
     Page object for homepage and the main tab.
     """
@@ -45,7 +63,11 @@ class AdminHomePage(page.PageObject):
         """
         Sign out from RHEVM.
         """
+        # Lazy import - required to avoid circular import with loginpage module.
+        from . import admin_login
+        self._model.logged_user.click()
         self._model.sign_out_link.click()
+        return admin_login.AdminLoginPage(self.driver)
 
     def go_to_navigation_pane(self):
         """
@@ -93,21 +115,3 @@ class AdminHomePage(page.PageObject):
         """
         self._model.quota_link.click()
         return pages.quota.QuotaTabCtrl(self.driver)
-
-
-class AdminHomePageModel(page.PageModel):
-    """Page model for homepage & adminportal main tab.
-    """
-    logged_user = element.PageElement(by.By.ID, 'HeaderView_userName')
-    sign_out_link = element.PageElement(by.By.ID, 'HeaderView_logoutLink')
-    data_centers_link = element.PageElement(by.By.LINK_TEXT, 'Data Centers')
-    clusters_link = element.PageElement(by.By.LINK_TEXT, 'Clusters')
-    hosts_link = element.PageElement(by.By.LINK_TEXT, 'Hosts')
-    storage_link = element.PageElement(by.By.LINK_TEXT, 'Storage')
-    disks_link = element.PageElement(by.By.LINK_TEXT, 'Disks')
-    vms_link = element.PageElement(by.By.LINK_TEXT, 'Virtual Machines')
-    pools_link = element.PageElement(by.By.LINK_TEXT, 'Pools')
-    templates_link = element.PageElement(by.By.LINK_TEXT, 'Templates')
-    users_link = element.PageElement(by.By.LINK_TEXT, 'Users')
-    quota_link = element.PageElement(by.By.LINK_TEXT, 'Quota')
-    events_link = element.PageElement(by.By.LINK_TEXT, 'Events')
