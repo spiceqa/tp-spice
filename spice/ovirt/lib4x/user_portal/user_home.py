@@ -144,10 +144,8 @@ class UserHomePage(page_base.PageObject):
         """
         self._model.extended_tab.click()
         ext_tab = extendedtab.ExtendedTab(self.driver)
-        ext_tab.go_to_vms_tab()
-        # quick workaround for
+        return ext_tab
         # https://bugzilla.redhat.com/show_bug.cgi?id=1150581
-        return extendedtab.ExtendedTabCtrl(self.driver)
 
 
 class UserAboutDialog(dialogs.ModalDlg):

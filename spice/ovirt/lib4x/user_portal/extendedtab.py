@@ -107,7 +107,7 @@ class VMModel(page_base.TableRow):
     STATUS_BOOTING = 'Powering Up'
 
 
-class RunOnceModel(dialogs.OkCancelDlg):
+class RunOnceModel(dialogs.OkCancelDlgModel):
     """ Run once dialog """
     boot_options = elements.PageElement(
         by.By.CSS_SELECTOR, "#VmRunOncePopupWidget_generalBootOptionsPanel a")
@@ -190,21 +190,26 @@ class RunOnceModel(dialogs.OkCancelDlg):
     cancel_btn = elements.Button(by.By.ID, "VmRunOncePopupView_Cancel")
 
 
-class ChangeCDModel(dialogs.OkCancelDlg):
+class ChangeCDModel(dialogs.OkCancelDlgModel):
     """Change CD dialog """
-    pick_cd = elements.Select(by.By.ID, "VmChangeCDPopupWidget_isoImage")
-
-    ok_btn = elements.Button(by.By.ID, "VmChangeCDPopupView_OnChangeCD")
-    cancel_btn = elements.Button(by.By.ID, "VmChangeCDPopupView_Cancel")
+    pick_cd = elements.Select(
+        by.By.ID, "VmChangeCDPopupWidget_isoImage")
+    ok_btn = elements.Button(
+        by.By.ID, "VmChangeCDPopupView_OnChangeCD")
+    cancel_btn = elements.Button(
+        by.By.ID, "VmChangeCDPopupView_Cancel")
 
 
 class TemplateTabMenuBarModel(page_base.PageModel):
-    edit_btn = elements.Button(by.By.ID, "SideTabExtendedTemplateView_table_Edit")
-    remove_btn = elements.Button(by.By.ID, "SideTabExtendedTemplateView_table_Remove")
+    edit_btn = elements.Button(
+        by.By.ID, "SideTabExtendedTemplateView_table_Edit")
+    remove_btn = elements.Button(
+        by.By.ID, "SideTabExtendedTemplateView_table_Remove")
 
 
 class TemplateModel(page_base.TableRow):
-    """ Single template instance """
+    """Single template instance.
+    """
     _NAME_CELL_XPATH = (
         '//span[starts-with(@id,"SideTabExtendedTemplateView'
         '_table_content_name_row")]'
@@ -241,18 +246,22 @@ class VMsSubTabModel(page_base.PageModel):
 
 
 class VDisksTabModel(page_base.PageModel):
-    add_btn = elements.Button(by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_New')
-    edit_btn = elements.Button(by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_Edit')
-    remove_btn = elements.Button(by.By.ID,
-                             'SubTabExtendedVmVirtualDiskView_table_Remove')
-    activate_btn = elements.Button(by.By.ID,
-                               'SubTabExtendedVmVirtualDiskView_table_Plug')
+    add_btn = elements.Button(
+        by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_New')
+    edit_btn = elements.Button(
+        by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_Edit')
+    remove_btn = elements.Button(
+        by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_Remove')
+    activate_btn = elements.Button(
+        by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_Plug')
     deactivate_btn = elements.Button(
         by.By.ID, 'SubTabExtendedVmVirtualDiskView_table_Unplug')
-    disk_type_all = elements.Radio(by.By.XPATH, '(//input[@name="diskTypeView"])[1]')
+    disk_type_all = elements.Radio(
+        by.By.XPATH, '(//input[@name="diskTypeView"])[1]')
     disk_type_image = elements.Radio(
         by.By.XPATH, '(//input[@name="diskTypeView"])[2]')
-    disk_type_lun = elements.Radio(by.By.XPATH, '(//input[@name="diskTypeView"])[3]')
+    disk_type_lun = elements.Radio(
+        by.By.XPATH, '(//input[@name="diskTypeView"])[3]')
 
 
 class VDiskImgInstModel(page_base.TableRow):
@@ -279,25 +288,38 @@ class VDiskImgInstModel(page_base.TableRow):
     STATUS_OK = 'OK'
 
 
-class VDiskPopup(dialogs.OkCancelDlg):
-    ok_btn = elements.Button(by.By.ID, 'VmDiskPopupView_OnSave')
-    cancel_btn = elements.Button(by.By.ID, 'VmDiskPopupView_Cancel')
-    size = elements.TextInput(by.By.ID, 'VmDiskPopupWidget_size')
-    alias = elements.TextInput(by.By.ID, 'VmDiskPopupWidget_alias')
-    description = elements.TextInput(by.By.ID, 'VmDiskPopupWidget_description')
-    interface = elements.Select(by.By.ID, 'VmDiskPopupWidget_interface')
-    allocation_format = elements.Select(by.By.ID, 'VmDiskPopupWidget_volumeType')
-    data_center = elements.Select(by.By.ID, 'VmDiskPopupWidget_dataCenter')
-    storage_domain = elements.Select(by.By.ID, 'VmDiskPopupWidget_storageDomain')
-    wipe_chk = elements.Checkbox(by.By.ID, 'VmDiskPopupWidget_wipeAfterDelete')
-    is_bootable_chk = elements.Checkbox(by.By.ID, 'VmDiskPopupWidget_isBootable')
-    is_shareable_chk = elements.Checkbox(by.By.ID, 'VmDiskPopupWidget_isShareable')
+class VDiskPopup(dialogs.OkCancelDlgModel):
+    ok_btn = elements.Button(
+        by.By.ID, 'VmDiskPopupView_OnSave')
+    cancel_btn = elements.Button(
+        by.By.ID, 'VmDiskPopupView_Cancel')
+    size = elements.TextInput(
+        by.By.ID, 'VmDiskPopupWidget_size')
+    alias = elements.TextInput(
+        by.By.ID, 'VmDiskPopupWidget_alias')
+    description = elements.TextInput(
+        by.By.ID, 'VmDiskPopupWidget_description')
+    interface = elements.Select(
+        by.By.ID, 'VmDiskPopupWidget_interface')
+    allocation_format = elements.Select(
+        by.By.ID, 'VmDiskPopupWidget_volumeType')
+    data_center = elements.Select(
+        by.By.ID, 'VmDiskPopupWidget_dataCenter')
+    storage_domain = elements.Select(
+        by.By.ID, 'VmDiskPopupWidget_storageDomain')
+    wipe_chk = elements.Checkbox(
+        by.By.ID, 'VmDiskPopupWidget_wipeAfterDelete')
+    is_bootable_chk = elements.Checkbox(
+        by.By.ID, 'VmDiskPopupWidget_isBootable')
+    is_shareable_chk = elements.Checkbox(
+        by.By.ID, 'VmDiskPopupWidget_isShareable')
 
 
 class VDiskRemovePopup(dialogs.RemoveConfirmDlg):
-    remove_permanently_chk = elements.Checkbox(by.By.ID,
-                                           'RemoveConfirmationPopupView_latch')
-    ok_btn = elements.Button(by.By.ID, "RemoveConfirmationPopupView_OnRemoveDisk")
+    remove_permanently_chk = elements.Checkbox(
+        by.By.ID, "RemoveConfirmationPopupView_latch")
+    ok_btn = elements.Button(
+        by.By.ID, "RemoveConfirmationPopupView_OnRemoveDisk")
     cancel_btn = elements.Button(
         by.By.ID, "RemoveConfirmationPopupView_CancelRemoveDisk")
 
@@ -317,6 +339,7 @@ class ExtendedTab(page_base.PageObject):
     def go_to_vms_tab(self):
         """ Go to the 'Virtual Machines' tab. """
         self._model.vms_link.click()
+        return ExtendedTabCtrl(self.driver)  # Is absent in original rhevm-raut
 
     def go_to_templates_tab(self):
         """ Go to Templates tab """
@@ -563,6 +586,10 @@ class ExtendedTabCtrl(object):
         ------
         WaitTimeoutError
             Failure.
+
+        XXX
+        ---
+            Rewrite to use: support.WaitForPageObject
         """
         vm = self._get_vm_inst(name)
         timeout = timeout or self.VM_ACTION_TIMEOUT
@@ -693,9 +720,6 @@ class Template(page_base.DynamicPageObject):
         except common.exceptions.WebDriverException as ex:
             raise excepts.UserActionError(
                 "cannot select %s; reason: %s" % (self, ex))
-
-
-
 
 ###########
 

@@ -24,16 +24,21 @@ from autotest.client.shared import error
 
 from spice.lib import act
 from spice.lib import stest
-from spice.lib import utils
 
 from lib4x import driver
+from lib4x import vms_base
 from lib4x.admin_portal import admin_login
 
 logger = logging.getLogger(__name__)
 
 @error.context_aware
 def run(vt_test, test_params, env):
-    """Download SeleniumHQ server, and copy it to a client.
+    """Steps:
+
+        - Download SeleniumHQ server, and copy it to a client.
+        - Open ovirt portal.
+        - Login as an admin.
+        - Connect with remote-viewer to selected VM.
 
     Parameters
     ----------
@@ -52,18 +57,28 @@ def run(vt_test, test_params, env):
         act.run_selenium(vmi, ssn)
         vm_addr = test.vm.get_address()
         logger.info("VM addr: %s", vm_addr)
-        act.turn_firewall(vmi, "no")
+        act.turn_firewall(vmi, "no")  # XXX
         port = vmi.vm.get_port(int(cfg.selenium_port))
         act.info(vmi, "Use port to connect to selenium: %s.", port)
-        drv = driver.DriverFactory(cfg.selenium_driver,
+        drv = driver.DriverFactory(cfg.selenium_driver,  # Browser name.
                                    vm_addr,
                                    port)
-        drv.maximize_window()
-        login_page = admin_login.AdminLoginPage(drv)
-        home_page = login_page.login_user(username=cfg.ovirt_admin_user,
-                                          password=cfg.ovirt_admin_password,
-                                          domain='internal')
+        drv.maximize_window()   # Maximize web-browser window.
+        login_page = user_login.UserLoginPage(drv)
+        home_page = login_page.login_user(username=cfg.ovirt_user,
+                                          password=cfg.ovirt_password,
+                                          domain=cfg.ovirt_profile,
+                                          autoconnect=False)
+        tab_controller = home_page.go_to_vms_tab()
         assert cfg.ovirt_vm_name
+        vm = tab_controller.get_vm(cfg.ovirt_vm_name)
         if not vm.is_up:
             tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name)
-        home_page.sign_out()
+        console_options_dialog = vm.console_edit()
+        console_options_dialog.select_spice()
+        console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
+        console_options_dialog.submit_and_wait_to_disappear(timeout=2)
+        vm.console()
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
+        home_page.sign_out_user()
+        drv.close()

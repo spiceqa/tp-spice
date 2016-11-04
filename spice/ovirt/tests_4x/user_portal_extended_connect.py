@@ -70,6 +70,8 @@ def run(vt_test, test_params, env):
                                           password=cfg.ovirt_password,
                                           domain=cfg.ovirt_profile,
                                           autoconnect=False)
+        ext_tab = home_page.go_to_extended_tab()
+        ext_tab.go_to_vms_tab()
         tab_controller = home_page.go_to_extended_tab()
         assert cfg.ovirt_vm_name
         vm = tab_controller.get_vm(cfg.ovirt_vm_name)
