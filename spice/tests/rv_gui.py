@@ -124,7 +124,7 @@ def run(vt_test, test_params, env):
     act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
     act.reset_gui(vmi_c)  # Activate accessibility
-    act.reset_gui(vmi_g)
+    # act.reset_gui(vmi_g)
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
     act.install_rpm(vmi_c, test.cfg_c.wmctrl_rpm)

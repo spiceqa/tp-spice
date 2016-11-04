@@ -38,6 +38,9 @@ group.add_argument("-m", "--mouse", help="Use mouse.", action="store_const",
                    const="mouse", dest="method")
 group.add_argument("-w", "--windowmanager", help="Use window manager.",
                    action="store_const", const="wm_key", dest="method")
+parser.add_argument("-r", "--repeat", help="Repeat zooming.", default=0, 
+                   dest="repeat", type=int)
+parser.add_argument("-R", "--reset", help="Reset to normal size.", action="store_true")
 args = parser.parse_args()
 
 app = rv.Application(method=args.method)
@@ -46,13 +49,20 @@ assert app.dsp_count() == 1
 logger.info("Dislay #%s extents before %s zoom: %s", app.dsp1.num,
             args.direction, app.dsp1.dsp.extents)
 _, _, w1, h1 = app.dsp1.dsp.extents
-app.dsp1.zoom(args.direction)
+for i in range(args.repeat + 1):
+    app.dsp1.zoom(args.direction)
+if args.reset:
+    app.dsp1.zoom()
 _, _, w2, h2 = app.dsp1.dsp.extents
 logger.info("Dislay #%s extents after %s zoom: %s", app.dsp1.num,
             args.direction, app.dsp1.dsp.extents)
-if args.direction == "in":
+if args.direction == "in" and not args.reset:
     assert w2 >= w1
     assert h2 >= h1
-elif args.direction == "in":
+elif args.direction == "out" and not args.reset:
     assert w2 <= w1
     assert h2 <= h1
+elif args.direction == "normal" or args.reset:
+    assert w2 == w1
+    assert h2 == h1
+
