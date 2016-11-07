@@ -32,19 +32,32 @@ logger = logging.getLogger(__name__)
 class AdminHomePageModel(page_base.PageModel):
     """Page model for homepage & adminportal main tab.
     """
-    logged_user = elements.PageElement(by.By.ID, 'HeaderView_userName')
-    sign_out_link = elements.PageElement(by.By.ID, 'HeaderView_logoutLink')
-    data_centers_link = elements.PageElement(by.By.LINK_TEXT, 'Data Centers')
-    clusters_link = elements.PageElement(by.By.LINK_TEXT, 'Clusters')
-    hosts_link = elements.PageElement(by.By.LINK_TEXT, 'Hosts')
-    storage_link = elements.PageElement(by.By.LINK_TEXT, 'Storage')
-    disks_link = elements.PageElement(by.By.LINK_TEXT, 'Disks')
-    vms_link = elements.PageElement(by.By.LINK_TEXT, 'Virtual Machines')
-    pools_link = elements.PageElement(by.By.LINK_TEXT, 'Pools')
-    templates_link = elements.PageElement(by.By.LINK_TEXT, 'Templates')
-    users_link = elements.PageElement(by.By.LINK_TEXT, 'Users')
-    quota_link = elements.PageElement(by.By.LINK_TEXT, 'Quota')
-    events_link = elements.PageElement(by.By.LINK_TEXT, 'Events')
+    logged_user = elements.PageElement(
+        by.By.ID, 'HeaderView_userName')
+    sign_out_link = elements.PageElement(
+        by.By.ID, 'HeaderView_logoutLink')
+    data_centers_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Data Centers')
+    clusters_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Clusters')
+    hosts_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Hosts')
+    storage_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Storage')
+    disks_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Disks')
+    vms_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Virtual Machines')
+    pools_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Pools')
+    templates_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Templates')
+    users_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Users')
+    quota_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Quota')
+    events_link = elements.PageElement(
+        by.By.LINK_TEXT, 'Events')
 
 
 class AdminHomePage(page_base.PageObject):
@@ -79,41 +92,42 @@ class AdminHomePage(page_base.PageObject):
         return pages.navigation.NavigationPaneCtrl(self.driver)
 
     def go_to_data_centers_tab(self):
-        """
-        Select Data Centers tab.
-        Return: DataCentersController instance.
+        """Select Data Centers tab.
+
+        Returns
+        -------
+            DataCentersController instance.
         """
         self._model.data_centers_link.click()
         return pages.datacenters.DataCentersController(self.driver)
 
     def go_to_clusters_tab(self):
-        """ Select Clusters tab. """
+        """Select Clusters tab. """
         self._model.clusters_link.click()
 
     def go_to_hosts_tab(self):
-        """ Select Hosts tab. """
+        """Select Hosts tab. """
         self._model.hosts_link.click()
 
     def go_to_storage_tab(self):
-        """ Select Storage tab. """
+        """Select Storage tab. """
         self._model.storage_link.click()
 
     def go_to_disks_tab(self):
-        """ Select Disks tab """
+        """Select Disks tab """
         self._model.disks_link.click()
 
     def go_to_vms_tab(self):
-        """ Select the Virtual Machines tab """
+        """Select the Virtual Machines tab """
         self._model.vms_link.click()
         return VmsTabCtrl(self.driver)  # Is absent in original rhevm-raut
 
     def go_to_templates_tab(self):
-        """ Select Templates tab """
+        """Select Templates tab """
         self._model.templates_link.click()
 
     def go_to_quota_tab(self):
-        """
-        Select Quota tab
+        """Select Quota tab
         Return: QuotaTabCtrl instance.
         """
         self._model.quota_link.click()
@@ -163,6 +177,26 @@ class VmsTabCtrl(object):
         vm = self._get_vm_inst(name)
         vm.select()
         return self.menu_bar.run()
+
+
+    def run_vm_and_wait_until_up(self, name, timeout=None):
+        """Run VM and wait until is up.
+
+        Parameters
+        ----------
+        name
+            VM name.
+        timeout
+            Timeout in [s] to wait.
+
+        Returns
+        -------
+        bool
+            True - success.
+        """
+        self.run_vm(name)
+        return self.wait_until_vm_is_up(name, timeout)
+
 
     def suspend_vm(self, name):
         """Suspend VM.
@@ -232,7 +266,56 @@ class VmsTabCtrl(object):
         """
         vm = self._get_vm_inst(name)
         vm.select()
-        support.WaitForPageObject(vm, timeout).status('is_suspended')
+        support.WaitForPageObject(vm, timeout).status('is_down')
+
+
+    def get_vm(self, name):
+        """Return VM object.
+
+        Parameters
+        ----------
+        name
+            VM name.
+
+        Returns
+        -------
+        VMDetailsView
+            Instance - success.
+        """
+        return self._get_vm_inst(name)
+
+
+    def console(self, name):
+        """Invoke console for VM.
+
+        Parameters
+        ----------
+        name
+            VM name.
+
+        """
+        vm = self._get_vm_inst(name)
+        vm.select()
+        confirm_dlg = self.menu_bar.console()
+
+
+    def console_edit(self, name):
+        """Invoke console optiosn for VM.
+
+        Parameters
+        ----------
+        name
+            VM name.
+
+        Returns
+        -------
+        VMDetailsView
+            Instance - success.
+        """
+        vm = self._get_vm_inst(name)
+        vm.select()
+        dlg = self.menu_bar.console_edit()
+        return dlg
 
 #
 # Virtual Machines tab.
@@ -246,21 +329,35 @@ class VmsTabCtrl(object):
 class VMsTabMenuBarModel(page_base.PageModel):
     """ Virtual Machines tab - menu bar. """
     new_vm_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_NewVm')
+        by.By.ID, 'MainTabVirtualMachineView_table_NewVm')
     edit_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_Edit')
+        by.By.ID, 'MainTabVirtualMachineView_table_Edit')
     remove_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_Remove')
+        by.By.ID, 'MainTabVirtualMachineView_table_Remove')
     clone_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_CloneVm')
+        by.By.ID, 'MainTabVirtualMachineView_table_CloneVm')
     run_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_Run')
+        by.By.ID, 'MainTabVirtualMachineView_table_Run')
     suspend_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_Pause')
+        by.By.ID, 'MainTabVirtualMachineView_table_Pause')
     shutdown_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_Shutdown')
+        by.By.ID, 'MainTabVirtualMachineView_table_Shutdown')
     make_template_btn = elements.Button(
-        By.ID, 'MainTabVirtualMachineView_table_NewTemplate')
+        by.By.ID, 'MainTabVirtualMachineView_table_NewTemplate')
+    # SpiceQE:
+    reboot_btn = elements.Button(
+        by.By.ID, 'MainTabVirtualMachineView_table_Reboot')
+    migrate_btn = elements.Button(
+        by.By.ID, 'MainTabVirtualMachineView_table_Migrate')
+    # Activate console.
+    console_btn = elements.Button(
+        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[1]')
+    # Navigate to console options.
+    console_opts = elements.Button(
+        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[2]')
+    # "Console Options".
+    console_opts_btn = elements.Button(
+        by.By.CLASS_NAME , 'actionPanelPopupMenuBar')
 
 
 class VMModel(page_base.TableRow):
@@ -268,20 +365,20 @@ class VMModel(page_base.TableRow):
     _NAME_CELL_XPATH = ('//div[starts-with(@id,'
                         '"MainTabVirtualMachineView_table_content_col2")]'
                         '[text() = "%s"]')
-    name = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col2_row%d')
-    host = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col4_row%d')
-    ip_address = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col5_row%d')
-    cluster = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col7_row%d')
-    data_center = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col8_row%d')
-    display = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col12_row%d')
-    status = DynamicPageElement(
-        By.ID, 'MainTabVirtualMachineView_table_content_col13_row%d')
+    name = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col2_row%d')
+    host = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col4_row%d')
+    ip_address = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col5_row%d')
+    cluster = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col7_row%d')
+    data_center = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col8_row%d')
+    display = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col12_row%d')
+    status = elements.DynamicPageElement(
+        by.By.ID, 'MainTabVirtualMachineView_table_content_col13_row%d')
     # static strings
     STATUS_UP = 'Up'
     STATUS_SUSPENDED = 'Suspended'
@@ -291,9 +388,9 @@ class VMModel(page_base.TableRow):
 class VMShutdownConfirmDlgModel(dialogs.OkCancelDlgModel):
     """ Shutdown VM confirmation dialog. """
     ok_btn = elements.Button(
-        By.ID, 'RemoveConfirmationPopupView_OnShutdown')
+        by.By.ID, 'RemoveConfirmationPopupView_OnShutdown')
     cancel_btn = elements.Button(
-        By.ID, 'RemoveConfirmationPopupView_Cancel')
+        by.By.ID, 'RemoveConfirmationPopupView_Cancel')
 
 
 TABLE_ROW = 10
@@ -328,13 +425,13 @@ class VM(page_base.DynamicPageObject):
         """ Return whether VM is Suspended. """
         return self.status == self._model.STATUS_SUSPENDED
 
-    # def select(self):
-    #     """ Select the VM.
+    def select(self):
+        """ Select the VM.
 
-    #     Return: `VMsSubTab` instance
-    #     """
-    #     self._model.name.click()
-    #     return vms_subtab.VMsSubTab(self.driver)
+        Return: `VMsSubTab` instance
+        """
+        self._model.name.click()
+    #     return vms_subtab.VMsSubTab(self.driver)  # XXX TODO
 
 
 class VMShutdownConfirmDlg(dialogs.OkCancelDlg):
@@ -343,7 +440,6 @@ class VMShutdownConfirmDlg(dialogs.OkCancelDlg):
     _label = 'Shut down Virtual Machine(s) dialog'
 
 
-# XXX: add here console button!
 class VMsTabMenuBar(page_base.PageObject):
     """ Virtual Machines tab - menu bar """
     _model = VMsTabMenuBarModel
@@ -409,6 +505,27 @@ class VMsTabMenuBar(page_base.PageObject):
         """
         self._model.make_template_btn.click()
         return vms_base.NewTemplateDlg(self.driver)
+
+    def console_edit(self):
+        """Edit console protocol of VM
+
+        Returns
+        -------
+            Console Options dialog
+        """
+        self._model.console_opts.click()
+        self._model.console_opts_btn.click()
+        return vms_base.EditConsoleOptions(self.driver)
+
+    def console(self):
+        """Invoke console for VM.
+
+        Returns
+        -------
+            Console Options dialog
+        """
+        self._model.console_btn.click()
+        time.sleep(3)  # Pause to save .vv file or auto-open it.
 
 # VMS_subtab
 # from raut.lib.selenium.ui.webadmin.pages.subtabs import vms as vms_subtab

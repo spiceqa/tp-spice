@@ -64,21 +64,21 @@ def run(vt_test, test_params, env):
                                    vm_addr,
                                    port)
         drv.maximize_window()   # Maximize web-browser window.
-        login_page = user_login.UserLoginPage(drv)
-        home_page = login_page.login_user(username=cfg.ovirt_user,
-                                          password=cfg.ovirt_password,
-                                          domain=cfg.ovirt_profile,
-                                          autoconnect=False)
+        login_page = admin_login.AdminLoginPage(drv)
+        home_page = login_page.login_user(username=cfg.ovirt_admin_user,
+                                          password=cfg.ovirt_admin_password,
+                                          domain='internal')
         tab_controller = home_page.go_to_vms_tab()
-        assert cfg.ovirt_vm_name
-        vm = tab_controller.get_vm(cfg.ovirt_vm_name)
+        vm_name = cfg.ovirt_vm_name
+        assert vm_name
+        vm = tab_controller.get_vm(vm_name)
         if not vm.is_up:
-            tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name)
-        console_options_dialog = vm.console_edit()
+            tab_controller.run_vm_and_wait_until_up(vm_name, timeout=30)
+        console_options_dialog = tab_controller.console_edit(vm_name)
         console_options_dialog.select_spice()
         console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
         console_options_dialog.submit_and_wait_to_disappear(timeout=2)
-        vm.console()
+        tab_controller.console(vm_name)
         vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
-        home_page.sign_out_user()
+        home_page.sign_out()
         drv.close()
