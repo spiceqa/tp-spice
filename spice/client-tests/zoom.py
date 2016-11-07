@@ -21,6 +21,7 @@ from distutils import util
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import rv
 import argparse
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -46,6 +47,8 @@ args = parser.parse_args()
 app = rv.Application(method=args.method)
 # Test assumes there is only one virtual display.
 assert app.dsp_count() == 1
+app.dsp1.key_combo('<Super_L>Down')
+time.sleep(1)
 logger.info("Dislay #%s extents before %s zoom: %s", app.dsp1.num,
             args.direction, app.dsp1.dsp.extents)
 _, _, w1, h1 = app.dsp1.dsp.extents
