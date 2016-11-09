@@ -19,7 +19,7 @@ will take the resolution of the client.
 
 import logging
 from avocado.core import exceptions
-from spice.lib import rv_ssn
+from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils
 
@@ -44,14 +44,15 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
-    res_target = "1920x1080"
+    res_target = "1600x1200"
     res_reset = "640x480"
     act.set_resolution(test.vmi_c, res_target)
     act.set_resolution(test.vmi_g, res_reset)
-    ssn = test.open_ssn(test.name_c)
-    rv_ssn.connect(test, ssn)
-    res_g = act.get_display_resolution(test.vmi_g)[0]
-    res_c = act.get_display_resolution(test.vmi_c)[0]
+    with act.new_ssn_context(test.vmi_c, name="Remote Viewer") as ssn:
+        act.rv_connect(test.vmi_c, ssn)
+        act.rv_chk_con(test.vmi_c)
+        res_g = act.get_display_resolution(test.vmi_g)[0]
+        res_c = act.get_display_resolution(test.vmi_c)[0]
     logger.info("Target: %s, client: %s, guest: %s.", res_target, res_c, res_g)
     err_info = "Guest res should have adjusted to client, but it hasn't."
     assert res_target == res_c == res_g, err_info
