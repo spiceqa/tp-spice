@@ -269,7 +269,7 @@ def gen_vv_file(vmi):
     rv_file = open(fpath, 'w')
     rv_file.write("[virt-viewer]\n")
     rv_file.write("type=%s\n" % cfg.display)
-    rv_file.write("host=%s\n" % utils_net.get_host_ip_address(cfg))
+    rv_file.write("host=%s\n" % utils.get_host_ip(test))
     rv_file.write("port=%s\n" % test.kvm_g.spice_port)
     if cfg.ticket_send:
         rv_file.write("password=%s\n" % cfg.ticket_send)

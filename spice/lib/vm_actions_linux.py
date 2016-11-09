@@ -435,7 +435,7 @@ def deploy_epel_repo(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
-def set_resolution(vmi, res, display="qxl-0"):
+def set_resolution(vmi, res, display=None):
     """Sets resolution of qxl device on a VM.
 
     Parameters
@@ -446,7 +446,10 @@ def set_resolution(vmi, res, display="qxl-0"):
         Target display.
 
     """
-    utils.info(vmi, "Seeting resolution to %s.", res)
+
+    if not display:
+        display = act.get_connected_displays(vmi)[0]
+    utils.info(vmi, "Setting resolution to %s.", res)
     cmd = utils.Cmd("xrandr", "--output", display, "--mode", res)
     act.run(vmi, cmd)
 
