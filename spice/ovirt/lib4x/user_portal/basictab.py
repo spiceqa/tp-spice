@@ -31,7 +31,7 @@ TIMEOUT_MAIN_TAB = 30
 TIMEOUT_TABLE_ROW = 10
 
 
-class VMInstModel(page_base.TableRow):
+class VMInstModel(page_base.TableRowModel):
     """VM instance model.
     """
     _ROW_IDX_RE = re.compile(r'.*BasicListView_vm(?P<row_idx>\d+)_name$')
@@ -66,7 +66,7 @@ class VMDetailsModel(page_base.PageModel):
         by.By.ID, 'MainTabBasicDetailsView_editProtocolLink')
 
 
-class VDiskInstModel(page_base.TableRow):
+class VDiskInstModel(page_base.TableRowModel):
     """VDisk instance model.
     """
     _ROW_IDX_RE = re.compile(

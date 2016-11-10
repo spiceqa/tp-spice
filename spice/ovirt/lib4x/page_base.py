@@ -396,7 +396,8 @@ class DynamicPageModel(PageModelBase):
         raise NotImplementedError("Abstract property not implemented.")
 
 
-class TableRow(DynamicPageModel):
+
+class TableRowModel(DynamicPageModel):
     """Dynamic page model describing a single table row in data grid.
 
     Note
@@ -409,7 +410,7 @@ class TableRow(DynamicPageModel):
     Examples
     --------
 
-      class VMInstance(TableRow):
+      class VMInstanceModel(TableRowModel):
           _NAME_CELL_XPATH = ('//div[starts-with(@id,'
                              '"MainTabVirtualMachineView_table_content_col2")]'
                              '[text()="%s"]')
@@ -431,7 +432,7 @@ class TableRow(DynamicPageModel):
         ValueError
             _NAME_CELL_XPATH value not defined.
         """
-        super(TableRow, self).__init__(*args, **kwargs)
+        super(TableRowModel, self).__init__(*args, **kwargs)
         if not self._NAME_CELL_XPATH:
             raise ValueError("%s._NAME_CELL_XPATH value not defined."
                              % self.__class__.__name__)

@@ -29,9 +29,9 @@ from .. import dialogs
 
 logger = logging.getLogger(__name__)
 
+
 TIMEOUT_MAIN_TAB = 30
 TIMEOUT_TABLE_ROW = 10
-
 
 
 class SideTabModel(page_base.PageModel):
@@ -58,7 +58,7 @@ class VMsTabMenuBarModel(page_base.PageModel):
         by.By.ID, 'SideTabExtendedVirtualMachineView_table_NewTemplate')
 
 
-class VMModel(page_base.TableRow):
+class VMModel(page_base.TableRowModel):
     """ A single VM instance. """
     _NAME_CELL_XPATH = (
         '//span[starts-with(@id,'
@@ -207,7 +207,7 @@ class TemplateTabMenuBarModel(page_base.PageModel):
         by.By.ID, "SideTabExtendedTemplateView_table_Remove")
 
 
-class TemplateModel(page_base.TableRow):
+class TemplateModel(page_base.TableRowModel):
     """Single template instance.
     """
     _NAME_CELL_XPATH = (
@@ -264,7 +264,7 @@ class VDisksTabModel(page_base.PageModel):
         by.By.XPATH, '(//input[@name="diskTypeView"])[3]')
 
 
-class VDiskImgInstModel(page_base.TableRow):
+class VDiskImgInstModel(page_base.TableRowModel):
     _NAME_CELL_XPATH = (
         '//div[starts-with(@id, '
         '"SubTabExtendedVmVirtualDiskView_table_content_col1")]'
@@ -668,8 +668,61 @@ class ExtendedTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
+    def get_vms_names(self):
+        marker = '//span[starts-with(@id, "SideTabExtendedVirtualMachineView_table_content_col2_row")]'
+        vms = self.driver.find_elements(by.By.XPATH, marker)
+        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        return set(vms_names)
 
-##
+    def _mk_pool_regex(self, pool_name):
+        if '?' in pool_name:
+            regex = pool_name.replace('?', '\d')  # Matches any decimal digit.
+        else:
+            regex = pool_name + '\d'
+        regex = regex + '$'
+        logger.info("Use pool_name: %s, use regex: %s.", pool_name, regex)
+        return regex
+
+    def get_vm_from_pool(self, pool_name):
+        regex = self._mk_pool_regex(pool_name)
+        vms = self.get_vms_names()
+        for vm_name in sorted(vms):
+            if re.match(regex, vm_name):
+                vm = VM(self.driver, name=vm_name)
+                if vm.is_up or vm.is_booting:
+                    logger.info("Found active VM from pool %s: %s.",
+                                pool_name,
+                                vm_name)
+                    return vm
+        logger.info("Did not found active vm from pool: %s. Start a new one.",
+                    pool_name)
+        return self.start_vm_from_pool(self, pool_name)
+
+    def start_vm_from_pool(self, pool_name):
+        vms_before = self.get_vms_names()
+        if pool_name not in vms_before:
+            msg = "No VMS pool with name: %s." % pool_name
+            raise Exception(msg)
+        self.run_vm(pool_name)
+        # Some dialog could appier
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
+        retries_left = 10
+        regex = self._mk_pool_regex(pool_name)
+        while retries_left:
+            retries_left -= 1
+            vms_after = self.get_vms_names()
+            new_vms = vms_after - vms_before
+            if not new_vms:
+                time.sleep(1)
+                continue
+            for vm_name in sorted(new_vms):
+                if re.match(regex, vm_name):
+                    vm = VM(self.driver, name=vm_name)
+                    if vm.is_up or vm.is_booting:
+                        logger.info("Found a new active VM from pool %s: %s.",
+                                    pool_name, vm_name)
+                    return vm
+
 
 class TemplateTabMenuBar(page_base.PageObject):
     """ Templates menu bar page object """
@@ -850,7 +903,9 @@ class VM(page_base.DynamicPageObject):
 
         Throws: UserActionError - cannot run VM
         """
-        if self.is_suspended or self.is_down:
+        if self.is_suspended or \
+                self.is_down or \
+                self.status == '':  # VMS pool case (doesn't have status)
             self._model.run_btn.click()
         else:
             raise excepts.UserActionError(
