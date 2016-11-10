@@ -124,8 +124,8 @@ Start a job
 
 #. On selected Beaker system will be installed choosen OS, you can SSH and run desired test cases
 
-Remarks:
---------
+Remark in the case of host bridge usage:
+----------------------------------------
 
  * If you want to connect by remote-viewer to the client VM or guest VM using bridge virbr0, you must create new route table:
    ::
