@@ -89,19 +89,25 @@ qcow2 VM guest image is then stored in ~/avocado/data/avocado-vt/images/
 
  * Go to http://jenkins.spice.brq.redhat.com/
 
+ * Select `Custom test run` and then `Build with Parameters` from left column menu.
+
+ * Fill in form and while selecting use-install radio-button option
+
+ * If desired, copy newly created qcow2 image to our nfs server (10.43.73.3:/nfs/iso/avocado/templates/) and make symlink of guest VM image.
+
 *****************************
 Beaker initialization and run
 *****************************
 
 #. Login to Beaker (http://beaker.engineering.redhat.com/).
 
-#. Configure your Beaker account to work with Jenkins (http://jenkins.spice.brq.redhat.com/).
+#. Configure your Beaker account to work with `Jenkins` (http://jenkins.spice.brq.redhat.com/).
 
    * Go to User preferences -> SSH Public Keys and upload your id_rsa ssh public key, store your ssh private key to safe place and do not forget its password
 
-   * Add auto/jenkins.spice.brq.redhat.com to Submission delegates in User preferences
+   * Add `auto/jenkins.spice.brq.redhat.com` to Submission delegates in User preferences
 
-   * To receive email for auto/jenkins.spice.brq.redhat.com subscribe yourself at: spice-qe-auto. Admin interface for mail list is: admin for spice-qe-auto (password is well know, starts with: fo0m4n.....)
+   * To receive email for auto/jenkins.spice.brq.redhat.com subscribe yourself at: `spice-qe-auto`. Admin interface for mail list is: admin for spice-qe-auto (password is well know, starts with: fo0m4n.....)
 
 Start a job
 ===========
@@ -112,10 +118,25 @@ Start a job
 
 #. Fill in form
 
-   * Qcow2 images are stored on 10.34.73.3 server in the path nfs/iso/avocado/templates/. You can choose from them or create your own image by following `Make guest VM image`_
+   * Qcow2 images are stored on 10.34.73.3 server in the path nfs/iso/avocado/templates/. You can choose from them or create your own image by following `Make guest VM image`_ 
+
+   * If image of desired guest/client VM already exists, choose `use-template` from radio-button menu. Then run ``# avocado run --vt-type  spice -- use-template`` on beaker machine.
 
 #. On selected Beaker system will be installed choosen OS, you can SSH and run desired test cases
 
+Remarks:
+--------
+
+ * If you want to connect by remote-viewer to the client VM or guest VM using bridge virbr0, you must create new route table:
+   ::
+
+    # cat /etc/iproute2/rt_tables << EOF
+    $any_number my
+    EOF
+    # ip r add default via 10.34.72.254 table my
+    # ip rule add from $virbr0:inet table my
+
+  , where ``$virbr0:inet`` is variable for virtual bridge IP address and ``$any_number`` stands for any unused number you like
 
 First look
 ==========
@@ -139,4 +160,3 @@ Directories
 TP-Spice related directories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Directory /mnt/tests/spice/qe-tests/avocado-data/avocado-vt/backends/spice/ and its subdirectories are create by ``avocado vt-bootstrap --vt-type spice`` command
-
