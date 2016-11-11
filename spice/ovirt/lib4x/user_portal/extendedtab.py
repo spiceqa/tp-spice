@@ -104,7 +104,7 @@ class VMModel(page_base.TableRowModel):
     STATUS_DOWN = 'Down'
     STATUS_SUSPENDED = 'Suspended'
     STATUS_PAUSED = 'Paused'
-    STATUS_BOOTING = 'Powering Up'
+    STATUS_BOOTING = 'PoweringUp'
 
 
 class RunOnceModel(dialogs.OkCancelDlgModel):
@@ -348,6 +348,8 @@ class ExtendedTab(page_base.PageObject):
 
 class ExtendedTabCtrl(object):
 
+    VM_ACTION_TIMEOUT = 120
+
     def __init__(self, driver):
         """
 
@@ -512,6 +514,22 @@ class ExtendedTabCtrl(object):
         vm = self._get_vm_inst(name)
         return vm.shutdown()
 
+
+    def power_off(self, name):
+        """Power off VM.
+
+        Parameters
+        ----------
+        name
+            VM name.
+
+        Returns
+        -------
+            True - success.
+        """
+        vm = self._get_vm_inst(name)
+        return vm.power_off()
+
     def shutdown_vm_and_wait_until_down(self, name, timeout=None):
         """Shutdown VM and wait until is down.
 
@@ -573,7 +591,7 @@ class ExtendedTabCtrl(object):
         name
             VM name
         status_prop : str
-            Name of the status property, e.g. 'is_up'.
+            Name of the status property, e.g. 'vm.is_up' -> 'is_up'
         timeout
             Timeout in [s] to wait.
 
@@ -587,20 +605,18 @@ class ExtendedTabCtrl(object):
         WaitTimeoutError
             Failure.
 
-        XXX
-        ---
-            Rewrite to use: support.WaitForPageObject
         """
         vm = self._get_vm_inst(name)
         timeout = timeout or self.VM_ACTION_TIMEOUT
         try:
-            return support.WebDriverWait(vm, timeout).until(
-                lambda vm: getattr(vm, status_prop))
+            w = support.WaitForPageObject(vm, timeout)
+            w.status(status_prop)
         except common.exceptions.TimeoutException:
-            raise execpts.WaitTimeoutError("%s - status is '%s'"
-                                                 % (vm, vm.status))
+            prop_val = getattr(vm, status_prop)
+            msg = "%s.%s is: %s" % (vm.name, status_prop, attr_val)
+            raise excepts.WaitTimeoutError(msg)
 
-    def wait_until_vm_is_up(self, name, timeout):
+    def wait_until_vm_is_up(self, name, timeout=None):
         """Wait until VM is up.
 
         Parameters
@@ -651,7 +667,7 @@ class ExtendedTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_down', timeout)
 
-    def wait_until_vm_starts_booting(self, name, timeout):
+    def wait_until_vm_starts_booting(self, name, timeout=None):
         """Wait until VM starts powering up.
 
         Parameters
@@ -674,17 +690,9 @@ class ExtendedTabCtrl(object):
         vms_names = map(lambda x : getattr(x, 'text'), vms)
         return set(vms_names)
 
-    def _mk_pool_regex(self, pool_name):
-        if '?' in pool_name:
-            regex = pool_name.replace('?', '\d')  # Matches any decimal digit.
-        else:
-            regex = pool_name + '\d'
-        regex = regex + '$'
-        logger.info("Use pool_name: %s, use regex: %s.", pool_name, regex)
-        return regex
 
     def get_vm_from_pool(self, pool_name):
-        regex = self._mk_pool_regex(pool_name)
+        regex = vms_base.mk_pool_regex(pool_name)
         vms = self.get_vms_names()
         for vm_name in sorted(vms):
             if re.match(regex, vm_name):
@@ -705,9 +713,9 @@ class ExtendedTabCtrl(object):
             raise Exception(msg)
         self.run_vm(pool_name)
         # Some dialog could appier
-        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(self.driver)
         retries_left = 10
-        regex = self._mk_pool_regex(pool_name)
+        regex = vms_base.mk_pool_regex(pool_name)
         while retries_left:
             retries_left -= 1
             vms_after = self.get_vms_names()

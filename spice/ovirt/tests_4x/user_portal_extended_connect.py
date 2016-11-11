@@ -79,15 +79,18 @@ def run(vt_test, test_params, env):
             vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)
             shutdown_vm = True
         if not vm.is_up:
-            vms_tab.run_vm_and_wait_until_up(vm.name)
+            logger.info("Up VM: %s.", vm.name)
+            vms_tab.run_vm(vm.name)
+            vms_tab.wait_until_vm_starts_booting(vm.name)
         console_options_dialog = vm.console_edit()
         console_options_dialog.select_spice()
         console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
         console_options_dialog.submit_and_wait_to_disappear(timeout=2)
+        vms_tab.wait_until_vm_is_up(vm.name)
         vm.console()
         vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
-        logging.info("Remote viewer is supposed now connected.")
+        logging.info("remote-viewer is supposed now connected.")
         if shutdown_vm:
-            vms_tab.shutdown_vm_and_wait_until_down(vm.name)
+            vms_tab.power_off(vm.name)
         home_page.sign_out_user()
         drv.close()

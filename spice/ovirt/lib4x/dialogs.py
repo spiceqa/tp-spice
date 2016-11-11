@@ -15,6 +15,7 @@
 import logging
 
 from selenium.webdriver.common import by
+from selenium.webdriver.support import ui
 
 import page_base
 import support
@@ -61,7 +62,7 @@ class ModalDlg(page_base.PageObject):
         timeout
             Timeout in seconds.
         """
-        support.WebDriverWait(self, timeout).until_not(
+        ui.WebDriverWait(self, timeout).until_not(
             lambda self: self._model.background_veil,
             "%s: timeout (%d seconds) expired. Dialog window is still present."
             % (self.__class__.__name__, timeout))

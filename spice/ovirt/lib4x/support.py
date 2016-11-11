@@ -17,24 +17,17 @@
 
 import logging
 
-from selenium.webdriver.support.ui import WebDriverWait as BaseWebDriverWait
+from selenium.webdriver.support import ui
 
-import excepts
+from . import excepts
 
 logger = logging.getLogger(__name__)
 
+
 POLL_FREQUENCY = 1
 
-
-class WebDriverWait(BaseWebDriverWait):
-    """Overridden <selenium.webdriver.support.ui.WebDriverWait> class.  The
-    only difference is updated POLL_FREQUENCY from 0.5 to 1 second.
-    """
-
-    def __init__(self, driver, timeout, poll_frequency=POLL_FREQUENCY,
-                 **kwargs):
-        super(WebDriverWait, self).__init__(driver, timeout, poll_frequency,
-                                            **kwargs)
+#WebDriverWait == from selenium.webdriver.support import ui.WebDriverWait
+#poll_frequency=POLL_FREQUENCY
 
 
 class WaitForPageObject(object):
@@ -57,10 +50,19 @@ class WaitForPageObject(object):
     def __init__(self, page_object, timeout=None):
         timeout = timeout or 0
         self.__page_object = page_object
-        self.__wait = WebDriverWait(
-            driver=self, timeout=timeout,
-            ignored_exceptions=self
-            .__IGNORED_EXCEPTIONS)
+        self.__wait = ui.WebDriverWait(driver=self, #  astepano@: what the ...?????? It wasn't me who wrote this!
+                                                    #  This object is only for methods: until_not/until
+                                                    #  .driver will be passed as an argument to until.
+                                                    #  See: /usr/lib/python2.7/site-packages/selenium/webdriver/support/wait.py
+                                                    #     def until(self, method, message=''):
+                                                    #        """Calls the method provided with the driver as an argument until the \
+                                                    #        return value is not False."""
+                                                    #        ....
+                                                    #        value = method(self._driver)
+                                                    # F@CK!!!!!!!!
+                                       timeout=timeout,
+                                       poll_frequency=POLL_FREQUENCY,
+                                       ignored_exceptions=self.__IGNORED_EXCEPTIONS)
 
     @property
     def __validated_page_object(self):
@@ -86,6 +88,7 @@ class WaitForPageObject(object):
         except excepts.TimeoutException as ex:
             self.__page_object.driver.implicitly_wait(original_timeout)
             raise ex
+
 
     def status(self, status_prop, message=None):
         """Waits until page object property `status_prop` is evaluated as True.

@@ -13,6 +13,7 @@
 # See LICENSE for more details.
 
 import re
+import time
 import logging
 
 from selenium.webdriver.common import by
@@ -62,6 +63,7 @@ class VMDetailsModel(page_base.PageModel):
     memory = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_memory')
     cores = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_numberOfCores')
     console = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_protocol')
+    connect = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_consoleConnectAnchor')
     console_edit = elements.PageElement(
         by.By.ID, 'MainTabBasicDetailsView_editProtocolLink')
 
@@ -274,6 +276,16 @@ class VMDetailsView(page_base.PageObject):
         """
         self._model.console_edit.click()
         return vms_base.EditConsoleOptions(self.driver)
+
+    def console(self):
+        """Invoke console for VM.
+
+        Returns
+        -------
+            Console Options dialog
+        """
+        self._model.connect.click()
+        time.sleep(3)  # Pause to save .vv file or auto-open it.
 
 
 class VDiskInstance(page_base.DynamicPageObject):
@@ -560,7 +572,7 @@ class BasicTabCtrl(object):
             raise excepts.WaitTimeoutError(msg)
 
 
-    def wait_until_vm_is_up(self, name, timeout):
+    def wait_until_vm_is_up(self, name, timeout=None):
         """Wait until VM is up.
 
         Parameters
@@ -576,6 +588,7 @@ class BasicTabCtrl(object):
             True - success.
         """
         return self._wait_for_vm_status(name, 'is_up', timeout)
+
 
     def wait_until_vm_is_suspended(self, name, timeout):
         """Wait until VM is suspended.
@@ -594,6 +607,7 @@ class BasicTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_suspended', timeout)
 
+
     def wait_until_vm_is_down(self, name, timeout):
         """Wait until VM is down.
 
@@ -611,7 +625,8 @@ class BasicTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_down', timeout)
 
-    def wait_until_vm_starts_booting(self, name, timeout):
+
+    def wait_until_vm_starts_booting(self, name, timeout=None):
         """Wait until VM starts powering up.
 
         Parameters
@@ -629,3 +644,50 @@ class BasicTabCtrl(object):
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
 
+    def get_vms_names(self):
+        marker = '//div[starts-with(@id, "MainTabBasicListView_vm")][contains(@id, "_name")]'
+        vms = self.driver.find_elements(by.By.XPATH, marker)
+        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        return set(vms_names)
+
+
+    def get_vm_from_pool(self, pool_name):
+        regex = vms_base.mk_pool_regex(pool_name)
+        vms = self.get_vms_names()
+        for vm_name in sorted(vms):
+            if re.match(regex, vm_name):
+                vm = VMInstance(self.driver, name=vm_name)
+                if vm.is_up or vm.is_booting:
+                    logger.info("Found active VM from pool %s: %s.",
+                                pool_name,
+                                vm_name)
+                    return vm
+        logger.info("Did not found active vm from pool: %s. Start a new one.",
+                    pool_name)
+        return self.start_vm_from_pool(self, pool_name)
+
+
+    def start_vm_from_pool(self, pool_name):
+        vms_before = self.get_vms_names()
+        if pool_name not in vms_before:
+            msg = "No VMS pool with name: %s." % pool_name
+            raise Exception(msg)
+        self.run_vm(pool_name)
+        # Some dialog could appier
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(self.driver)
+        retries_left = 10
+        regex = vms_base.mk_pool_regex(pool_name)
+        while retries_left:
+            retries_left -= 1
+            vms_after = self.get_vms_names()
+            new_vms = vms_after - vms_before
+            if not new_vms:
+                time.sleep(1)
+                continue
+            for vm_name in sorted(new_vms):
+                if re.match(regex, vm_name):
+                    vm = VMInstance(self.driver, name=vm_name)
+                    if vm.is_up or vm.is_booting:
+                        logger.info("Found a new active VM from pool %s: %s.",
+                                    pool_name, vm_name)
+                    return vm

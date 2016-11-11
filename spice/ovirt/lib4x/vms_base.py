@@ -975,3 +975,13 @@ class EditConsoleOptions(dialogs.OkCancelDlg):
 
     def set_enable_wan(self, val):
         self._model.enable_wan = val
+
+
+def mk_pool_regex(pool_name):
+    if '?' in pool_name:
+        regex = pool_name.replace('?', '\d')  # Matches any decimal digit.
+    else:
+        regex = pool_name + '\d'
+    regex = regex + '$'
+    logger.info("Use pool_name: %s, use regex: %s.", pool_name, regex)
+    return regex
