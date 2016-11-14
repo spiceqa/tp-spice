@@ -431,7 +431,7 @@ def get_host_subj(test):
             # Has form: /C=CZ/L=BRNO/O=SPICE/CN=.
             subj = test.kvm_g.spice_x509_server_subj
             subj = subj.replace('/', ',')[1:]
-            subj += get_host_ip(test)
+            subj += str(get_host_ip(test))
     return subj
 
 
