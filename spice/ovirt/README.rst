@@ -20,7 +20,7 @@ Sometimes you can see next code:
     def init_validation(self):
         self._model.name
 
-It is very tricky code. 
+It is very tricky code.
 
 Here self._model.name is a "property". See at elements.py:
 

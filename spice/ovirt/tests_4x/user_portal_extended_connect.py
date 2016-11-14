@@ -78,7 +78,7 @@ def run(vt_test, test_params, env):
         elif cfg.ovirt_pool_name:
             vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)
             shutdown_vm = True
-        if not vm.is_up:
+        if vm.is_down:
             logger.info("Up VM: %s.", vm.name)
             vms_tab.run_vm(vm.name)
             vms_tab.wait_until_vm_starts_booting(vm.name)

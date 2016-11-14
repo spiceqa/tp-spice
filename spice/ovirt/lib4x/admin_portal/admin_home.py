@@ -29,6 +29,59 @@ TIME_HOME_PAGE = 45
 logger = logging.getLogger(__name__)
 
 
+class SearchModel(page_base.PageModel):
+    search_input = elements.TextInput(
+        by.By.ID, 'SearchPanelView_searchStringInput')
+    search_btn = elements.Button(
+        by.By.ID, 'SearchPanelView_searchButton')
+    bookmark_btn = elements.Button(
+        by.By.ID, 'SearchPanelView_bookmarkButton')
+
+
+class SearchPanel(page_base.PageObject):
+    """Search panel abstraction class.
+    """
+    _model = SearchModel
+    _label = 'Search panel'
+
+
+    @property
+    def search_string(self):
+        return self._model.search_input.text
+
+
+    def init_validation(self):
+        """Initial validation - check that all Search panel elements are
+        present.
+
+        Returns
+        -------
+        bool
+            True - successful validation.
+        """
+        self._model.search_input
+        return True
+
+
+    def submit_search(self, search_string):
+        """Submit a search query.
+
+        Parameters
+        ----------
+        search_string : str
+            Search string.
+
+        Returns
+        -------
+        bool
+            True - success.
+
+        """
+        self._model.search_input = search_string
+        self._model.search_btn.click()
+        return True
+
+
 class AdminHomePageModel(page_base.PageModel):
     """Page model for homepage & adminportal main tab.
     """
@@ -264,9 +317,60 @@ class VmsTabCtrl(object):
             VM name.
 
         """
+        return self._wait_for_vm_status(name, 'is_down', timeout)
+
+
+    def wait_until_vm_starts_booting(self, name, timeout=None):
+        """Wait until VM starts powering up.
+
+        Parameters
+        ----------
+        name
+            VM name.
+        timeout
+            Timeout in [s] to wait.
+
+        Returns
+        -------
+        bool
+            True - success / False - failure.
+        """
+        return self._wait_for_vm_status(name, 'is_booting', timeout)
+
+    VM_ACTION_TIMEOUT = 120
+
+    def _wait_for_vm_status(self, name, status_prop, timeout=None):
+        """Wait until VM status property returns True.
+
+        Parameters
+        ----------
+        name
+            VM name
+        status_prop : str
+            Name of the status property, e.g. 'vm.is_up' -> 'is_up'
+        timeout
+            Timeout in [s] to wait.
+
+        Returns
+        -------
+        bool
+            True - success.
+
+        Raises
+        ------
+        WaitTimeoutError
+            Failure.
+
+        """
         vm = self._get_vm_inst(name)
-        vm.select()
-        support.WaitForPageObject(vm, timeout).status('is_down')
+        timeout = timeout or self.VM_ACTION_TIMEOUT
+        try:
+            w = support.WaitForPageObject(vm, timeout)
+            w.status(status_prop)
+        except common.exceptions.TimeoutException:
+            prop_val = getattr(vm, status_prop)
+            msg = "%s.%s is: %s" % (vm.name, status_prop, attr_val)
+            raise excepts.WaitTimeoutError(msg)
 
 
     def get_vm(self, name):
@@ -317,6 +421,67 @@ class VmsTabCtrl(object):
         dlg = self.menu_bar.console_edit()
         return dlg
 
+
+    def get_vms_names(self):
+        """Get VMs names.
+
+        Note
+        ----
+            If there are to much VMs they are not shown all at once. Instead,
+            XX per page.
+        """
+        marker = '//div[starts-with(@id, "MainTabVirtualMachineView_table_content_col2_row")]'
+        vms = self.driver.find_elements(by.By.XPATH, marker)
+        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        return set(vms_names)
+
+
+    def get_vm_from_pool(self, pool_name):
+        search_panel = search.SearchPanel(self.driver)
+        search_string = ("Vms: pool={0} and status=up"
+                         "or"
+                         "pool={0} and status=poweringup" . \
+                         format(pool_name))
+        search_panel.submit_search(search_string)
+        regex = vms_base.mk_pool_regex(pool_name)
+        vms = self.get_vms_names()
+        for vm_name in sorted(vms):
+            if re.match(regex, vm_name):
+                vm = VM(self.driver, name=vm_name)
+                if vm.is_up or vm.is_booting:
+                    logger.info("Found active VM from pool %s: %s.",
+                                pool_name,
+                                vm_name)
+                    return vm
+        logger.info("Did not found active vm from pool: %s. Start a new one.",
+                    pool_name)
+        return self.start_vm_from_pool(self, pool_name)
+
+
+    def start_vm_from_pool(self, pool_name):
+        search_panel = search.SearchPanel(self.driver)
+        search_string = ("Vms: pool={0} and status=down" . format(pool_name))
+        search_panel.submit_search(search_string)
+        vms_before = self.get_vms_names()
+        found_free_vm = False
+        for vm_name in sorted(vms):
+            if re.match(regex, vm_name):
+                vm = VM(self.driver, name=vm_name)
+                if vm.is_down:
+                    logger.info("Found inactive VM from pool %s: %s.",
+                                pool_name,
+                                vm_name)
+                    found_free_vm = True
+                    break
+        if not found_free_vm:
+            msg = "Cannot find free(down) vm from pool: %s." % pool_name
+            raise Exception(msg)
+        self.run_vm(vm.name)
+        self.wait_until_vm_starts_booting(vm.name)
+        # Some dialog could appier
+        vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(self.driver)
+        return vm
+
 #
 # Virtual Machines tab.
 
@@ -360,7 +525,7 @@ class VMsTabMenuBarModel(page_base.PageModel):
         by.By.CLASS_NAME , 'actionPanelPopupMenuBar')
 
 
-class VMModel(page_base.TableRow):
+class VMModel(page_base.TableRowModel):
     """ VM instance model. """
     _NAME_CELL_XPATH = ('//div[starts-with(@id,'
                         '"MainTabVirtualMachineView_table_content_col2")]'
@@ -527,6 +692,9 @@ class VMsTabMenuBar(page_base.PageObject):
         self._model.console_btn.click()
         time.sleep(3)  # Pause to save .vv file or auto-open it.
 
+
+
+
 # VMS_subtab
 # from raut.lib.selenium.ui.webadmin.pages.subtabs import vms as vms_subtab
 
@@ -560,7 +728,7 @@ class VMsTabMenuBar(page_base.PageObject):
 #     disk_type_lun = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[3]')
 # 
 # 
-# class VDiskImgInst(tables.TableRow):
+# class VDiskImgInst(tables.TableRowModel):
 #     """ Virtual disk page model """
 #     _NAME_CELL_XPATH = (
 #         '//div[starts-with(@id, '
