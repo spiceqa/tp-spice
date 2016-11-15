@@ -94,3 +94,4 @@ def run(vt_test, test_params, env):
             vms_tab.power_off(vm.name)
         home_page.sign_out_user()
         drv.close()
+        act.rv_chk_con(vmi)  # Check connection on client.
