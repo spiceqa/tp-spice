@@ -96,7 +96,7 @@ def _is_focused(n):
     return _is_focused(p)
 
 
-@retries.retries(5, exceptions=(AssertionError,))
+@retries.retries(10, exceptions=(AssertionError,))
 def is_focused(node):
     assert _is_focused(node), \
         "Node [%s | %s] is: not focused." % (node.roleName, node.name)
@@ -483,6 +483,7 @@ class DisplayAccessKey(Display):
     def_key_mapping = {
         'File' : '<Alt>f',
         'File|Quit' : 'q',
+        'File|Screenshot' : 's',
         'Help' : '<Alt>h',
         'Help|About' : 'a',
         'View' : '<Alt>v',
@@ -575,13 +576,24 @@ class DisplayAccessKey(Display):
         return filler.children[0].text
 
 
+    def screenshot(self, filename):
+        self.menu('File', ['File|Screenshot'])
+        file_chooser = self.app.child(roleName='file chooser')
+        file_chooser.childLabelled('Name:').text = filename
+        n = file_chooser.button('Save')
+        do_click(n)
+        if self.app.isChild(roleName='alert', name='Question'):
+            n = self.app.child(roleName='alert', name='Question').button('Replace')
+            do_click(n)
+
+
 class DisplayHotKey(Display):
 
     # See dogtail/rawinput.py keyNameAliases = {..}
     def_key_mapping = {
         'quit': '<Control><Shift>q',
         'zoom_out': '<Control>minus',
-        'zoom_normal': '<Control>0',
+        'zoom_normal': '<Control>_0',
         'zoom_in': '<Control><Shift>plus',
         'Ctrl+Alt+Del': '<Control><Alt>End',
     }
