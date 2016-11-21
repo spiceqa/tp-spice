@@ -50,16 +50,16 @@ def run(vt_test, test_params, env):
         Dictionary with test environment.
 
     """
-    test = stest.ClientTest(vt_test, test_params, env)
-    vmi = test.vmi
-    cfg = vmi.cfg
-    with act.new_ssn_context(vmi, name='Selenium session') as ssn:
-        act.run_selenium(vmi, ssn)
-        vm_addr = test.vm.get_address()
+    test = stest.ClientGuestOvirtTest(vt_test, test_params, env)
+    vmi_c = test.vmi_c
+    cfg = test.cfg
+    with act.new_ssn_context(vmi_c, name='Selenium session') as ssn:
+        act.run_selenium(vmi_c, ssn)
+        vm_addr = test.vm_c.get_address()
         logger.info("VM addr: %s", vm_addr)
-        act.turn_firewall(vmi, "no")  # XXX
-        port = vmi.vm.get_port(int(cfg.selenium_port))
-        act.info(vmi, "Use port to connect to selenium: %s.", port)
+        act.turn_firewall(vmi_c, "no")  # XXX
+        port = test.vm_c.get_port(int(cfg.selenium_port))
+        act.info(vmi_c, "Use port to connect to selenium: %s.", port)
         drv = driver.DriverFactory(cfg.selenium_driver,  # Browser name.
                                    vm_addr,
                                    port)
@@ -90,4 +90,4 @@ def run(vt_test, test_params, env):
             vms_tab.power_off(vm.name)
         home_page.sign_out()
         drv.close()
-        act.rv_chk_con(vmi)  # Check connection on client.
+        act.rv_chk_con(vmi_c)  # Check connection on client.
