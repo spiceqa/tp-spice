@@ -75,11 +75,13 @@ def run(vt_test, test_params, env):
             vm = tab_controller.get_vm(vm_name)
         elif cfg.ovirt_pool_name:
             vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)
+            vm_name = vm.name
+            test.cfg_g.ovirt_vm_name = vm_name
             shutdown_vm = True
         if vm.is_down:
-            logger.info("Up VM: %s.", vm.name)
-            vms_tab.run_vm(vm.name)
-            tab_controller.wait_until_vm_starts_booting(vm.name)
+            logger.info("Up VM: %s.", vm_name)
+            vms_tab.run_vm(vm_name)
+            tab_controller.wait_until_vm_starts_booting(vm_name)
         console_options_dialog = tab_controller.console_edit(vm_name)
         console_options_dialog.select_spice()
         console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
@@ -87,7 +89,7 @@ def run(vt_test, test_params, env):
         tab_controller.console(vm_name)
         vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
         if shutdown_vm:
-            vms_tab.power_off(vm.name)
+            vms_tab.power_off(vm_name)
         home_page.sign_out()
         drv.close()
         act.rv_chk_con(vmi_c)  # Check connection on client.
