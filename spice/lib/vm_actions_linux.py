@@ -782,7 +782,7 @@ def chk_deps(vmi, fname, dst_dir=None):
 def img2cb(vmi, img):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
@@ -799,7 +799,7 @@ def cb2img(vmi, img):
         Where to save img.
 
     """
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
@@ -810,7 +810,7 @@ def cb2img(vmi, img):
 def text2cb(vmi, text):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
@@ -820,7 +820,7 @@ def text2cb(vmi, text):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2text(vmi):
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
@@ -832,7 +832,7 @@ def cb2text(vmi):
 def clear_cb(vmi):
     """Use the script to clear clipboard.
     """
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--clear")
     utils.info(vmi, "Clear clipboard.")
@@ -841,7 +841,7 @@ def clear_cb(vmi):
 
 @reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
@@ -850,7 +850,7 @@ def gen_text2cb(vmi, kbytes):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2file(vmi, fname):
-    script = vmi.cfg.helper
+    script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     utils.info(vmi, "Dump clipboard to file.", fname)
