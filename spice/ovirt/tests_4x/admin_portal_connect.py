@@ -50,16 +50,16 @@ def run(vt_test, test_params, env):
         Dictionary with test environment.
 
     """
-    test = stest.ClientTest(vt_test, test_params, env)
-    vmi = test.vmi
-    cfg = vmi.cfg
-    with act.new_ssn_context(vmi, name='Selenium session') as ssn:
-        act.run_selenium(vmi, ssn)
-        vm_addr = test.vm.get_address()
+    test = stest.ClientGuestOvirtTest(vt_test, test_params, env)
+    vmi_c = test.vmi_c
+    cfg = test.cfg
+    with act.new_ssn_context(vmi_c, name='Selenium session') as ssn:
+        act.run_selenium(vmi_c, ssn)
+        vm_addr = test.vm_c.get_address()
         logger.info("VM addr: %s", vm_addr)
-        act.turn_firewall(vmi, "no")  # XXX
-        port = vmi.vm.get_port(int(cfg.selenium_port))
-        act.info(vmi, "Use port to connect to selenium: %s.", port)
+        act.turn_firewall(vmi_c, "no")  # XXX
+        port = test.vm_c.get_port(int(cfg.selenium_port))
+        act.info(vmi_c, "Use port to connect to selenium: %s.", port)
         drv = driver.DriverFactory(cfg.selenium_driver,  # Browser name.
                                    vm_addr,
                                    port)
@@ -70,15 +70,26 @@ def run(vt_test, test_params, env):
                                           domain='internal')
         tab_controller = home_page.go_to_vms_tab()
         vm_name = cfg.ovirt_vm_name
-        assert vm_name
-        vm = tab_controller.get_vm(vm_name)
-        if not vm.is_up:
-            tab_controller.run_vm_and_wait_until_up(vm_name, timeout=30)
+        shutdown_vm = False
+        if vm_name:
+            vm = tab_controller.get_vm(vm_name)
+        elif cfg.ovirt_pool_name:
+            vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)
+            vm_name = vm.name
+            test.cfg_g.ovirt_vm_name = vm_name
+            shutdown_vm = True
+        if vm.is_down:
+            logger.info("Up VM: %s.", vm_name)
+            vms_tab.run_vm(vm_name)
+            tab_controller.wait_until_vm_starts_booting(vm_name)
         console_options_dialog = tab_controller.console_edit(vm_name)
         console_options_dialog.select_spice()
         console_options_dialog.set_open_in_fullscreen(cfg.full_screen)
         console_options_dialog.submit_and_wait_to_disappear(timeout=2)
         tab_controller.console(vm_name)
         vms_base.GuestAgentIsNotResponsiveDlg.ok_ignore(drv)
+        if shutdown_vm:
+            vms_tab.power_off(vm_name)
         home_page.sign_out()
         drv.close()
+        act.rv_chk_con(vmi_c)  # Check connection on client.

@@ -93,7 +93,16 @@ class VmInfo(object):
         self.ccfg = test.cfg                # Common config
         self.vm = test.vms[vm_name]
         self.vm_name = vm_name
-        self.kvm = test.kvm[vm_name]
+        self.kvm = test.kvms[vm_name]
+
+
+class VmOvirtInfo(object):
+
+    def __init__(self, test, vm_name):
+        self.test = test
+        self.cfg = test.cfg_vm[vm_name]     # VM config
+        self.ccfg = test.cfg                # Common config
+        self.vm_name = vm_name
 
 
 class SpiceTest(object):
@@ -131,15 +140,15 @@ class SpiceTest(object):
             except virt_vm.VMDeadError as excp:
                 raise utils.SpiceTestFail(self,
                                           "Required VM is dead: %s" % excp)
-        self.kvm = {}
+        self.kvms = {}
         """Spice KVM options per VM."""
         for name in vm_names:
-            self.kvm[name] = AttributeDict()
+            self.kvms[name] = AttributeDict()
             for prm in KVM_SPICE_KNOWN_PARAMS:
-                self.kvm[name][prm] = self.vms[name].get_spice_var(prm)
-                if self.kvm[name][prm]:
+                self.kvms[name][prm] = self.vms[name].get_spice_var(prm)
+                if self.kvms[name][prm]:
                     logger.info("VM %s spice server option %s is %s.", name,
-                                prm, self.kvm[name][prm])
+                                prm, self.kvms[name][prm])
         """Config set per VM."""
         self.cfg_vm = {}
         for name in vm_names:
@@ -149,6 +158,17 @@ class SpiceTest(object):
         self.vm_info = {}
         for name in vm_names:
             self.vm_info[name] = VmInfo(self, name)
+        """Ovirt."""
+        vm_roles = self.cfg.ovirt_vms.split()
+        """Config set per Ovirt VM."""
+        for name in vm_roles:
+            self.cfg_vm[name] = AttributeDict()
+            vm_role_cfg = parameters.object_params(name)
+            # See env_process.py: process(..., postprocess_vm,...)
+            self.cfg_vm[name].update(vm_role_cfg)
+        """Actions set per Ovirt VM's OS."""
+        for name in vm_roles:
+            self.vm_info[name] = VmOvirtInfo(self, name)
 
 
 class ClientGuestTest(SpiceTest):
@@ -162,8 +182,8 @@ class ClientGuestTest(SpiceTest):
         self.name_g = name_g
         self.vm_c = self.vms[name_c]
         self.vm_g = self.vms[name_g]
-        self.kvm_c = self.kvm[name_c]
-        self.kvm_g = self.kvm[name_g]
+        self.kvm_c = self.kvms[name_c]
+        self.kvm_g = self.kvms[name_g]
         self.cfg_c = self.cfg_vm[name_c]
         self.cfg_g = self.cfg_vm[name_g]
         self.vmi_c = self.vm_info[name_c]
@@ -184,8 +204,8 @@ class OneVMTest(SpiceTest):
             name = self.cfg.vms.split()[0]
         self.name = name
         self.vm = self.vms[name]
-        self.kvm = self.kvm[name]
-        self.cfg = self.cfg_vm[name]
+        self.kvm = self.kvms[name]
+        self.cfg = self.cfg_vm[name]  # Fix me, base class has .cfg
         self.vmi = self.vm_info[name]
 
 
@@ -193,9 +213,7 @@ class ClientTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        vm_name = None
-        if "client_vm" in parameters:
-            vm_name = parameters["client_vm"]
+        vm_name = parameters.get("client_vm", None)
         super(ClientTest, self).__init__(test, parameters, env, name=vm_name)
 
 
@@ -203,7 +221,24 @@ class GuestTest(OneVMTest):
     """Alias to OneVMTest.
     """
     def __init__(self, test, parameters, env):
-        vm_name = None
-        if "guest_vm" in parameters:
-            vm_name = parameters["guest_vm"]
+        vm_name = parameters.get("guest_vm", None)
         super(GuestTest, self).__init__(test, parameters, env, name=vm_name)
+
+
+class ClientGuestOvirtTest(SpiceTest):
+    """Guest is running at Ovirt portal. No running avocado-vt KVM for guest.
+    """
+    def __init__(self, test, parameters, env):
+        super(ClientGuestOvirtTest, self).__init__(test, parameters, env)
+        name_c = self.cfg.client_vm
+        name_g = self.cfg.guest_vm
+        self.name_c = name_c
+        self.name_g = name_g
+        self.vm_c = self.vms[name_c]
+        # self.vm_g = is absent for Ovirt
+        self.kvm_c = self.kvms[name_c]
+        # self.kvm_g = is absent for Ovirt
+        self.cfg_c = self.cfg_vm[name_c]
+        self.cfg_g = self.cfg_vm[name_g]
+        self.vmi_c = self.vm_info[name_c]
+        self.vmi_g = self.vm_info[name_g]

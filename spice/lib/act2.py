@@ -34,16 +34,26 @@ class Action(object):
         self.name = action_name
 
     def __call__(self, vmi, *args, **kwargs):
-        os = registry.lookup([], ios.IOSystem, vmi.cfg.interface_os)
+        os = registry.lookup([], ios.IOSystem,
+                             vmi.cfg.interface_os)
         ver = registry.lookup([], ios.IVersionMajor,
                               vmi.cfg.interface_os_version)
         mver = registry.lookup([], ios.IVersionMinor,
                                vmi.cfg.interface_os_mversion)
-        arch = registry.lookup([], ios.IArch, vmi.cfg.interface_os_arch)
-        os_info = ",".join(map(repr, [os, ver, mver, arch]))
+        arch = registry.lookup([], ios.IArch,
+                               vmi.cfg.interface_os_arch)
+        ovirt_ver = registry.lookup([], ios.IArch,
+                                    vmi.cfg.interface_ovirt_version)
+        os_info = ",".join(map(repr, [os, ver, mver, arch, ovirt_ver]))
         msg = "OS info: %s" % os_info
         utils.debug(vmi, msg)
-        lookup_order = [[os, ver, mver, arch],
+        lookup_order = [
+                        [os, ver, mver, arch, ovirt_ver],
+                        [os, ver, mver, ovirt_ver],
+                        [os, ver, arch, ovirt_ver],
+                        [os, ver, ovirt_ver],
+                        [os, ovirt_ver],
+                        [os, ver, mver, arch],
                         [os, ver, mver],
                         [os, ver, arch],
                         [os, ver],

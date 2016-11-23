@@ -71,6 +71,16 @@ class IOSInfo(interface.Interface):
     """
 
 
+class IOvirt(IOSInfo):
+    """OS type.
+    """
+
+
+@add_os_info(marker='4')
+class IOvirt4(IOvirt):
+    pass
+
+
 class IOSystem(IOSInfo):
     """OS type.
     """

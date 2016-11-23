@@ -684,6 +684,7 @@ class ExtendedTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
+
     def get_vms_names(self):
         marker = '//span[starts-with(@id, "SideTabExtendedVirtualMachineView_table_content_col2_row")]'
         vms = self.driver.find_elements(by.By.XPATH, marker)
@@ -705,6 +706,7 @@ class ExtendedTabCtrl(object):
         logger.info("Did not found active vm from pool: %s. Start a new one.",
                     pool_name)
         return self.start_vm_from_pool(self, pool_name)
+
 
     def start_vm_from_pool(self, pool_name):
         vms_before = self.get_vms_names()

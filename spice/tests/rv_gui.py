@@ -123,7 +123,7 @@ def run(vt_test, test_params, env):
     act.x_active(vmi_c)
     act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
-    # act.reset_gui(vmi_c)  # disabled because BZ#1340160 # Activate accessibility 
+    act.reset_gui(vmi_c)  # BZ#1340160 for rhel7 # Activate accessibility for rhel6
     # act.reset_gui(vmi_g)  # disabled because BZ#1340160
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
