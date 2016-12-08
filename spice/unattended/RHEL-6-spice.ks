@@ -151,4 +151,21 @@ gconftool-2 --direct --config-source "$cfg" --type int \
 # Remove ifname <-> MAC binding.
 #
 sed -i "s/^/#/g" /etc/udev/rules.d/70-persistent-net.rules
+
+#
+# Add RedHat certificates.
+#
+certs[1]='https://password.corp.redhat.com/cacert.crt'
+certs[2]='https://password.corp.redhat.com/RH-IT-Root-CA.crt'
+certs[3]='http://idm.spice.brq.redhat.com/ipa/config/ca.crt'
+i=1
+for cert in "${certs[@]}"; do
+    name="${i}.crt"
+    wget -O "$name" "$cert"
+    cp "$name" "/etc/pki/ca-trust/source/anchors/"
+    i=$((i+1))
+done
+update-ca-trust force-enable
+update-ca-trust extract
+
 %end

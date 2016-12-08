@@ -138,5 +138,19 @@ cat > '/etc/dconf/db/local.d/locks/screensaver' << EOF
 EOF
 dconf update
 
+#
+# Add RedHat certificates.
+#
+certs[1]='https://password.corp.redhat.com/cacert.crt'
+certs[2]='https://password.corp.redhat.com/RH-IT-Root-CA.crt'
+certs[3]='http://idm.spice.brq.redhat.com/ipa/config/ca.crt'
+i=1
+for cert in "${certs[@]}"; do
+    name="${i}.crt"
+    wget -O "$name" "$cert"
+    trust anchor "$name"
+    i=$((i+1))
+done
+
 echo 'Post setup is finished.'
 %end
