@@ -912,22 +912,30 @@ def turn_accessibility(vmi, on=True):
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
 def lock_scr_off(vmi):
+    """
+    Info
+    ----
+        See: gsettings list-recursively or use dconf-editor.
+
+        https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Desktop_Migration_and_Administration_Guide/custom-default-values-system-settings.html
+
+        $ dconf dump /
+    """
     utils.info(vmi, "Disable lock screen.")
+    # The number of seconds of inactivity before the session is considered idle.
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session",
                     "idle-delay", "0")
     act.run(vmi, cmd)
+    # Prevent the user to lock his screen.
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.lockdown",
                     "disable-lock-screen", "true")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
-                    "lock-delay", "3600")
     act.run(vmi, cmd)
+    # Set this to TRUE to lock the screen when the screensaver goes active.
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
                     "lock-enabled", "false")
     act.run(vmi, cmd)
-    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.screensaver",
-                    "idle-activation-enabled", "false")
-    act.run(vmi, cmd)
+    # Whether this plugin would be activated by gnome-settings-daemon or not.
     cmd = utils.Cmd("gsettings", "set",
                     "org.gnome.settings-daemon.plugins.power",
                     "active", "false")
