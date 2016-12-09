@@ -779,6 +779,17 @@ def chk_deps(vmi, fname, dst_dir=None):
 
 
 @reg.add_action(req=[ios.ILinux])
+def imggen(vmi, img, size):
+    """Generate an image file.
+    """
+    script = vmi.cfg.helper_cb
+    dst_script = act.chk_deps(vmi, script)
+    cmd = utils.Cmd(dst_script, "--genimg", size, img)
+    utils.info(vmi, "Generate an %s image of %s size %s.", img, size)
+    act.run(vmi, cmd) 
+
+
+@reg.add_action(req=[ios.ILinux])
 def img2cb(vmi, img):
     """Use the clipboard script to copy an image into the clipboard.
     """
@@ -786,7 +797,7 @@ def img2cb(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, timeout=60)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -803,7 +814,7 @@ def cb2img(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, timeout=60)
 
 
 @reg.add_action(req=[ios.ILinux])

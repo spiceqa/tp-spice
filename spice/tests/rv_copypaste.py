@@ -76,7 +76,8 @@ def run(vt_test, test_params, env):
         if md5src == md5dst:
             success = True
     elif cfg.copy_img:
-        dst_img = act.chk_deps(src, cfg.test_image)
+        dst_img = os.path.join(act.dst_dir(src), cfg.test_image)
+        act.imggen(src, dst_img, cfg.test_image_size)
         act.img2cb(src, dst_img)
         act.cb2img(src, cfg.dump_img)
         act.cb2img(dst, cfg.dump_img)

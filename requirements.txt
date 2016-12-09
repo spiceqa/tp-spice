@@ -1,2 +1,5 @@
 # OVirt requirements
 selenium
+
+# tp-spice copypaste requirements
+python-pillow
