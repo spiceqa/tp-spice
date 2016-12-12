@@ -79,7 +79,7 @@ class AttributeDict(dict):
 
     def dump(self):
         for line in pprint.pformat(self).split('\n'):
-                logger.info(line)
+            logger.info(line)
 
 #    def __init__(self, custom_dict={}):
 #        self.update(custom_dict)

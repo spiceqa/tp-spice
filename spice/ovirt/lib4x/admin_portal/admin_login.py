@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 # location = ''.join([config.url, config.webadmin_entry_point])
 location = "https://rhevm40.spice.brq.redhat.com/ovirt-engine/webadmin/"
 
+
 class AdminLoginPage(login_base.LoginPageBase):
     """Login page abstraction class.
 

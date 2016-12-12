@@ -204,7 +204,6 @@ class WebDriverExtension(object):
         locator_type, locator_value = self._parse_ui_map_locator(locator)
         return self.find_elements(by=locator_type, value=locator_value)
 
-
     def get_screen_filename(self, prefix=None, suffix=None, use_timestamp=True,
                             dir_=None):
         """Create temporary file and return its filename.
@@ -233,7 +232,6 @@ class WebDriverExtension(object):
             prefix = ''.join((prefix, '-', timestr, suffix))
         abspath = os.path.join(dir_, prefix)
         return abspath
-
 
     def save_screen_as_file(self, filename=None):
         """Save the screenshot of the current window.
@@ -325,8 +323,8 @@ class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
     """
     def __init__(self, *args, **kwargs):
         super(SpiceQEFirefoxProfile, self).__init__(*args, **kwargs)
-        self.set_preference("browser.download.folderList",2)
-        self.set_preference("browser.download.manager.showWhenStarting",False)
+        self.set_preference("browser.download.folderList", 2)
+        self.set_preference("browser.download.manager.showWhenStarting", False)
         self.set_preference("browser.download.dir", "~/")
         #self.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-virt-viewer")
         self.set_preference("browser.helperApps.neverAsk.openFile", "application/x-virt-viewer")

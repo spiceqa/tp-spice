@@ -28,6 +28,7 @@ from spice.lib import ios
 
 logger = logging.getLogger(__name__)
 
+
 @reg.add_action(req=[ios.IOvirt4, ios.ILinux])
 def new_ssn(vmi, admin=False):
     utils.debug(vmi, "Yahooooooooooooo!")
@@ -44,6 +45,7 @@ def new_ssn(vmi, admin=False):
     #                            timeout=int(vmi.cfg.login_timeout))
     #act.export_vars(vmi, ssn)
     #return ssn
+
 
 @reg.add_action(req=[ios.IOvirt4])
 def get_ip(vmi):
@@ -84,18 +86,18 @@ def get_ip(vmi):
     """
     cfg = vmi.cfg
     cmd1 = utils.Cmd("curl")
-    cmd.append("--insecure")
-    cmd.append("--request")
-    cmd.append("GET")
-    cmd.append("--header")
-    cmd.append("Filter: true")
-    cmd.append("--header")
-    cmd.append("Accept: application/xml")
-    cmd.append("--user")
+    cmd1.append("--insecure")
+    cmd1.append("--request")
+    cmd1.append("GET")
+    cmd1.append("--header")
+    cmd1.append("Filter: true")
+    cmd1.append("--header")
+    cmd1.append("Accept: application/xml")
+    cmd1.append("--user")
     user = "{user}@{profile}:{passw}".format(user=cfg.ovirt_user,
                                              profile=cfg.ovirt_profile,
                                              passw=cfg.ovirt_password)
-    cmd.append(user)
+    cmd1.append(user)
     if cfg.ovirt_vm_name:
         # The same syntax as in admin portal search bar.
         search = "name=%s" % cfg.ovirt_vm_name
@@ -106,7 +108,7 @@ def get_ip(vmi):
     url = "{ovirt_engine}/api/vms/?search={search}".format(
         ovirt_engine=cfg.ovirt_engine_url,
         search=search)
-    cmd.append(url)
+    cmd1.append(url)
     cmd2 = utils.Cmd("xmllint",
                      "--xpath",
                      "string(/vms/vm/guest_info/ips/ip/@address)",

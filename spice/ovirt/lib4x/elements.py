@@ -115,7 +115,7 @@ class SelectWrapper(ui.Select):
                 return
             matched = True
         if not matched:
-            raise exceptions.NoSuchElementException(
+            raise common.exceptions.NoSuchElementException(
                 "Cannot locate option starting with value: %s"
                 % value)
 
@@ -147,7 +147,7 @@ class SelectWrapper(ui.Select):
                 return
             matched = True
         if not matched:
-            raise exceptions.NoSuchElementException(
+            raise common.exceptions.NoSuchElementException(
                 "Could not locate option"
                 " starting with visible text: %s"
                 % text)
@@ -281,7 +281,7 @@ class PageElement(RootPageElement):
             locator = self._locator % model._instance_identifier
         webelement = lookup_method(by=self._by, value=locator)
         if self._helper:
-            return self._helper(webelement)
+            return self._helper
         return webelement
 
     def _set(self, model, value):
@@ -475,7 +475,7 @@ class LabeledSelect(PageElement):
         """
         if element.tag_name.lower() != 'select':
             element = element.find_element_by_tag_name('select')
-        select_element = forms.Select(element)
+        select_element = Select(element)
         select_element.select_by_visible_text(str(value))
 
 

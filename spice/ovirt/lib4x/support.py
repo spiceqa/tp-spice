@@ -50,16 +50,17 @@ class WaitForPageObject(object):
     def __init__(self, page_object, timeout=None):
         timeout = timeout or 0
         self.__page_object = page_object
-        self.__wait = ui.WebDriverWait(driver=self, #  astepano@: what the ...?????? It wasn't me who wrote this!
-                                                    #  This object is only for methods: until_not/until
-                                                    #  .driver will be passed as an argument to until.
-                                                    #  See: /usr/lib/python2.7/site-packages/selenium/webdriver/support/wait.py
-                                                    #     def until(self, method, message=''):
-                                                    #        """Calls the method provided with the driver as an argument until the \
-                                                    #        return value is not False."""
-                                                    #        ....
-                                                    #        value = method(self._driver)
-                                                    # F@CK!!!!!!!!
+        self.__wait = ui.WebDriverWait(driver=self,
+                                       # astepano@: what the ...?????? It wasn't me who wrote this!
+                                       #  This object is only for methods: until_not/until
+                                       #  .driver will be passed as an argument to until.
+                                       #  See: /usr/lib/python2.7/site-packages/selenium/webdriver/support/wait.py
+                                       #     def until(self, method, message=''):
+                                       #        """Calls the method provided with the driver as an argument until the
+                                       #        return value is not False."""
+                                       #        ....
+                                       #        value = method(self._driver)
+                                       # F@CK!!!!!!!!
                                        timeout=timeout,
                                        poll_frequency=POLL_FREQUENCY,
                                        ignored_exceptions=self.__IGNORED_EXCEPTIONS)
@@ -88,7 +89,6 @@ class WaitForPageObject(object):
         except excepts.TimeoutException as ex:
             self.__page_object.driver.implicitly_wait(original_timeout)
             raise ex
-
 
     def status(self, status_prop, message=None):
         """Waits until page object property `status_prop` is evaluated as True.

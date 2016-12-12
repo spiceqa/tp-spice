@@ -1,3 +1,6 @@
+import os
+import re
+
 class CommandsLinuxSelenium(Commands):
 
     def run_selenium(self, ssn):
@@ -53,8 +56,8 @@ class CommandsLinuxSelenium(Commands):
                 cmd = "firefox -CreateProfile %s" % profile
                 output = self.ssn.cmd(cmd)
                 output = re.findall(r'\'[^\']*\'', output)[1]
-                output = output.replace("'",'')
-                output =  os.path.dirname(dirname)
+                output = output.replace("'", '')
+                output = os.path.dirname(dirname)
                 self.firefox_profile_dir = output
                 self.vm.info("Created a new FF profile at: %s", output)
                 defs.append("-Dwebdriver.firefox.profile=%s" % profile)

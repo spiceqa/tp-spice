@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 TIMEOUT_PAGE_OBJECT = 15
 
+
 class PageObjectBase(object):
     """Abstract base class for page object.
 
@@ -74,7 +75,7 @@ class PageObjectBase(object):
             self._driver.get(self._location)
         self.init(**kwargs)
         self._initial_page_object_validation()
-        self._driver.implicitly_wait(TIMEOUT_PAGE_OBJECT)  #  Restore default.
+        self._driver.implicitly_wait(TIMEOUT_PAGE_OBJECT)  # Restore default.
 
     def __str__(self):
         """Return human readable page object label if available.
@@ -296,105 +297,6 @@ class DynamicPageModel(PageModelBase):
             Abstract property, not implemented.
         """
         raise NotImplementedError("abstract property not implemented")
-
-
-class PageModelBase(object):
-    """Base class for page models.  A page model is designed as a lower layer
-    for page objects, which provides basic functionality over single web page
-    or its area by describing its page elements as class attributes.  Along
-    with page elements, class attributes can specify other information, like
-    string constants, etc.  For usage see <*PageElement> docstring.
-
-    Attributes
-    ----------
-    _root
-        Root page element of a page model. If defined, all other page elements
-        are looked up relatively to this root element (i.e., inside of the root
-        page element).
-    """
-    _root = None
-
-    def __init__(self, driver):
-        """Save the webdriver instance to attribute.
-
-        Parameters
-        ----------
-        driver
-            Webdriver instance.
-        """
-        self._driver = driver
-
-    def __str__(self):
-        """Return human readable page model representation.
-        """
-        return 'page model <%s>' % self.__class__.__name__
-
-    def __unicode__(self):
-        return unicode(str(self))
-
-    def __repr__(self):
-        return str(self)
-
-
-class PageModel(PageModelBase):
-    """ Static page model.  It doesn't differ from its base class, but is
-    defined separately so we can distinguish it from the DynamicPageModel
-    class.  Static page model contains only static page elements, i.e.,
-    <PageElement> instances or its direct descendants.
-    """
-
-    def __init__(self, driver):
-        """Save the webdriver instance to attribute.
-
-        Parameters
-        ----------
-        driver :
-            Webdriver instance.
-        """
-        super(PageModel, self).__init__(driver)
-
-
-class DynamicPageModel(PageModelBase):
-    """Dynamic page model.
-    Dynamic page model can contain both - static and dynamic - page elements.
-    It must implement property method `_instance_identifier`, whose return
-    value is used for string interpolation of locators of all dynamic elements.
-    """
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, driver, name):
-        """Save the webdriver instance to an attribute.
-
-        Parameters
-        ----------
-        driver
-            Webdriver instance.
-        name
-            Page model instance name; this name is used for identifying single
-            instance along others, e.g., single VM in the VM list.
-        """
-        super(DynamicPageModel, self).__init__(driver)
-        self._name = name
-
-    def __str__(self):
-        """Return human readable page model representation.
-        """
-        return '%s "%s"' \
-               % (super(DynamicPageModel, self).__str__(), self._name)
-
-    @abc.abstractproperty
-    def _instance_identifier(self):
-        """Page model instance identifier.  Property method whose return value
-        is used for string interpolation of locators of all dynamic elements.
-
-        Raises
-        ------
-        NotImplementedError
-            Abstract property, not implemented.
-        """
-        raise NotImplementedError("Abstract property not implemented.")
-
 
 
 class TableRowModel(DynamicPageModel):

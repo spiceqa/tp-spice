@@ -14,8 +14,12 @@
 
 import time
 import logging
+import re
+import regex
+import excepts
 
-#from raut.lib.selenium.ui.webadmin import pages
+from raut.lib.selenium.ui.webadmin import pages
+from selenium import common
 from selenium.webdriver.common import by
 
 from .. import dialogs
@@ -44,11 +48,9 @@ class SearchPanel(page_base.PageObject):
     _model = SearchModel
     _label = 'Search panel'
 
-
     @property
     def search_string(self):
         return self._model.search_input.text
-
 
     def init_validation(self):
         """Initial validation - check that all Search panel elements are
@@ -61,7 +63,6 @@ class SearchPanel(page_base.PageObject):
         """
         self._model.search_input
         return True
-
 
     def submit_search(self, search_string):
         """Submit a search query.
@@ -231,7 +232,6 @@ class VmsTabCtrl(object):
         vm.select()
         return self.menu_bar.run()
 
-
     def run_vm_and_wait_until_up(self, name, timeout=None):
         """Run VM and wait until is up.
 
@@ -250,7 +250,6 @@ class VmsTabCtrl(object):
         self.run_vm(name)
         return self.wait_until_vm_is_up(name, timeout)
 
-
     def suspend_vm(self, name):
         """Suspend VM.
 
@@ -263,7 +262,6 @@ class VmsTabCtrl(object):
         vm = self._get_vm_inst(name)
         vm.select()
         return self.menu_bar.suspend()
-
 
     def shutdown_vm(self, name):
         """Shutdown VM.
@@ -279,7 +277,6 @@ class VmsTabCtrl(object):
         confirm_dlg = self.menu_bar.shutdown()
         confirm_dlg.submit_and_wait_to_disappear(self._DLG_DISMISS_TIMEOUT)
 
-
     def wait_until_vm_is_up(self, name, timeout):
         """Wait until VM status is 'Up'.
 
@@ -292,7 +289,6 @@ class VmsTabCtrl(object):
         vm = self._get_vm_inst(name)
         vm.select()
         support.WaitForPageObject(vm, timeout).status('is_up')
-
 
     def wait_until_vm_is_suspended(self, name, timeout):
         """Wait until VM status is 'Suspended'.
@@ -307,7 +303,6 @@ class VmsTabCtrl(object):
         vm.select()
         support.WaitForPageObject(vm, timeout).status('is_suspended')
 
-
     def wait_until_vm_is_down(self, name, timeout):
         """Wait until VM status is 'Suspended'.
 
@@ -318,7 +313,6 @@ class VmsTabCtrl(object):
 
         """
         return self._wait_for_vm_status(name, 'is_down', timeout)
-
 
     def wait_until_vm_starts_booting(self, name, timeout=None):
         """Wait until VM starts powering up.
@@ -369,9 +363,8 @@ class VmsTabCtrl(object):
             w.status(status_prop)
         except common.exceptions.TimeoutException:
             prop_val = getattr(vm, status_prop)
-            msg = "%s.%s is: %s" % (vm.name, status_prop, attr_val)
+            msg = "%s.%s is: %s" % (vm.name, status_prop, prop_val)
             raise excepts.WaitTimeoutError(msg)
-
 
     def get_vm(self, name):
         """Return VM object.
@@ -388,7 +381,6 @@ class VmsTabCtrl(object):
         """
         return self._get_vm_inst(name)
 
-
     def console(self, name):
         """Invoke console for VM.
 
@@ -401,7 +393,6 @@ class VmsTabCtrl(object):
         vm = self._get_vm_inst(name)
         vm.select()
         confirm_dlg = self.menu_bar.console()
-
 
     def console_edit(self, name):
         """Invoke console optiosn for VM.
@@ -421,7 +412,6 @@ class VmsTabCtrl(object):
         dlg = self.menu_bar.console_edit()
         return dlg
 
-
     def get_vms_names(self):
         """Get VMs names.
 
@@ -432,15 +422,14 @@ class VmsTabCtrl(object):
         """
         marker = '//div[starts-with(@id, "MainTabVirtualMachineView_table_content_col2_row")]'
         vms = self.driver.find_elements(by.By.XPATH, marker)
-        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        vms_names = map(lambda x: getattr(x, 'text'), vms)
         return set(vms_names)
 
-
     def get_vm_from_pool(self, pool_name):
-        search_panel = search.SearchPanel(self.driver)
+        search_panel = SearchPanel(self.driver)
         search_string = ("Vms: pool={0} and status=up"
                          "or"
-                         "pool={0} and status=poweringup" . \
+                         "pool={0} and status=poweringup" .
                          format(pool_name))
         search_panel.submit_search(search_string)
         regex = vms_base.mk_pool_regex(pool_name)
@@ -455,16 +444,15 @@ class VmsTabCtrl(object):
                     return vm
         logger.info("Did not found active vm from pool: %s. Start a new one.",
                     pool_name)
-        return self.start_vm_from_pool(self, pool_name)
-
+        return self.start_vm_from_pool(pool_name)
 
     def start_vm_from_pool(self, pool_name):
-        search_panel = search.SearchPanel(self.driver)
+        search_panel = SearchPanel(self.driver)
         search_string = ("Vms: pool={0} and status=down" . format(pool_name))
         search_panel.submit_search(search_string)
         vms_before = self.get_vms_names()
         found_free_vm = False
-        for vm_name in sorted(vms):
+        for vm_name in sorted(vms_before):
             if re.match(regex, vm_name):
                 vm = VM(self.driver, name=vm_name)
                 if vm.is_down:
@@ -490,6 +478,7 @@ class VmsTabCtrl(object):
 #   ./raut/lib/selenium/ui/webadmin/models/vms.py
 #   ./raut/lib/selenium/ui/webadmin/pages/vms.py
 #
+
 
 class VMsTabMenuBarModel(page_base.PageModel):
     """ Virtual Machines tab - menu bar. """
@@ -521,8 +510,8 @@ class VMsTabMenuBarModel(page_base.PageModel):
     console_opts = elements.Button(
         by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[2]')
     # "Console Options".
-    console_opts_btn = elements.Button(
-        by.By.CLASS_NAME , 'actionPanelPopupMenuBar')
+    console_opts_btn = elements.Button(by.By.CLASS_NAME,
+                                       'actionPanelPopupMenuBar')
 
 
 class VMModel(page_base.TableRowModel):
@@ -559,6 +548,7 @@ class VMShutdownConfirmDlgModel(dialogs.OkCancelDlgModel):
 
 
 TABLE_ROW = 10
+
 
 class VM(page_base.DynamicPageObject):
     """ A table row representing a VM instance. """
@@ -706,159 +696,159 @@ class VMsTabMenuBar(page_base.PageObject):
 
 # from raut.core import By, PageModel, DynamicPageElement
 # from raut.lib.selenium.ui.common.models import form, tables
-# 
-# 
-# class VDisksTab(PageModel):
-#     """ Disks subtab menu bar page model"""
-#     add_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_New')
-#     edit_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Edit')
-#     remove_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Remove')
-#     activate_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Plug')
-#     deactivate_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Unplug')
-#     move_btn = form.Button(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Move')
-#     disk_type_all = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[1]')
-#     disk_type_image = form.Radio(
-#         By.XPATH, '(//input[@name="diskTypeView"])[2]')
-#     disk_type_lun = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[3]')
-# 
-# 
-# class VDiskImgInst(tables.TableRowModel):
-#     """ Virtual disk page model """
-#     _NAME_CELL_XPATH = (
-#         '//div[starts-with(@id, '
-#         '"SubTabVirtualMachineVirtualDiskView_table_content_col1")]'
-#         '[text() = "%s"]')
-#     alias = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col1_row%d')
-#     vsize = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col6_row%d')
-#     allocation = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col8_row%d')
-#     storage_domain = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col9_row%d')
-#     attached_to = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col16_row%d')
-#     interface = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col17_row%d')
-#     alignment = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col18_row%d')
-#     status = DynamicPageElement(
-#         By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col19_row%d')
-#     STATUS_OK = 'OK'
-# from raut.core import By, PageModel, PageElement
-# 
-# 
-# class VMSubtabsPanel(PageModel):
-#     general_tab_link = PageElement(By.XPATH, '//a[@href="#vms-general"]')
-#     net_ifaces_tab_link = PageElement(
-#         By.XPATH, '//a[@href="#vms-network_interfaces"]')
-#     disks_tab_link = PageElement(By.XPATH, '//a[@href="#vms-disks"]')
-#     snapshots_tab_link = PageElement(By.XPATH, '//a[@href="#vms-snapshots"]')
-#     apps_tab_link = PageElement(By.XPATH, '//a[@href="#vms-applications"]')
-#     permissions_tab_link = PageElement(
-#         By.XPATH, '//a[@href="#vms-permission"]')
-# """
-# Page objects and controllers for `Disks` sub-tab.
-# 
-# Author: pnovotny
-# """
-# from utilities.enum import Enum
-# 
-# import raut.lib.selenium.ui.webadmin.models.subtabs.vms.disks as m_disks
-# import raut.lib.selenium.ui.exceptions as ui_exceptions
-# import raut.lib.selenium.ui.common.pages.disks as disks_common
-# 
-# 
-# DISK_TYPE = Enum(
-#     IMAGE="image",
-#     LUN="LUN",
-# )
-# 
-# 
-# class VDiskImgInstance(disks_common.VDiskImgInstanceBase):
-#     _model = m_disks.VDiskImgInst
-# 
-# 
-# class VDisksSubTab(disks_common.VDisksSubTabBase):
-#     """
-#     `Disks` sub-tab page object.
-#     """
-#     _model = m_disks.VDisksTab
-# 
-# 
-# class VDisksSubTabCtrl(disks_common.VDisksSubTabCtrlBase):
-#     """
-#     `Disks` sub-tab controller. Handles actions
-#       like creating, editing and deleting a virtual disk.
-#     Parameters:
-#         * VDISK_ACTION_TIMEOUT - default timeout for virtual disk actions
-#             like `remove_image_disk`
-#     """
-#     VDISK_ACTION_TIMEOUT = 60
-# 
-#     def __init__(self, driver):
-#         """
-#         Init.
-#         Parameters:
-#             * driver - WebDriver instance
-#         """
-#         self.driver = driver
-#         self.vdisks_tab = VDisksSubTab(self.driver)
-# 
-#     def _get_vdisk_img_inst(self, alias):
-#         """
-#         Return an image-based virtual disk instance (if exists in data grid).
-#         Parameters:
-#             * alias - virtual disk alias
-#         Return: VDiskImgInstance instance - success / None - does not exist
-#         """
-#         try:
-#             vdisk = VDiskImgInstance(self.driver, alias)
-#         except ui_exceptions.InitPageValidationError:
-#             return None
-#         else:
-#             return vdisk
-# """
-# Page objects and controllers for general `Virtual Machines` sub-tab.
-# 
-# Author: pnovotny
-# """
-# 
-# from raut.lib.selenium.ui.common import timeouts
-# from raut.lib.selenium.ui.webadmin.pages.subtabs.vms import disks
-# from raut.lib.selenium.ui.webadmin.models.subtabs.vms import VMSubtabsPanel
-# from raut.core import PageObject
-# 
-# 
-# class VMsSubTab(PageObject):
-#     """
-#     General VMs sub-tab page object.
-#     """
-#     _model = VMSubtabsPanel
-#     _label = 'VM sub-tabs panel'
-#     _timeout = timeouts.SUB_TAB
-# 
-#     def init_validation(self):
-#         """
-#         Initial validation.
-#         Return: True - successful validation
-#         """
-#         self._model.general_tab_link
-#         return True
-# 
-#     def go_to_disks_sub_tab(self):
-#         """
-#         Go to `Disks` sub-tab and return its controller.
-#         Return:  instance
-#         """
-#         self._model.disks_tab_link.click()
-#         return disks.VDisksSubTabCtrl(self.driver)
-# 
+#
+#
+#class VDisksTab(PageModel):
+#    """ Disks subtab menu bar page model"""
+#    add_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_New')
+#    edit_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Edit')
+#    remove_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Remove')
+#    activate_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Plug')
+#    deactivate_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Unplug')
+#    move_btn = form.Button(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_Move')
+#    disk_type_all = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[1]')
+#    disk_type_image = form.Radio(
+#        By.XPATH, '(//input[@name="diskTypeView"])[2]')
+#    disk_type_lun = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[3]')
+#
+#
+#class VDiskImgInst(tables.TableRowModel):
+#    """ Virtual disk page model """
+#    _NAME_CELL_XPATH = (
+#        '//div[starts-with(@id, '
+#        '"SubTabVirtualMachineVirtualDiskView_table_content_col1")]'
+#        '[text() = "%s"]')
+#    alias = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col1_row%d')
+#    vsize = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col6_row%d')
+#    allocation = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col8_row%d')
+#    storage_domain = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col9_row%d')
+#    attached_to = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col16_row%d')
+#    interface = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col17_row%d')
+#    alignment = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col18_row%d')
+#    status = DynamicPageElement(
+#        By.ID, 'SubTabVirtualMachineVirtualDiskView_table_content_col19_row%d')
+#    STATUS_OK = 'OK'
+#from raut.core import By, PageModel, PageElement
+#
+#
+#class VMSubtabsPanel(PageModel):
+#    general_tab_link = PageElement(By.XPATH, '//a[@href="#vms-general"]')
+#    net_ifaces_tab_link = PageElement(
+#        By.XPATH, '//a[@href="#vms-network_interfaces"]')
+#    disks_tab_link = PageElement(By.XPATH, '//a[@href="#vms-disks"]')
+#    snapshots_tab_link = PageElement(By.XPATH, '//a[@href="#vms-snapshots"]')
+#    apps_tab_link = PageElement(By.XPATH, '//a[@href="#vms-applications"]')
+#    permissions_tab_link = PageElement(
+#        By.XPATH, '//a[@href="#vms-permission"]')
+#"""
+#Page objects and controllers for `Disks` sub-tab.
+#
+#Author: pnovotny
+#"""
+#from utilities.enum import Enum
+#
+#import raut.lib.selenium.ui.webadmin.models.subtabs.vms.disks as m_disks
+#import raut.lib.selenium.ui.exceptions as ui_exceptions
+#import raut.lib.selenium.ui.common.pages.disks as disks_common
+#
+#
+#DISK_TYPE = Enum(
+#    IMAGE="image",
+#    LUN="LUN",
+#)
+#
+#
+#class VDiskImgInstance(disks_common.VDiskImgInstanceBase):
+#    _model = m_disks.VDiskImgInst
+#
+#
+#class VDisksSubTab(disks_common.VDisksSubTabBase):
+#    """
+#    `Disks` sub-tab page object.
+#    """
+#    _model = m_disks.VDisksTab
+#
+#
+#class VDisksSubTabCtrl(disks_common.VDisksSubTabCtrlBase):
+#    """
+#    `Disks` sub-tab controller. Handles actions
+#      like creating, editing and deleting a virtual disk.
+#    Parameters:
+#        * VDISK_ACTION_TIMEOUT - default timeout for virtual disk actions
+#            like `remove_image_disk`
+#    """
+#    VDISK_ACTION_TIMEOUT = 60
+#
+#    def __init__(self, driver):
+#        """
+#        Init.
+#        Parameters:
+#            * driver - WebDriver instance
+#        """
+#        self.driver = driver
+#        self.vdisks_tab = VDisksSubTab(self.driver)
+#
+#    def _get_vdisk_img_inst(self, alias):
+#        """
+#        Return an image-based virtual disk instance (if exists in data grid).
+#        Parameters:
+#            * alias - virtual disk alias
+#        Return: VDiskImgInstance instance - success / None - does not exist
+#        """
+#        try:
+#            vdisk = VDiskImgInstance(self.driver, alias)
+#        except ui_exceptions.InitPageValidationError:
+#            return None
+#        else:
+#            return vdisk
+#"""
+#Page objects and controllers for general `Virtual Machines` sub-tab.
+#
+#Author: pnovotny
+#"""
+#
+#from raut.lib.selenium.ui.common import timeouts
+#from raut.lib.selenium.ui.webadmin.pages.subtabs.vms import disks
+#from raut.lib.selenium.ui.webadmin.models.subtabs.vms import VMSubtabsPanel
+#from raut.core import PageObject
+#
+#
+#class VMsSubTab(PageObject):
+#    """
+#    General VMs sub-tab page object.
+#    """
+#    _model = VMSubtabsPanel
+#    _label = 'VM sub-tabs panel'
+#    _timeout = timeouts.SUB_TAB
+#
+#    def init_validation(self):
+#        """
+#        Initial validation.
+#        Return: True - successful validation
+#        """
+#        self._model.general_tab_link
+#        return True
+#
+#    def go_to_disks_sub_tab(self):
+#        """
+#        Go to `Disks` sub-tab and return its controller.
+#        Return:  instance
+#        """
+#        self._model.disks_tab_link.click()
+#        return disks.VDisksSubTabCtrl(self.driver)
+#
 
-# VMS_subtab END
+#VMS_subtab END

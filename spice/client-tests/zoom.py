@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(
     description='Push RV zoom mode.')
 group = parser.add_mutually_exclusive_group(required=True)
 parser.add_argument("direction", help="Zoom direction.",
-                    choices=['in', 'out', 'normal'] )
+                    choices=['in', 'out', 'normal'])
 group.add_argument("-a", "--accesskeys", help="Use access keys.",
                    action="store_const", const="access_key", dest="method")
 group.add_argument("-k", "--hotkeys", help="Use hot keys.",
@@ -39,8 +39,8 @@ group.add_argument("-m", "--mouse", help="Use mouse.", action="store_const",
                    const="mouse", dest="method")
 group.add_argument("-w", "--windowmanager", help="Use window manager.",
                    action="store_const", const="wm_key", dest="method")
-parser.add_argument("-r", "--repeat", help="Repeat zooming.", default=0, 
-                   dest="repeat", type=int)
+parser.add_argument("-r", "--repeat", help="Repeat zooming.", default=0,
+                    dest="repeat", type=int)
 parser.add_argument("-R", "--reset", help="Reset to normal size afterwards.", action="store_true")
 args = parser.parse_args()
 
@@ -69,4 +69,3 @@ if args.direction == "normal" or args.reset:
     logger.info("Dislay #%s extents after %s zoom: %s", app.dsp1.num, args.direction, app.dsp1.dsp.extents)
     assert w2 == w1
     assert h2 == h1
-

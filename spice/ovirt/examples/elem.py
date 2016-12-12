@@ -13,6 +13,7 @@ driver = webdriver.Firefox()
 
 # Go to admin and select running VM.
 
+
 def example():
     """Address the same element in different ways.
     """

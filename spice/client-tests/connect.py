@@ -23,10 +23,11 @@ import subprocess
 
 logger = logging.getLogger(__name__)
 
+
 def run(helper):
     cfg = helper.query_master("get_cfg")
     dbus = helper.query_master("get_x_var", "DBUS_SESSION_BUS_ADDRESS",
-                                cfg["client_vm"])
+                               cfg["client_vm"])
     helper.info("Dbus: %s.", repr(dbus))
     os.environ['DBUS_SESSION_BUS_ADDRESS'] = dbus
     uri = helper.query_master("get_uri")

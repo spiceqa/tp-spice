@@ -17,6 +17,7 @@
 inherits from GeneralException.
 """
 
+
 class GeneralException(Exception):
     """Base class for user defined exceptions.
     """

@@ -277,6 +277,7 @@ class VMDetailsView(page_base.PageObject):
         self._model.console_edit.click()
         return vms_base.EditConsoleOptions(self.driver)
 
+    # pylint: disable=E0102
     def console(self):
         """Invoke console for VM.
 
@@ -541,7 +542,6 @@ class BasicTabCtrl(object):
         assert self.wait_until_vm_starts_booting(name, timeout)
         return self.wait_until_vm_is_up(name, timeout)
 
-
     @deco.retry(8, exceptions=(excepts.WaitTimeoutError,))
     def _wait_for_vm_status(self, name, status_prop, timeout=None):
         """Wait until VM status property returns True.
@@ -571,7 +571,6 @@ class BasicTabCtrl(object):
             msg = "%s - status is '%s'" % (vm, vm.status)
             raise excepts.WaitTimeoutError(msg)
 
-
     def wait_until_vm_is_up(self, name, timeout=None):
         """Wait until VM is up.
 
@@ -588,7 +587,6 @@ class BasicTabCtrl(object):
             True - success.
         """
         return self._wait_for_vm_status(name, 'is_up', timeout)
-
 
     def wait_until_vm_is_suspended(self, name, timeout):
         """Wait until VM is suspended.
@@ -607,7 +605,6 @@ class BasicTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_suspended', timeout)
 
-
     def wait_until_vm_is_down(self, name, timeout):
         """Wait until VM is down.
 
@@ -624,7 +621,6 @@ class BasicTabCtrl(object):
             True - success / False - failure.
         """
         return self._wait_for_vm_status(name, 'is_down', timeout)
-
 
     def wait_until_vm_starts_booting(self, name, timeout=None):
         """Wait until VM starts powering up.
@@ -643,13 +639,11 @@ class BasicTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
-
     def get_vms_names(self):
         marker = '//div[starts-with(@id, "MainTabBasicListView_vm")][contains(@id, "_name")]'
         vms = self.driver.find_elements(by.By.XPATH, marker)
-        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        vms_names = map(lambda x: getattr(x, 'text'), vms)
         return set(vms_names)
-
 
     def get_vm_from_pool(self, pool_name):
         regex = vms_base.mk_pool_regex(pool_name)
@@ -664,8 +658,7 @@ class BasicTabCtrl(object):
                     return vm
         logger.info("Did not found active vm from pool: %s. Start a new one.",
                     pool_name)
-        return self.start_vm_from_pool(self, pool_name)
-
+        return self.start_vm_from_pool(pool_name)
 
     def start_vm_from_pool(self, pool_name):
         vms_before = self.get_vms_names()

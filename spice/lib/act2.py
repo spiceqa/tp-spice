@@ -48,16 +48,16 @@ class Action(object):
         msg = "OS info: %s" % os_info
         utils.debug(vmi, msg)
         lookup_order = [
-                        [os, ver, mver, arch, ovirt_ver],
-                        [os, ver, mver, ovirt_ver],
-                        [os, ver, arch, ovirt_ver],
-                        [os, ver, ovirt_ver],
-                        [os, ovirt_ver],
-                        [os, ver, mver, arch],
-                        [os, ver, mver],
-                        [os, ver, arch],
-                        [os, ver],
-                        [os]]
+                       [os, ver, mver, arch, ovirt_ver],
+                       [os, ver, mver, ovirt_ver],
+                       [os, ver, arch, ovirt_ver],
+                       [os, ver, ovirt_ver],
+                       [os, ovirt_ver],
+                       [os, ver, mver, arch],
+                       [os, ver, mver],
+                       [os, ver, arch],
+                       [os, ver],
+                       [os]]
         action = None
         for iset in lookup_order:
             if not all(iset):

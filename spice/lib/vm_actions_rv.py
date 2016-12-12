@@ -228,10 +228,10 @@ def rv_url(vmi):
                 "explicit" in vmi.cfg.ssltype:
             hostname = socket.gethostname()
             url = "spice://%s?tls-port=%s&port=%s" % (hostname, tls_port,
-                                                        port)
+                                                      port)
         else:
             url = "spice://%s?tls-port=%s&port=%s" % (host_ip, tls_port,
-                                                        port)
+                                                      port)
         return url
     # No SSL
     url = "spice://%s?port=%s" % (host_ip, port)
@@ -323,7 +323,7 @@ def rv_run(vmi, rcmd, ssn, env={}):
         ssn.sendline(str(rcmd))
     except aexpect.ShellStatusError:
         logger.debug("Ignoring a status exception, will check connection"
-                      "of remote-viewer later")
+                     "of remote-viewer later")
 
 
 @reg.add_action(req=[ios.ILinux])
