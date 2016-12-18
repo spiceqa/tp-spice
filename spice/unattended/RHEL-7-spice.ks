@@ -50,7 +50,7 @@ firstboot --disable
 #
 # Packages.
 #
-%packages --default
+%packages --default --ignoremissing
 @smart-card
 spice-vdagent
 virt-viewer
