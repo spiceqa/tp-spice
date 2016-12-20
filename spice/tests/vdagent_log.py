@@ -64,30 +64,30 @@ def run(vt_test, test_params, env):
             cmd_g.start_vdagent()
         cmd_g.stop_vdagent()
         cmd = "tail -n 3 %s | grep 'vdagentd quiting'" % cfg.vdagent_log
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)
     if cfg.spice_vdagent_start_log:
         logger.info("Inspect logs for start action.")
         if cmd_g.vdagent_is_active():
             cmd_g.stop_vdagent()
-        .cmd_g.start_vdagent()
+        cmd_g.start_vdagent()
         cmd = "tail -n 2 %s | grep 'opening vdagent virtio channel'" % \
             cfg.vdagent_log
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)
     if cfg.spice_vdagent_restart_log:
         cmd_g.restart_vdagent()
         cmd = "tail -n 2 %s | grep 'opening vdagent virtio channel'" % \
             cfg.vdagent_log
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)
     if cfg.spice_vdagent_copypaste:
         # Script location: avocado-vt/shared/scripts/cb.py
         script_path = os.path.join(test.virtdir, "scripts", cfg.guest_script)
-        vm_g.copy_files_to(script_path, cfg.dst_dir)
+        test.vm_g.copy_files_to(script_path, cfg.dst_dir)
         cmd = 'echo "SPICE_VDAGENTD_EXTRA_ARGS=-dd > /etc/sysconfig/spice-vdagentd'
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)
         cmd_g.restart_vdagent()
         script_call = os.path.join(cfg.dst_dir, cfg.guest_script)
         cmd = "%s %s %s %s" % (cfg.interpreter, script_call, cfg.script_params,
                                cfg.text_to_test)
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)
         cmd = "tail -n 3 " + cfg.vdagent_log + " | grep 'clipboard grab'"
-        vm_g.assn_g.cmd(cmd)
+        test.vm_g.assn_g.cmd(cmd)

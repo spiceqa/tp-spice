@@ -101,23 +101,23 @@ class VMPopupGeneralTabModel(page_base.PageModel):
 
 class VMPopupSystemTabModel(page_base.PageModel):
     """ VM popup - 'System' side-tab. """
-    mem_size = elements.TextInput(by.By.CSS_SELECTOR, '*[id$=PopupWidget_memSize]')
+    mem_size = elements.TextInput(by.By.CSS_SELECTOR,
+                                  '*[id$=PopupWidget_memSize]')
     cpu_cores = elements.TextInput(by.By.CSS_SELECTOR,
-                               '*[id$=PopupWidget_totalCPUCores]')
+                                   '*[id$=PopupWidget_totalCPUCores]')
     advanced_params_toggle = elements.PageElement(
-        by.By.XPATH,
-        '//div[contains(@class, "gwt-ToggleButton")]'
+        by.By.XPATH, '//div[contains(@class, "gwt-ToggleButton")]'
         '//span[. = "Advanced Parameters"]')
     cores_per_socket = elements.Select(by.By.CSS_SELECTOR,
-                                   '*[id$=PopupWidget_coresPerSocket]')
+                                       '*[id$=PopupWidget_coresPerSocket]')
     num_of_sockets = elements.Select(by.By.CSS_SELECTOR,
-                                 '*[id$=PopupWidget_numOfSockets]')
+                                     '*[id$=PopupWidget_numOfSockets]')
 
 
 class VMPopupInitRunTabModel(page_base.PageModel):
     """ VM popup - 'Initial Run' side-tab. """
-    time_zone = elements.Select(
-        by.By.CSS_SELECTOR, '*[id$=PopupWidget_timeZone]')
+    time_zone = elements.Select(by.By.CSS_SELECTOR,
+                                '*[id$=PopupWidget_timeZone]')
     domain = elements.Select(
         by.By.CSS_SELECTOR, '*[id$=PopupWidget_domain]')
 
@@ -127,12 +127,13 @@ class VMPopupConsoleTabModel(page_base.PageModel):
     display_protocol = elements.Select(
         by.By.CSS_SELECTOR, '*[id$=PopupWidget_graphicsType]')
     vnc_kb_layout = elements.Select(by.By.CSS_SELECTOR,
-                                '*[id$=PopupWidget_vncKeyboardLayout]')
-    usb_policy = elements.Select(by.By.CSS_SELECTOR, '*[id$=PopupWidget_usbPolicy]')
+                                    '*[id$=PopupWidget_vncKeyboardLayout]')
+    usb_policy = elements.Select(by.By.CSS_SELECTOR,
+                                 '*[id$=PopupWidget_usbPolicy]')
     num_of_monitors = elements.Select(by.By.CSS_SELECTOR,
-                                  '*[id$=PopupWidget_numOfMonitors]')
-    is_smartcard_enabled = elements.Checkbox(by.By.CSS_SELECTOR,
-                                         '*[id$=PopupWidget_numOfMonitors]')
+                                      '*[id$=PopupWidget_numOfMonitors]')
+    is_smartcard_enabled = elements.Checkbox(
+        by.By.CSS_SELECTOR, '*[id$=PopupWidget_numOfMonitors]')
 
     advanced_params_toggle = elements.PageElement(
         by.By.XPATH,
@@ -162,14 +163,14 @@ class VMPopupHostTabModel(page_base.PageModel):
 
 class VMPopupHighAvailTabModel(page_base.PageModel):
     """ VM popup - 'High Availability' side-tab. """
-    is_highly_available = elements.Checkbox(by.By.CSS_SELECTOR,
-                                        '*[id$=PopupWidget_isHighlyAvailable]')
+    is_highly_available = elements.Checkbox(
+        by.By.CSS_SELECTOR, '*[id$=PopupWidget_isHighlyAvailable]')
     migration_prio = elements.Select(
         by.By.CSS_SELECTOR, '*[id$=PopupWidget_priority]')
     watchdog_model = elements.Select(by.By.CSS_SELECTOR,
-                                 '*[id$=PopupWidget_watchdogModel]')
+                                     '*[id$=PopupWidget_watchdogModel]')
     watchdog_action = elements.Select(by.By.CSS_SELECTOR,
-                                  '*[id$=PopupWidget_watchdogAction]')
+                                      '*[id$=PopupWidget_watchdogAction]')
     PRIO_LOW = 'Low'
     PRIO_MEDIUM = 'Medium'
     PRIO_HIGH = 'High'
@@ -181,9 +182,9 @@ class VMPopupResAllocTabModel(page_base.PageModel):
         by.By.CSS_SELECTOR,
         '*[id$=PopupWidget_minAllocatedMemory]')
     template_prov_thin = elements.Radio(by.By.CSS_SELECTOR,
-                                    '*[id$=PopupWidget_provisioningThin]')
-    template_prov_clone = elements.Radio(by.By.CSS_SELECTOR,
-                                     '*[id$=PopupWidget_provisioningClone]')
+                                        '*[id$=PopupWidget_provisioningThin]')
+    template_prov_clone = elements.Radio(
+        by.By.CSS_SELECTOR, '*[id$=PopupWidget_provisioningClone]')
 
 
 class VMPopupBootOptsTabModel(page_base.PageModel):
@@ -213,12 +214,12 @@ class NewTemplateDlgModel(dialogs.OkCancelDlgModel):
     """ New Template dialog. """
     name = elements.TextInput(by.By.ID, 'VmMakeTemplatePopupWidget_name')
     description = elements.TextInput(by.By.ID,
-                                 'VmMakeTemplatePopupWidget_description')
+                                     'VmMakeTemplatePopupWidget_description')
     host_cluster = elements.ComboBox(
         by.By.ID, 'VmMakeTemplatePopupWidget_dataCenterWithCluster')
     quota = elements.Select(by.By.ID, 'VmMakeTemplatePopupWidget_quota')
     is_public = elements.Checkbox(by.By.ID,
-                              'VmMakeTemplatePopupWidget_isTemplatePublic')
+                                  'VmMakeTemplatePopupWidget_isTemplatePublic')
 
     ok_btn = elements.Button(by.By.ID, 'VmMakeTemplatePopupView_OnNewTemplate')
     cancel_btn = elements.Button(by.By.ID, 'VmMakeTemplatePopupView_Cancel')
@@ -227,9 +228,9 @@ class NewTemplateDlgModel(dialogs.OkCancelDlgModel):
 class NewTemplateDiskInstModel(page_base.DynamicPageModel):
     """ A single disk instance from Disks Allocation section. """
     _disk_names = elements.PageElement(by.By.CSS_SELECTOR,
-                              'input[id^="VmMakeTemplatePopupWidget_'
-                              'disksAllocation_disk"][id$=_diskName]',
-                              as_list=True)
+                                       'input[id^="VmMakeTemplatePopupWidget_'
+                                       'disksAllocation_disk"][id$=_diskName]',
+                                       as_list=True)
     alias = elements.DynamicTextInput(
         by.By.ID, 'VmMakeTemplatePopupWidget_disksAllocation_disk%s_diskAlias')
     size = elements.DynamicTextInput(

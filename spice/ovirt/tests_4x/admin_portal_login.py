@@ -31,6 +31,7 @@ from lib4x.admin_portal import admin_login
 
 logger = logging.getLogger(__name__)
 
+
 @error.context_aware
 def run(vt_test, test_params, env):
     """Download SeleniumHQ server, and copy it to a client.
@@ -64,6 +65,6 @@ def run(vt_test, test_params, env):
                                           password=cfg.ovirt_admin_password,
                                           domain='internal')
         assert cfg.ovirt_vm_name
-        if not vm.is_up:
-            tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name)
+        if not vmi.vm.is_up:
+            tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name)  # undefined tab_controller
         home_page.sign_out()

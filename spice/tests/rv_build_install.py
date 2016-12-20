@@ -42,6 +42,7 @@ def connect_to_vm(vm_name, env, params):
     logging.info("VM %s is up and running" % vm_name)
     return (vm, vm_root_session)
 
+
 def install_req_pkgs(pkgsRequired, vm_root_session, params):
     """
     Checks to see if packages are installed and if not, installs the package
@@ -62,6 +63,7 @@ def install_req_pkgs(pkgsRequired, vm_root_session, params):
                 vm_root_session.cmd("yum -y localinstall %s" % rpm, timeout=300)
             except ShellCmdError:
                 logging.info("Could not install %s" % pkgName)
+
 
 def build_install_qxl(vm_root_session, vm_script_path, params):
     """
@@ -87,6 +89,7 @@ def build_install_qxl(vm_root_session, vm_script_path, params):
     logging.info(output)
     if re.search("Return code", output):
         raise error.TestFail("qxl was not installed properly")
+
 
 def build_install_spicegtk(vm_root_session, vm_script_path, params):
     """
@@ -137,6 +140,7 @@ def build_install_spicegtk(vm_root_session, vm_script_path, params):
     except ShellCmdError:
         logging.error(output)
 
+
 def build_install_vdagent(vm_root_session, vm_script_path, params):
     """
     Build and install spice-vdagent in the VM
@@ -182,6 +186,7 @@ def build_install_vdagent(vm_root_session, vm_script_path, params):
         logging.info(output)
     except ShellCmdError:
         logging.error(output)
+
 
 def run_rv_build_install(test, params, env):
     """

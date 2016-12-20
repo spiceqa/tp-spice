@@ -49,8 +49,6 @@ print "Is down: %s" % vm.is_down
 print "Is suspeded: %s" % vm.is_suspended
 print "is booting: %s" % vm.is_booting
 
-
-
 # EditConsoleOptions
 console = details.console_edit()
 print "FullScreen: %s" % console.fullscreen_is_checked

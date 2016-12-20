@@ -30,6 +30,7 @@ from lib4x.user_portal import user_login
 
 logger = logging.getLogger(__name__)
 
+
 @error.context_aware
 def run(vt_test, test_params, env):
     """Download SeleniumHQ server, and copy it to a client.
@@ -57,9 +58,9 @@ def run(vt_test, test_params, env):
         drv.maximize_window()
         login_page = user_login.UserLoginPage(drv)
         home_page = login_page.login_user(username=cfg.ovirt_user,
-                                        password=cfg.ovirt_password,
-                                        domain=cfg.ovirt_profile,
-                                        autoconnect=False)
+                                          password=cfg.ovirt_password,
+                                          domain=cfg.ovirt_profile,
+                                          autoconnect=False)
         tab_controller = home_page.go_to_basic_tab()
         tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name, timeout=None)
         home_page.sign_out_user()

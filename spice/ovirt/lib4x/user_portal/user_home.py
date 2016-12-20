@@ -42,7 +42,7 @@ class UserHomePageModel(page_base.PageModel):
 
 class UserAboutDlgModel(page_base.PageModel):
     close_btn = elements.Button(by.By.XPATH,
-                            '//div[@role="button"][starts-with(., "Close")]')
+                                '//div[@role="button"][starts-with(., "Close")]')
     title = elements.PageElement(
         by.By.XPATH,
         '//div[starts-with(@class, "gwt-DialogBox")]'
@@ -112,7 +112,7 @@ class UserHomePage(page_base.PageObject):
             Page object.
         """
         self._model.about_link.click()
-        return AboutDialog(self.driver)
+        return AboutDialog(self.driver)  # pylint- undefined AboutDialog
 
     def go_to_basic_tab(self):
         """Go to the Basic tab by clicking on 'Basic' tab label.
@@ -125,7 +125,7 @@ class UserHomePage(page_base.PageObject):
         self._model.basic_tab.click()
         try:
             basictab.BasicTab(self.driver)
-        except InitPageValidationError:
+        except excepts.InitPageValidationError:
             pass
         time.sleep(1)
         self._model.basic_tab.click()

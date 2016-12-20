@@ -229,7 +229,7 @@ class PageElement(RootPageElement):
         Is part of the locator string dynamic and needs to be interpolated?
         false in this case.
     """
-    _helper = None
+    _helper = None  # defined in child classes
     _is_dynamic = False
 
     def __init__(self, by, locator, as_list=False):
@@ -281,7 +281,7 @@ class PageElement(RootPageElement):
             locator = self._locator % model._instance_identifier
         webelement = lookup_method(by=self._by, value=locator)
         if self._helper:
-            return self._helper
+            return self._helper(webelement)  # pylint: disable=E1102
         return webelement
 
     def _set(self, model, value):

@@ -1,3 +1,8 @@
+* Define RvSession in spice/test/rv_smartcard.py:46
+* Remove or review spice/tests/rv_migrate.py
+* Define tab_controller in spice/ovirt/tests_4x/admin_portal_login.py:69
+* Define vms_tab in spice/ovirt/tests_4x/admin_portal_connect.py:78
+* Add AboutDialog class to spice/ovirt/lib4x/user_portal/user_home.py:115
 * Remove or review utils_selenium.py
 * Import selftests from avocado.
 * Add https://coveralls.io and status to README.rst

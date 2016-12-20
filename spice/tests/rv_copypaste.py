@@ -86,8 +86,7 @@ def run(vt_test, test_params, env):
         if md5src == md5dst:
             success = True
 
-    if cfg.negative and success \
-        or not cfg.negative and not success:
+    if cfg.negative and success or not cfg.negative and not success:
         raise utils.SpiceTestFail(test, "Test failed.")
 
     pass
