@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser(
     description='Push RV into/from fullscreen mode.')
 group = parser.add_mutually_exclusive_group(required=True)
 parser.add_argument("fs", help="Fullscreen on/off.",
-                    choices=['on', 'off'] )
+                    choices=['on', 'off'])
 group.add_argument("-a", "--accesskeys", help="Use access keys.",
                    action="store_const", const="access_key", dest="method")
 group.add_argument("-k", "--hotkeys", help="Use hot keys.",

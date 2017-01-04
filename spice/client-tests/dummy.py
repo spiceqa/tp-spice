@@ -16,6 +16,7 @@ import logging
 import time
 import sys
 
+
 def run(helper):
     for i in range(50):
         t = time.time()

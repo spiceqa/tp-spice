@@ -21,6 +21,7 @@ from autotest.client.shared import error
 
 logger = logging.getLogger(__name__)
 
+
 @error.context_aware
 def run(test, params, env):
     """Boot VM.

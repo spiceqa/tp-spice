@@ -40,7 +40,6 @@ logger = logging.getLogger(__name__)
 # Look at: qemu/tests/cfg/migrate.cfg
 
 
-
 def run(test, params, env):
     """KVM migration test:
 
@@ -98,7 +97,7 @@ def run(test, params, env):
     # process is running
     session2 = vm.wait_for_login(timeout=login_timeout)
 
-    try:
+    try:  # where is except?
         # run some functions before migrate start.
         pre_migrate = get_functions(params.get("pre_migrate"), locals())
         for func in pre_migrate:
@@ -112,14 +111,14 @@ def run(test, params, env):
             else:
                 logging.info("Round %s pong..." % str(i / 2))
             vm.migrate(mig_timeout, mig_protocol, mig_cancel_delay,
-                        offline, check,
-                        migration_exec_cmd_src=mig_exec_cmd_src,
-                        migration_exec_cmd_dst=mig_exec_cmd_dst, env=env)
+                       offline, check,
+                       migration_exec_cmd_src=mig_exec_cmd_src,
+                       migration_exec_cmd_dst=mig_exec_cmd_dst, env=env)
 
         # Set deamon thread action to stop after migrate
         params["action"] = "stop"
 
         # Make sure the background process is still running
         error.context("Checking the background command in the guest "
-                        "post migration", logging.info)
+                      "post migration", logging.info)
         session2.cmd(check_command, timeout=30)

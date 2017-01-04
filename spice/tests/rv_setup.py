@@ -25,7 +25,7 @@ Actions on the client
 
 # noqa
 # flake8: noqa
-# pylint: skip-file
+# pylint: disable=E0602
 
 import logging
 import os
@@ -34,8 +34,6 @@ from virttest import utils_misc
 from spice.lib import utils_spice
 from spice.lib import rv_session
 from spice.lib import conf
-
-
 
 
 def deploy_tests_linux(vm, cfg):

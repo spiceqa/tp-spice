@@ -35,8 +35,8 @@ import os
 from virttest import remote
 from virttest import utils_misc
 from distutils import util
+from autotest.client.shared import error
 
-#pylint: skip-file
 
 def launch_totem(session):
     """Launch Totem player and play video file.
@@ -46,7 +46,7 @@ def launch_totem(session):
     session : RvSession
         remote-viewer session
     """
-    totem_version = sesion.guest_session.cmd_output('totem --version')
+    totem_version = session.guest_session.cmd_output('totem --version')
     logging.info("Totem version %s", totem_version)
     # Repeat parameters for totem.
     totem_params = ""
@@ -68,6 +68,8 @@ def launch_totem(session):
     cmd = "nohup totem %s %s &> /dev/null &" % (dst, totem_params)
     session.guest_session.cmd(cmd)
 
+
+# pylint: disable=E0602
 def deploy_video_file(test, vm_obj, params):
     """Deploy video file into destination on vm.
 
@@ -100,8 +102,8 @@ def run_rv_video(test, params, env):
         timeout=int(params.get("login_timeout", 360)),
         username="root", password="123456")
     guest_root_session = guest_vm.wait_for_login(
-            timeout=int(params.get("login_timeout", 360)),
-            username="root", password="123456")
+        timeout=int(params.get("login_timeout", 360)),
+        username="root", password="123456")
 
     client_vm = session.client_vm
 
@@ -114,8 +116,7 @@ def run_rv_video(test, params, env):
     except:
         raise error.TestFail("Failed to establish connection")
 
-
     deploy_video_file(test, guest_vm, params)
 
-    launch_totem(guest_session, params)
+    launch_totem(guest_session)
     guest_session.close()

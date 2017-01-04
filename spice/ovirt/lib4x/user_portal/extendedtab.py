@@ -1219,6 +1219,3 @@ class ChangeCD(dialogs.OkCancelDlg):
 #            return None
 #        else:
 #            return vdisk
-
-
-

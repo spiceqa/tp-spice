@@ -46,7 +46,6 @@ def exc_handler(tries_remaining, exception, delay):
         time.sleep(seconds)
 
 
-
 def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
     """Function decorator implementing retrying logic.
 
@@ -77,7 +76,7 @@ def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
             tries.reverse()
             for tries_remaining in tries:
                 try:
-                   return func(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except exceptions as e:
                     if tries_remaining > 0:
                         if hook is not None:
@@ -111,7 +110,7 @@ def log(level=logging.DEBUG, name=None, message=None):
         def wrapper(*args, **kwargs):
             logger.info('Entering {}'.format(logmsg))
             start = time.time()
-            f_result = func(*args, **kwds)
+            f_result = func(*args, **kwargs)
             end = time.time()
             logger.info('Exiting {}'.format(logmsg))
             logger.log(level, func.__name__, "time ", end-start)

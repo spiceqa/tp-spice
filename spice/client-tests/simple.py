@@ -18,6 +18,7 @@ import os
 import subprocess
 import commands
 
+
 def run(helper):
     try:
         cfg = helper.query_master("get_cfg")

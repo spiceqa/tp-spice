@@ -41,7 +41,7 @@ from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act
 
-EXPECTED_RV_CORNERS_FS = [('+0','+0'),('-0','+0'),('-0','-0'),('+0','-0')]
+EXPECTED_RV_CORNERS_FS = [('+0', '+0'), ('-0', '+0'), ('-0', '-0'), ('+0', '-0')]
 WIN_TITLE = "'vm1 (1) - Remote Viewer'"
 
 
@@ -55,7 +55,7 @@ class Helper(object):
         self.test = test
 
     def get_cfg(self):
-        return {v:k for v,k in self.test.cfg.iteritems()}
+        return {v: k for v, k in self.test.cfg.iteritems()}
 
     def get_x_var(self, var_name, vm_name):
         var_val = act.get_x_var(self.test.vm_info[vm_name], var_name)
@@ -134,7 +134,7 @@ def run(vt_test, test_params, env):
     is_connected = False
     if cfg.make_rv_connect:
         act.x_active(vmi_g)
-        ssn = act.new_ssn(vmi_c) 
+        ssn = act.new_ssn(vmi_c)
         act.rv_connect(vmi_c, ssn)
         act.rv_chk_con(vmi_c)
         is_connected = True

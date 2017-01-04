@@ -47,8 +47,9 @@ logger.info("Create a new Zope registry.")
 registry = adapter.AdapterRegistry()
 
 
+# pylint: disable=E0211
 class IVmAction(interface.Interface):
-    def __call__():
+    def __call__():  # Zope Interfaces are defined without 'self'
         """Run some command on VM."""
 
 

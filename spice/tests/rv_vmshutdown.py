@@ -78,6 +78,7 @@ def run(vt_test, test_params, env):
     else:
         raise utils.SpiceTestFail(test, "Bad config.")
     # Test: guest VM is dead.
+
     @deco.retry(8, exceptions=(AssertionError,))
     def is_dead():
         assert test.vm_g.is_dead(), "VM is alive."

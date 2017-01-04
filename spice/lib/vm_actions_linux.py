@@ -786,7 +786,7 @@ def imggen(vmi, img, size):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--genimg", size, img)
     utils.info(vmi, "Generate an %s image of %s size %s.", img, size)
-    act.run(vmi, cmd) 
+    act.run(vmi, cmd)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -854,7 +854,7 @@ def clear_cb(vmi):
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
-    cmd = utils.Cmd(dst_script, "--kbytes2cb", size)
+    cmd = utils.Cmd(dst_script, "--kbytes2cb", kbytes)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
     act.run(vmi, cmd)
 
@@ -952,9 +952,9 @@ def lock_scr_off(vmi):
                     "active", "false")
     act.run(vmi, cmd)
 
-
+# pylint: disable=E0102
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
-def turn_accessibility(vmi, on=True):
+def turn_accessibility(vmi, on=True):  
     """Turn accessibility on vm.
 
     Parameters
@@ -1021,6 +1021,7 @@ def lock_scr_off(vmi):
     act.run(vmi, cmd)
 
 
+# pylint: disable=E0711
 @reg.add_action(req=[ios.ILinux])
 def turn_firewall(vmi, state):
     utils.info(vmi, "Turn firewall: %r.", state)
@@ -1117,7 +1118,7 @@ def firefox_auto_open_vv(vmi):
     if status == 0:
         for o in opts:
             utils.info(vmi, "Remove old value %s from Firefox profile: %s", o,
-                    user_js)
+                       user_js)
             cmd = utils.Cmd("sed", "-i", "-e", "/%s/d" % o, user_js)
             act.run(vmi, cmd)
     line = ('user_pref("browser.helperApps.neverAsk.openFile",'

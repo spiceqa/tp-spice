@@ -31,6 +31,7 @@ from lib4x.admin_portal import admin_login
 
 logger = logging.getLogger(__name__)
 
+
 @error.context_aware
 def run(vt_test, test_params, env):
     """Steps:
@@ -74,7 +75,7 @@ def run(vt_test, test_params, env):
         if vm_name:
             vm = tab_controller.get_vm(vm_name)
         elif cfg.ovirt_pool_name:
-            vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)
+            vm = vms_tab.start_vm_from_pool(cfg.ovirt_pool_name)  # vms_tab undefined
             vm_name = vm.name
             test.cfg_g.ovirt_vm_name = vm_name
             shutdown_vm = True

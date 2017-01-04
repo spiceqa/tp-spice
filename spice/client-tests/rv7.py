@@ -86,6 +86,7 @@ def _is_focused(n):
     logger.info("Check if parent [%s | %s] is focused.", p.roleName, p.name)
     return _is_focused(p)
 
+
 @retries.retries(5, exceptions=(AssertionError,))
 def is_focused(node):
     assert _is_focused(node), \
@@ -106,6 +107,7 @@ def click_and_focused(node):
     assert _is_focused(node), \
         "Click for node [%s | %s]: failed." % (node.roleName, node.name)
     logger.info("Click for node [%s | %s]: success.", node.roleName, node.name)
+
 
 @retries.retries(5, exceptions=(AssertionError,))
 def point_and_focused(node):
@@ -169,12 +171,9 @@ class Display(object):
                 return cls(application, num)
         raise ValueError
 
-
-
     def typeText(self, text):
         logger.info("Display #%s, type text: %s", self.num, text)
         return self.dsp.window.typeText(text)
-
 
     def key_combo(self, combo):
         self.push_front()
@@ -188,7 +187,6 @@ class Display(object):
             point_and_pointed(self.dsp.menu('File'))
         logger.info("Display #%s, send key combo: %s", self.num, combo)
         self.drawing_area.keyCombo(combo)
-
 
     def push_front(self):
         self.drawing_area.grabFocus()
@@ -206,7 +204,6 @@ class Display(object):
             time.sleep(i)
         assert pid_req == pid
 
-
     def is_fullscreen(self):
         flag = self.dsp.menu('View').menuItem('Full screen').isChecked
         if flag:
@@ -217,34 +214,27 @@ class Display(object):
                 raise GeneralError(err_msg)
         return flag
 
-
     def is_window(self):
         return not self.is_fullscreen()
-
 
     def fullscreen_on(self):
         raise NotImplementedError()
 
-
     def fullscreen_off(self):
         raise NotImplementedError()
-
 
     def zoom(self, direction):
         raise NotImplementedError()
 
-
     def vm_sendkey(self, key):
         raise NotImplementedError()
-
 
     def screenshot(self, save_as):
         raise NotImplementedError()
 
-
     def closeabout(self):
         assert self.is_window()
-        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
         about.keyCombo('Esc')
 
     def confirm_quit(self):
@@ -320,7 +310,6 @@ class DisplayMouse(Display):
         n = self.dsp.menu('View').menu('Zoom').menuItem(menu_item)
         do_click(n)
 
-
     def screenshot(self, filename):
         assert self.is_window()
         self.push_front()
@@ -336,7 +325,6 @@ class DisplayMouse(Display):
             n = self.app.child(roleName='alert', name='Question').button('Replace')
             do_click(n)
 
-
     def fullscreen_on(self):
         assert self.is_window()
         self.push_front()
@@ -346,14 +334,12 @@ class DisplayMouse(Display):
         do_click(n)
         assert self.is_fullscreen()
 
-
     def fullscreen_off(self):
         assert self.is_fullscreen()
         self.push_front()
         n = self.dsp.button('Leave fullscreen')
         do_click(n)
         assert self.is_window()
-
 
     def help_license(self):
         # Return license text.
@@ -363,12 +349,11 @@ class DisplayMouse(Display):
         do_click(n)
         n = self.dsp.menu('Help').menuItem('About')
         do_click(n)
-        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
         n = about.child(name="License", roleName="radio button")
         do_click(n)
         licence_txt = about.child(roleName='text')
         return licence_txt.text
-
 
     def help_credits(self):
         assert self.is_window()
@@ -377,14 +362,13 @@ class DisplayMouse(Display):
         do_click(n)
         n = self.dsp.menu('Help').menuItem('About')
         do_click(n)
-        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
         n = about.child(name="Credits", roleName="radio button")
         do_click(n)
         scroll_panel = about.child(roleName='scroll pane')
         labels = about.findChildren(
             predicate.GenericPredicate(roleName='label'))
         return [i.name for i in labels if i.name]
-
 
     def vm_sendkey(self, key):
         logger.info("Send key to guest VM using 'Send key' menu.")
@@ -407,7 +391,6 @@ class DisplayMouse(Display):
         else:
             raise NotImplementedError()
 
-
     def help_version(self):
         logger.info("Get RV version using Help->About dialog.")
         assert self.is_window()
@@ -416,7 +399,7 @@ class DisplayMouse(Display):
         do_click(n)
         n = self.dsp.menu('Help').menuItem('About')
         do_click(n)
-        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
         n = about.child(name="About", roleName="radio button")
         do_click(n)
         # Dirty hack, it is because of:
@@ -439,48 +422,44 @@ class DisplayMouse(Display):
         return filler.children[0].text
 
 
-
-
 class DisplayAccessKey(Display):
 
     def_key_mapping = {
-        'File' : '<Alt>f',
-        'File|Quit' : 'q',
-        'File|Screenshot' : 's',
-        'Help' : '<Alt>h',
-        'Help|About' : 'a',
-        'View' : '<Alt>v',
-        'View|Zoom' : 'z',
-        'View|Zoom|Zoom out' : 'o',
-        'View|Zoom|Normal size' : 'n',
-        'View|Zoom|Zoom in' : 'i',
-        'Send key' : '<Alt>s',
-        'Send key|Ctrl+Alt+Del' : 'd',
-        'Send key|Ctrl+Alt+Backspace' : 'b',
-        'Send key|Ctrl+Alt+F1' : '1',
-        'Send key|Ctrl+Alt+F2' : '2',
-        'Send key|Ctrl+Alt+F3' : '3',
-        'Send key|Ctrl+Alt+F4' : '4',
-        'Send key|Ctrl+Alt+F5' : '5',
-        'Send key|Ctrl+Alt+F6' : '6',
-        'Send key|Ctrl+Alt+F7' : '7',
-        'Send key|Ctrl+Alt+F8' : '8',
-        'Send key|Ctrl+Alt+F9' : '9',
-        'Send key|Ctrl+Alt+F10' : '0',
-        'Send key|PrintScreen' : 'p',
+        'File': '<Alt>f',
+        'File|Quit': 'q',
+        'File|Screenshot': 's',
+        'Help': '<Alt>h',
+        'Help|About': 'a',
+        'View': '<Alt>v',
+        'View|Zoom': 'z',
+        'View|Zoom|Zoom out': 'o',
+        'View|Zoom|Normal size': 'n',
+        'View|Zoom|Zoom in': 'i',
+        'Send key': '<Alt>s',
+        'Send key|Ctrl+Alt+Del': 'd',
+        'Send key|Ctrl+Alt+Backspace': 'b',
+        'Send key|Ctrl+Alt+F1': '1',
+        'Send key|Ctrl+Alt+F2': '2',
+        'Send key|Ctrl+Alt+F3': '3',
+        'Send key|Ctrl+Alt+F4': '4',
+        'Send key|Ctrl+Alt+F5': '5',
+        'Send key|Ctrl+Alt+F6': '6',
+        'Send key|Ctrl+Alt+F7': '7',
+        'Send key|Ctrl+Alt+F8': '8',
+        'Send key|Ctrl+Alt+F9': '9',
+        'Send key|Ctrl+Alt+F10': '0',
+        'Send key|PrintScreen': 'p',
     }
 
     @classmethod
     def is_for(cls, method):
         return method == 'access_key'
 
-
     def __init__(self, app, num, kmap={}):
         super(DisplayAccessKey, self).__init__(app, num)
         self.kmap = {}
         self.kmap.update(DisplayAccessKey.def_key_mapping)
         self.kmap.update(kmap)
-
 
     def menu(self, menu, sub_menu):
         """menu - name for menu. E.g.: File
@@ -504,11 +483,9 @@ class DisplayAccessKey(Display):
                  'normal': 'View|Zoom|Normal size'}
         self.menu('View', ['View|Zoom', menus[direction]])
 
-
     def vm_sendkey(self, key):
         menu = 'Send key|%s' % key
-        self.menu('Send key', [menu,])
-
+        self.menu('Send key', [menu, ])
 
     def app_quit(self):
         self.menu('File', ['File|Quit'])
@@ -517,10 +494,9 @@ class DisplayAccessKey(Display):
             do_click(n)
         assert self.app.dead
 
-
     def help_version(self):
         self.menu('Help', ['Help|About'])
-        about = self.app.child("About Virtual Machine Viewer", roleName = "dialog")
+        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
         # Dirty hack, it is because of:
         # [panel | ]
         # [filler | ]
@@ -539,7 +515,6 @@ class DisplayAccessKey(Display):
         filler = panel.children[0]
         # See rv_dogtail.txt
         return filler.children[0].text
-
 
     def screenshot(self, filename):
         self.menu('File', ['File|Screenshot'])
@@ -574,12 +549,11 @@ class DisplayHotKey(Display):
         return method == 'hot_key'
 
     def zoom(self, direction='normal'):
-        kmap_keys =  {'in': 'zoom_in',
-                      'out': 'zoom_out',
-                      'normal': 'zoom_normal'}
+        kmap_keys = {'in': 'zoom_in',
+                     'out': 'zoom_out',
+                     'normal': 'zoom_normal'}
         key = self.kmap[kmap_keys[direction]]
         self.key_combo(key)
-
 
     def app_quit(self):
         self.key_combo(self.kmap['quit'])
@@ -587,7 +561,6 @@ class DisplayHotKey(Display):
             n = self.app.child(roleName='alert', name='Question').button('OK')
             do_click(n)
         assert self.app.dead
-
 
     def vm_sendkey(self, key):
         self.key_combo(self.kmap[key])
@@ -604,13 +577,11 @@ class DisplayWMKey(Display):
     def is_for(cls, method):
         return method == 'wm_key'
 
-
     def __init__(self, app, num, kmap={}):
         super(DisplayWMKey, self).__init__(app, num)
         self.kmap = {}
         self.kmap.update(DisplayWMKey.def_key_mapping)
         self.kmap.update(kmap)
-
 
     def wm_send_key(self, key):
         self.push_front()
@@ -626,7 +597,6 @@ class DisplayWMKey(Display):
         tree.root.keyCombo(key)
         #rawinput.pressKey('F11')
 
-
     def app_quit(self):
         assert not self.app.dead
         key = self.kmap['quit']
@@ -634,17 +604,14 @@ class DisplayWMKey(Display):
         self.confirm_quit()
         assert self.app.dead
 
-
     def fullscreen_toggle(self):
         key = self.kmap['fullscreen']
         self.wm_send_key(key)
-
 
     def fullscreen_on(self):
         assert self.is_window()
         self.fullscreen_toggle()
         assert self.is_fullscreen()
-
 
     def fullscreen_off(self):
         assert self.is_fullscreen()
@@ -686,7 +653,6 @@ class ConnectMouse(Connect):
     def is_for(cls, method):
         return method == 'mouse'
 
-
     def connect(self, url, ticket=""):
         con_addr = self.conn.child(roleName='text')
         con_addr.grabFocus()
@@ -696,7 +662,7 @@ class ConnectMouse(Connect):
         do_click(n)
         if ticket:
             dialog = self.app.child(name='Authentication required',
-                                roleName='dialog')
+                                    roleName='dialog')
             passw = dialog.child(roleName='password text')
             passw.typeText(ticket)
             passw.keyCombo('enter')
@@ -715,7 +681,6 @@ class ConnectMouse(Connect):
             role = 'drawing area'
         assert self.app.isChild(roleName=role, retry=False), \
             "No active display."
-
 
 
 class Application(object):

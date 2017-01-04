@@ -62,7 +62,7 @@ def install_rv(vmi):
     .. todo:: Add cfg.client_path_rv_dst = C:\virt-viewer
 
     """
-    vm.copy_files_to(vmi.cfg.host_path, self.cfg.client_path_rv)
+    vmi.vm.copy_files_to(vmi.cfg.host_path, vmi.cfg.client_path_rv)
     cmd = ['start', '/wait', 'msiexec', '/i', vmi.cfg.client_path_rv]
     cmd.append('INSTALLDIR=%s' % vmi.cfg.client_path_rv_dst)
     act.run_cmd(vmi, cmd)
@@ -75,7 +75,7 @@ def install_usbclerk_win(vmi):
     ..todo:: host_path - fix
 
     """
-    vm.copy_files_to(vmi.cfg.host_path, self.cfg.client_path_usbc)
+    vmi.vm.copy_files_to(vmi.cfg.host_path, vmi.cfg.client_path_usbc)
     cmd = ["start", "/wait", "msiexec", "/i", vmi.cfg.client_path_usbc, "/qn"]
     act.run_cmd(vmi, cmd)
 
