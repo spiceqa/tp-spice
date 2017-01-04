@@ -18,9 +18,7 @@
 
 import logging
 
-from avocado.core import exceptions
 from autotest.client.shared import error
-from virttest import asset
 
 from spice.lib import act
 from spice.lib import stest

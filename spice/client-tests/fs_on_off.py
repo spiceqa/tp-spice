@@ -18,8 +18,6 @@
 import os
 import sys
 import logging
-import argparse
-import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +37,8 @@ def run(helper):
         helper.info("Cannot import rv: %s.", repr(e))
         return 1
     try:
-    # Exec new instance RV, without arguments. RV shows 'Connection details.'
-    # dialog.
+        # Exec new instance RV, without arguments. RV shows 'Connection
+        # details.' dialog.
         rv_app = rv.Application(method=cfg["method"])
         # Test assumes there is only one virtual display.
         assert rv_app.dsp_count() == 1

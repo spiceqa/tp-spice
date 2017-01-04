@@ -32,7 +32,6 @@ Requirements for GuestOS
 
 import logging
 import os
-from virttest import remote
 from virttest import utils_misc
 from distutils import util
 from autotest.client.shared import error

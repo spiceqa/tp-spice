@@ -16,10 +16,8 @@
 """
 
 
-import os
 import logging
-import aexpect
-from avocado.core import exceptions
+
 from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils

@@ -11,18 +11,10 @@
 #
 # See LICENSE for more details.
 
-import os
 import logging
-import socket
-import time
-import aexpect
-import ntpath
 import subprocess
 
-from virttest import utils_net
-
 from spice.lib import utils
-from spice.lib import act
 from spice.lib import reg
 from spice.lib import ios
 

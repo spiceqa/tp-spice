@@ -16,8 +16,6 @@
 """
 
 import logging
-from avocado.core import exceptions
-from virttest import utils_misc
 from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils

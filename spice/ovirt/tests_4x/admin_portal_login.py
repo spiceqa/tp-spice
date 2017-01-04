@@ -18,13 +18,10 @@
 
 import logging
 
-from virttest import asset
-from avocado.core import exceptions
 from autotest.client.shared import error
 
 from spice.lib import act
 from spice.lib import stest
-from spice.lib import utils
 
 from lib4x import driver
 from lib4x.admin_portal import admin_login

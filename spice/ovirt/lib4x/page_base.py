@@ -20,7 +20,6 @@ import abc
 import re
 import logging
 
-from selenium.webdriver.common import by
 from selenium import common
 
 import excepts

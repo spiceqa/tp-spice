@@ -18,7 +18,6 @@
 import os
 import sys
 import logging
-import argparse
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,8 @@ def run(helper):
     else:
         raise Exception("Found runing RV.")
     try:
-    # Exec new instance RV, without arguments. RV shows 'Connection details.'
-    # dialog.
+        # Exec new instance RV, without arguments. RV shows 'Connection
+        # details' dialog.
         rv_p = subprocess.Popen(["remote-viewer"], shell=True)
         rv_app = rv.Application(method="mouse")
         rv_app.diag_connect.connect(uri, ticket=None)

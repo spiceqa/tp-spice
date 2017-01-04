@@ -17,10 +17,8 @@
 import os
 import sys
 import logging
-from distutils import util
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import rv
-import argparse
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

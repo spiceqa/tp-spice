@@ -40,7 +40,6 @@ from dogtail import predicate
 from dogtail import rawinput
 import platform
 import time
-import commands
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import retries
