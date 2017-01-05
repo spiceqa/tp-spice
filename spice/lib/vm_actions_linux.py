@@ -952,9 +952,10 @@ def lock_scr_off(vmi):
                     "active", "false")
     act.run(vmi, cmd)
 
+
 # pylint: disable=E0102
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
-def turn_accessibility(vmi, on=True):  
+def turn_accessibility(vmi, on=True):
     """Turn accessibility on vm.
 
     Parameters
