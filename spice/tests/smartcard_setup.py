@@ -20,7 +20,6 @@ to be generated.
 
 """
 import logging
-import aexpect
 from virttest import utils_misc, utils_spice
 from autotest.client.shared import error
 

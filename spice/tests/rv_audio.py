@@ -93,11 +93,8 @@ Recording test::
 import logging
 import commands
 import struct
-import time
 import wave
-from distutils import util
 import aexpect
-from avocado.core import exceptions
 from virttest import utils_misc
 from spice.lib import rv_ssn
 from spice.lib import stest

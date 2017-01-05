@@ -26,17 +26,8 @@ Test is successful if all sub-tests running at VM are successful.
 
 """
 
-import os
-import sys
 import logging
-import aexpect
-import glob
-import tempfile
 import traceback
-import copy
-from virttest.virt_vm import VMDeadError
-from autotest.client.shared import error
-from virttest import utils_net
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act

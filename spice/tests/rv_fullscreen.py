@@ -18,10 +18,8 @@ will take the resolution of the client.
 
 
 import logging
-from avocado.core import exceptions
 from spice.lib import act
 from spice.lib import stest
-from spice.lib import utils
 
 
 logger = logging.getLogger(__name__)

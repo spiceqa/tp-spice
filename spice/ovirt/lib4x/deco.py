@@ -24,7 +24,6 @@
 # https://wiki.python.org/moin/PythonDecoratorLibrary
 
 
-import sys
 import time
 import functools
 import logging

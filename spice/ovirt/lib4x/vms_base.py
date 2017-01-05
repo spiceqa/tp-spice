@@ -18,7 +18,6 @@
 
 import logging
 
-from selenium import common
 from selenium.webdriver.common import by
 
 from . import page_base

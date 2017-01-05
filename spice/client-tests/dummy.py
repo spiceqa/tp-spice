@@ -14,7 +14,6 @@
 
 import logging
 import time
-import sys
 
 
 def run(helper):

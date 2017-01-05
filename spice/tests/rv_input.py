@@ -26,9 +26,6 @@ Presumes the numlock state at startup is 'OFF'.
 
 import logging
 
-from virttest import utils_misc
-from avocado.core import exceptions
-
 from spice.lib import act
 from spice.lib import stest
 from spice.lib import utils

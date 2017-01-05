@@ -17,12 +17,10 @@ import time
 import logging
 
 from selenium.webdriver.common import by
-from selenium import common
 
 from .. import deco
 from .. import page_base
 from .. import elements
-from .. import support
 from .. import excepts
 from .. import vms_base
 

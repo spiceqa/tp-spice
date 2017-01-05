@@ -18,7 +18,6 @@ from selenium.webdriver.common import by
 from selenium.webdriver.support import ui
 
 import page_base
-import support
 import elements
 
 logger = logging.getLogger(__name__)

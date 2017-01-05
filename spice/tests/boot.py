@@ -16,7 +16,6 @@
 
 import time
 import logging
-from virttest import utils_test
 from autotest.client.shared import error
 
 logger = logging.getLogger(__name__)

@@ -16,14 +16,8 @@
 """Classes to work with User/Admin portals loginpages.
 """
 
-import abc
 import logging
 
-from selenium.webdriver.common import by
-from selenium import common
-
-from .. import elements
-from .. import page_base
 from .. import login_base
 from .. import excepts
 from . import user_home
