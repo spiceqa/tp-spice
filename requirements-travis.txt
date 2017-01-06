@@ -1,5 +1,5 @@
 # All pip installable requirements pinned for Travis CI
 inspektor
 pep8
-Pillow; python_version > '2.7'
+Pillow; python_version >= '2.7'
 Pillow<3.5.0; python_version < '2.7'
