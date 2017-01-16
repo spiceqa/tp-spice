@@ -351,18 +351,19 @@ def rv_chk_con(vmi):
         remote_ip = socket.gethostbyname(hostname)
     elif cfg.spice_proxy:
         proxy_port = "3128"
-        if "http" in cfg.spice_proxy:
-            split = cfg.spice_proxy.split('//')[1].split(':')
-        else:
-            split = cfg.spice_proxy.split(':')
-        remote_ip = split[0]
-        if len(split) > 1:
-            proxy_port = split[1]
+        prx_parse = cfg.spice_proxy.split('//')[-1]
+        if '[' in prx_parse:
+            prx_parse = prx_parse.split(']:')
+        elif len(prx_parse.split(':')) <= 2:
+            prx_parse = prx_parse.split(':')
+        if len(prx_parse) > 1:
+            proxy_port = prx_parse[-1]
+        remote_ip = prx_parse[0].translate(None, '[]')
         logger.info("Proxy port to inspect: %s", proxy_port)
     else:
         remote_ip = utils.get_host_ip(test)
     rv_binary = os.path.basename(cfg.rv_binary)
-    cmd1 = utils.Cmd("netstat", "-p", "-n")
+    cmd1 = utils.Cmd("netstat", "-p", "-n", "--wide")
     grep_regex = "^tcp.*:.*%s.*ESTABLISHED.*%s.*" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)

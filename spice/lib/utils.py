@@ -30,7 +30,6 @@ import time
 import pipes
 from distutils import util
 from virttest import qemu_vm
-from virttest import utils_misc
 from virttest import asset
 from virttest import utils_net
 from avocado.core import exceptions
@@ -381,14 +380,17 @@ def get_host_ip(test):
         Spice test object.
 
     """
+    ip_ver = test.kvm_g.listening_addr
+    if not ip_ver:
+        ip_ver = "ipv4"
     try:
-        ip = utils_net.get_host_ip_address(test.cfg)
+        ip = utils_net.get_host_ip_address(test.cfg, ip_ver)
     except utils_net.NetError:
         ips = utils_net.get_all_ips()
         ip = ips[0]
         logger.info("Take as a host IP: %s", ip)
-    if test.kvm_g.listening_addr == "ipv6":
-        ip = "[" + utils_misc.convert_ipv4_to_ipv6(ip) + "]"
+    if ip_ver == "ipv6":
+        ip = "[" + ip + "]"
     return ip
 
 
