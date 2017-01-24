@@ -27,6 +27,7 @@ import subprocess
 from virttest import asset
 from virttest import remote
 from virttest.staging import service
+from virttest import utils_net
 
 from spice.lib import utils
 from spice.lib import deco
@@ -109,6 +110,20 @@ def verify_vdagent(vmi):
     cmd2 = utils.Cmd("grep", "spice-vdagentd")
     cmd = utils.combine(cmd1, "|", cmd2)
     act.run(vmi, cmd)
+
+
+@reg.add_action(req=[ios.ILinux])
+def verify_listen(vmi):
+    """Verify SPICE guest is listening on specific sockets
+    """
+    s_port = vmi.kvm.spice_port
+    s_addr = vmi.cfg.spice_addr
+    if not s_addr:
+        s_addr = '0.0.0.0'
+    utils.info(
+        vmi, "Verifying listening address: %s, port: %s.", s_addr, s_port)
+    utils_net.check_listening_port_by_service(
+        os.path.basename(vmi.cfg.qemu_binary), s_port, s_addr)
 
 
 @reg.add_action(req=[ios.ILinux])
