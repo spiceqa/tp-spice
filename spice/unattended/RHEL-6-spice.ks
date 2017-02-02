@@ -54,6 +54,7 @@ poweroff
 @smart-card
 spice-vdagent
 virt-viewer
+python-imaging
 # Note
 # ----
 # Make a note why do you need a certain package when you add a new entry.

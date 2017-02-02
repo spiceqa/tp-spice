@@ -54,6 +54,7 @@ firstboot --disable
 @smart-card
 spice-vdagent
 virt-viewer
+python-pillow
 # Note
 # ----
 # Leave a note: why do you need a certain package when you add a new entry?
