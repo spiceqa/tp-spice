@@ -14,16 +14,11 @@ vdagent daemon.
 
 """
 
-
 import os
-import logging
 
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act
-
-
-logger = logging.getLogger(__name__)
 
 
 def run(vt_test, test_params, env):
