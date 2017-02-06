@@ -13,8 +13,8 @@
 
 """Verify listening SPICE sockets of guest VM.
 """
-
 import logging
+import signal
 from spice.lib import act
 from spice.lib import stest
 
@@ -22,6 +22,8 @@ from autotest.client.shared import error
 
 from virttest import env_process
 from virttest import virt_vm
+
+from avocado.utils import process
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +41,21 @@ def run(vt_test, test_params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
     """
+    # See https://www.redhat.com/archives/avocado-devel/2017-January/msg00012.html
+    vmname = test_params['main_vm']
     if test_params['start_vm'] == "no":
         test_params['start_vm'] = "yes"
+        if test_params['spice_port_closed'] == "yes":
+            cmd = "nc -l %s" % test_params['spice_port']
+            nc_process = process.SubProcess(cmd)
+            nc_process_pid = nc_process.start()
+        error.context("Start guest VM with invalid parameters.")
         try:
-            error.context("Start guest VM with invalid parameters.")
-            env_process.preprocess_vm(
-                vt_test, test_params, env, test_params["main_vm"])
+            env_process.preprocess_vm(vt_test, test_params, env, vmname)
         except virt_vm.VMCreateError, emsg:
             error_s = test_params['error_msg']
             if '%s,%s' in error_s:
-                s_port = env.get_vm(test_params['main_vm']).spice_port
+                s_port = env.get_vm(vmname).spice_port
                 error_s = error_s % (test_params['spice_addr'], s_port)
             if error_s in emsg.output and emsg.status == 1:
                 logging.info("Guest terminated as expected: %s" % emsg.output)
@@ -56,8 +63,12 @@ def run(vt_test, test_params, env):
             else:
                 raise error.TestFail("Guest creation failed, bad error message:"
                 " %s and/or exit status: %s" % (emsg.output, emsg.status))
+        finally:
+            try:
+                process.safe_kill(nc_process_pid, signal.SIGKILL)
+            except:
+                pass
         raise error.TestFail("Guest start normally, didn't quit as expected.")
-
     else:
         test = stest.GuestTest(vt_test, test_params, env)
         cfg = test.cfg
