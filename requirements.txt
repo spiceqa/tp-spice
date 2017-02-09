@@ -3,3 +3,6 @@ selenium
 
 # Copypaste tests requirements.
 Pillow
+
+# General req:
+zope.interface
