@@ -350,16 +350,17 @@ def rv_chk_con(vmi):
         hostname = socket.gethostname()    # See rv_url() function
         remote_ip = socket.gethostbyname(hostname)
     elif cfg.spice_proxy:
-        proxy_port = "3128"
         prx_parse = cfg.spice_proxy.split('//')[-1]
-        if '[' in prx_parse:
-            prx_parse = prx_parse.split(']:')
-        elif len(prx_parse.split(':')) <= 2:
-            prx_parse = prx_parse.split(':')
-        if len(prx_parse) > 1:
-            proxy_port = prx_parse[-1]
-        remote_ip = prx_parse[0].translate(None, '[]')
-        logger.info("Proxy port to inspect: %s", proxy_port)
+        if ']:' in prx_parse or '.' in prx_parse and ':' in prx_parse:
+            # port is specified in prx_parse
+            remote_ip, _, proxy_port = prx_parse.rpartition(':')
+        else:
+            remote_ip, proxy_port = prx_parse, cfg.http_proxy_port
+        remote_ip = remote_ip.strip('[]')
+        if remote_ip.split('.')[-1].isalpha():
+            remote_ip = socket.gethostbyname(remote_ip)
+        logger.info("Proxy port to inspect: %s, proxy IP: s%",
+                    proxy_port, remote_ip)
     else:
         remote_ip = utils.get_host_ip(test)
     rv_binary = os.path.basename(cfg.rv_binary)
@@ -367,7 +368,7 @@ def rv_chk_con(vmi):
     grep_regex = "^tcp.*:.*%s.*ESTABLISHED.*%s.*" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
-    time.sleep(5)  # Wait all RV Spice links raise up.
+    time.sleep(7)  # Wait all RV Spice links raise up.
     status, netstat_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         raise utils.SpiceUtilsError("No active RV connections.")
