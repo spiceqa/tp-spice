@@ -41,13 +41,15 @@ def run(vt_test, test_params, env):
     env : virttest.utils_env.Env
         Dictionary with test environment.
     """
-    # See https://www.redhat.com/archives/avocado-devel/2017-January/msg00012.html
+    # See
+    # https://www.redhat.com/archives/avocado-devel/2017-January/msg00012.html
     vmname = test_params['main_vm']
     if test_params['start_vm'] == "no":
         test_params['start_vm'] = "yes"
         if test_params['spice_port_closed'] == "yes":
             cmd = "nc -l %s" % test_params['spice_port']
-            nc_process = process.SubProcess(cmd)
+            nc_process_cl = process.get_sub_process_klass(cmd)
+            nc_process = nc_process_cl(cmd)
             nc_process_pid = nc_process.start()
         error.context("Start guest VM with invalid parameters.")
         try:
@@ -62,7 +64,8 @@ def run(vt_test, test_params, env):
                 return
             else:
                 raise error.TestFail("Guest creation failed, bad error message:"
-                " %s and/or exit status: %s" % (emsg.output, emsg.status))
+                                     " %s and/or exit status: %s" %
+                                     (emsg.output, emsg.status))
         finally:
             try:
                 process.safe_kill(nc_process_pid, signal.SIGKILL)
