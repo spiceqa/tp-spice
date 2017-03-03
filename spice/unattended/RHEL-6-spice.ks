@@ -96,12 +96,6 @@ echo 'Remove rhgb quiet in grub config.'
 grubby --remove-args='rhgb quiet' --update-kernel="$(grubby --default-kernel)"
 
 #
-# CD-ROM udev rules.
-#
-echo 'Disable lock cdrom udev rules.'
-sed -i '/--lock-media/s/^/#/' '/usr/lib/udev/rules.d/60-cdrom_id.rules' 2>/dev/null>&1
-
-#
 # Gnome autologin.
 #
 echo 'Enable Gnome autologin.'
