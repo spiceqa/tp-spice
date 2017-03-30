@@ -116,7 +116,9 @@ def verify_vdagent(vmi):
 def verify_listen(vmi):
     """Verify SPICE guest is listening on specific sockets
     """
-    s_port = vmi.kvm.spice_port
+    s_port = vmi.kvm.spice_tls_port
+    if not s_port:
+        s_port = vmi.kvm.spice_port
     s_addr = vmi.kvm.spice_addr
     if not s_addr:
         s_addr = '0.0.0.0'
