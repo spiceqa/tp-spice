@@ -2,7 +2,7 @@
 selenium
 
 # Copypaste tests requirements.
-Pillow
+Pillow < 3.5; python_version < '2.7'
 
 # General req:
 zope.interface
