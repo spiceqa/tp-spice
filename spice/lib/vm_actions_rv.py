@@ -378,7 +378,10 @@ def rv_chk_con(vmi):
         test.vm_g.info("Active proxy ports %s: %s", proxy_port, proxy_port_count)
     port = test.kvm_g.spice_port
     tls_port = test.kvm_g.spice_tls_port
-    port_count = netstat_out.count(port)
+    if port == 'no':
+        port_count = 0
+    else:
+        port_count = netstat_out.count(port)
     test.vm_g.info("Active ports %s: %s", port, port_count)
     tls_port_count = 0
     if tls_port:
@@ -394,6 +397,12 @@ def rv_chk_con(vmi):
         if tls_port_count < tls_port_expected:
             msg = "Secure links per session is less then expected. %s (%s)" % (
                 tls_port_count, tls_port_expected)
+            raise RVSessionConnect(test, msg)
+    if cfg.spice_plaintext_channels:
+        plaintext_port_expected = len(cfg.spice_plaintext_channels.split(','))
+        if port_count < plaintext_port_expected:
+            msg = "Plaintext links per session is less then expected. %s (%s)" % (
+                port_count, plaintext_port_expected)
             raise RVSessionConnect(test, msg)
     for line in netstat_out.split('\n'):
         for p in port, tls_port, proxy_port:

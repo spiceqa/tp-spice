@@ -45,6 +45,7 @@ KVM_SPICE_KNOWN_PARAMS = [
     "spice_x509_cacert_subj",
     "spice_x509_server_subj",
     "spice_secure_channels",
+    "spice_plaintext_channels",
     "spice_image_compression",
     "spice_jpeg_wan_compression",
     "spice_zlib_glz_wan_compression",
