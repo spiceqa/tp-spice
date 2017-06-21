@@ -89,8 +89,10 @@ class RVSessionConnect(RVSessionError):
     """
 
 
+#pylint: disable=W0613
+#TODO: pass env variables
 @reg.add_action(req=[ios.IOSystem])
-def rv_connect(vmi, ssn, env={}):
+def rv_connect(vmi, ssn, env=None):
     """Establish connection between client and guest based on test parameters
     supplied at cartesian config.
 
@@ -109,13 +111,14 @@ def rv_connect(vmi, ssn, env={}):
     ssn : xxx
         Session object, as a exec-layer to VM.
     env : dict
-        Dictionary of env variables to passed before remote-viewer start.
+        Dictionary of env variables to be passed  before remote-viewer starts.
 
     Returns
     -------
     None
 
     """
+    env = env or {}
     method = vmi.cfg.rv_parameters_from
     if method == 'cmd':
         act.info(vmi, "Connect to VM using command line.")
@@ -130,6 +133,8 @@ def rv_connect(vmi, ssn, env={}):
         raise RVSessionConnect(vmi.test, "Wrong connect method.")
 
 
+#pylint: disable=W0613
+#TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_cmd(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
@@ -142,6 +147,8 @@ def rv_connect_cmd(vmi, ssn, env):
     act.rv_auth(vmi)
 
 
+#pylint: disable=W0613
+#TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_menu(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
@@ -297,7 +304,8 @@ def gen_vv_file(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
-def rv_run(vmi, rcmd, ssn, env={}):
+def rv_run(vmi, rcmd, ssn, env=None):
+    env = env or {}
     cfg = vmi.cfg
     if cfg.rv_ld_library_path:
         cmd = utils.Cmd("export")
@@ -326,6 +334,7 @@ def rv_run(vmi, rcmd, ssn, env={}):
                      "of remote-viewer later")
 
 
+#pylint: disable=R0912
 @reg.add_action(req=[ios.ILinux], name="rv_chk_con")
 @deco.retry(8, exceptions=(utils.SpiceUtilsError, RVSessionConnect,))
 def rv_chk_con(vmi):
@@ -353,16 +362,9 @@ def rv_chk_con(vmi):
         hostname = socket.gethostname()    # See rv_url() function
         remote_ip = socket.gethostbyname(hostname)
     elif cfg.spice_proxy:
-        prx_parse = cfg.spice_proxy.split('//')[-1]
-        if ']:' in prx_parse or '.' in prx_parse and ':' in prx_parse:
-            # port is specified in prx_parse
-            remote_ip, _, proxy_port = prx_parse.rpartition(':')
-        else:
-            remote_ip, proxy_port = prx_parse, cfg.http_proxy_port
-        remote_ip = remote_ip.strip('[]')
-        if remote_ip.split('.')[-1].isalpha():
-            remote_ip = socket.gethostbyname(remote_ip)
-        logger.info("Proxy port to inspect: %s, proxy IP: s%",
+        remote_ip, proxy_port = utils.URL_parse(cfg.spice_proxy,
+                                                cfg.http_proxy_port)
+        logger.info("Proxy port to inspect: %s, proxy IP: %s",
                     proxy_port, remote_ip)
     else:
         remote_ip = utils.get_host_ip(test)
@@ -373,12 +375,13 @@ def rv_chk_con(vmi):
     cmd = utils.combine(cmd1, "|", cmd2)
     status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
-        logger.info("ss output: s%", ss_out)
+        logger.info("ss output: %s", ss_out)
         raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
     if cfg.spice_proxy:
         proxy_port_count = ss_out.count(proxy_port)
-        test.vm_g.info("Active proxy ports %s: %s", proxy_port, proxy_port_count)
+        test.vm_g.info("Active proxy ports %s: %s",
+                       proxy_port, proxy_port_count)
     port = test.kvm_g.spice_port
     tls_port = test.kvm_g.spice_tls_port
     if port == 'no':
@@ -404,8 +407,8 @@ def rv_chk_con(vmi):
     if cfg.spice_plaintext_channels:
         plaintext_port_expected = len(cfg.spice_plaintext_channels.split(','))
         if port_count < plaintext_port_expected:
-            msg = "Plaintext links per session is less then expected. %s (%s)" % (
-                port_count, plaintext_port_expected)
+            msg = ("Plaintext links per session is less then expected. %s (%s)"
+                   % (port_count, plaintext_port_expected))
             raise RVSessionConnect(test, msg)
     for line in ss_out.split('\n'):
         for p in port, tls_port, proxy_port:

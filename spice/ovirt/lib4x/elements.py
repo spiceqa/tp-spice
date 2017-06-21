@@ -166,20 +166,21 @@ class RootPageElement(property):
         _root = RootPageElement(by=By.ID, locator='LoginPopupView_loginForm')
     """
 
-    def __init__(self, by, locator):
+    def __init__(self, byset, locator):
         """Save locator type and value to attributes.
 
         Parameters
         ----------
-        by :
+        byset :
             Element locator type; see selenium.webdriver.common.by.By.
         locator :
             Element locator value.
         """
-        self._by = by
+        self._by = byset
         self._locator = locator
         super(RootPageElement, self).__init__(self._get, self._set)
 
+    #pylint: disable=W0212
     def _get(self, model):
         """Property getter method.  The return value is what is returned, when
         a <*PageModel> attribute is accessed.
@@ -232,12 +233,12 @@ class PageElement(RootPageElement):
     _helper = None  # defined in child classes
     _is_dynamic = False
 
-    def __init__(self, by, locator, as_list=False):
+    def __init__(self, byset, locator, as_list=False):
         """Save arguments to attributes.
 
         Parameters
         ----------
-        by :
+        byset :
             Element locator type; see selenium.webdriver.common.by.By.
         locator :
             Element locator value.
@@ -249,11 +250,12 @@ class PageElement(RootPageElement):
         ValueError
             Attempt for using a dynamic element as list.
         """
-        super(PageElement, self).__init__(by, locator)
+        super(PageElement, self).__init__(byset, locator)
         if self._is_dynamic and as_list:
             raise ValueError("List of page elements cannot be set as dynamic.")
         self._as_list = as_list
 
+    #pylint: disable=W0212
     def _get(self, model):
         """Property getter method.
         The return value is what is returned, when a <*PageModel> attribute
@@ -307,6 +309,7 @@ class PageElement(RootPageElement):
             webelement = self._get(model)
             self.set_value(webelement, value)
 
+    #pylint: disable=W0613,R0201
     def set_value(self, element, value):
         """User-defined setter method.
         Implement it in a child class only if you want to set a value
@@ -357,7 +360,7 @@ class DynamicPageElement(PageElement):
     """
     _is_dynamic = True
 
-    def __init__(self, by, locator):
+    def __init__(self, byset, locator):
         """Note that with dynamic page element you cannot return list of
         elements using the `as_list` argument as with static page element.
 
@@ -368,7 +371,7 @@ class DynamicPageElement(PageElement):
         locator:
             Element locator value.
         """
-        super(DynamicPageElement, self).__init__(by=by, locator=locator,
+        super(DynamicPageElement, self).__init__(by=byset, locator=locator,
                                                  as_list=False)
 
 
@@ -443,6 +446,8 @@ class Select(PageElement):
         element.select_by_value(str(value))
 
 
+#TODO: needs review (correction)
+#pylint: disable=E1120
 class LabeledSelect(PageElement):
     """Page element for widget of a select box with label.  This widget is
     mostly used for selecting a cluster, where label shows the data center the

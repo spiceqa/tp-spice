@@ -11,13 +11,14 @@ import optparse
 import subprocess
 
 
-def run_subprocess_cmd(args):
-    output = subprocess.Popen(args, shell=False,
-                              stdin=subprocess.PIPE,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE,
-                              close_fds=True).stdout.read().strip()
-    return output
+def run_subprocess_cmd(subproc_args):
+    subproc_out = subprocess.Popen(subproc_args, shell=False,
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   close_fds=True).stdout.read().strip()
+    return subproc_out
+
 
 git_repo = {}
 configure_options = {}
@@ -25,14 +26,18 @@ autogen_options = {}
 prefix_defaults = {}
 
 # Git repo associated with each packages
-git_repo["spice-protocol"] = "git://git.freedesktop.org/git/spice/spice-protocol"
+git_repo["spice-protocol"] = \
+    "git://git.freedesktop.org/git/spice/spice-protocol"
 git_repo["spice-gtk"] = "git://anongit.freedesktop.org/spice/spice-gtk"
-git_repo["spice-vd-agent"] = "git://git.freedesktop.org/git/spice/linux/vd_agent"
-git_repo["xf86-video-qxl"] = "git://anongit.freedesktop.org/xorg/driver/xf86-video-qxl"
+git_repo["spice-vd-agent"] = \
+    "git://git.freedesktop.org/git/spice/linux/vd_agent"
+git_repo["xf86-video-qxl"] = \
+    "git://anongit.freedesktop.org/xorg/driver/xf86-video-qxl"
 git_repo["virt-viewer"] = "https://git.fedorahosted.org/git/virt-viewer.git"
 
 # options to pass
-autogen_options["spice-gtk"] = "--disable-gtk-doc --disable-werror --disable-vala  --enable-smartcard"
+autogen_options["spice-gtk"] = ("--disable-gtk-doc --disable-werror"
+                                "--disable-vala  --enable-smartcard")
 autogen_options["spice-vd-agent"] = "--libdir=/usr/lib64 --sysconfdir=/etc"
 autogen_options["xf86-video-qxl"] = "--libdir=\"/usr/lib64\""
 autogen_options["virt-viewer"] = "--with-spice-gtk --disable-update-mimedb"
@@ -43,8 +48,10 @@ prefix_defaults["spice-vd-agent"] = "/usr"
 usageMsg = "\nUsage: %prog -p package-to-build [options]\n\n"
 usageMsg += "build_install.py lets you build any package from a git repo.\n"
 usageMsg += "It downloads the git repo, builds and installs it.\n"
-usageMsg += "You can pass options such as git repo, branch you want to build at,\n"
-usageMsg += "specific commit to build at, build options to pass to autogen.sh\n"
+usageMsg += \
+    "You can pass options such as git repo, branch you want to build at,\n"
+usageMsg += \
+    "specific commit to build at, build options to pass to autogen.sh\n"
 usageMsg += "and which location to install the built binaries to.\n\n"
 usageMsg += "The following aliases for SPICE are already set: "
 usageMsg += "\n\tspice-protocol\t ->\t SPICE protocol "
@@ -98,7 +105,7 @@ print "OS: %s" % rhelVersion
 if re.findall("release 6", rhelVersion):
     if pkgName in ("spice-gtk", "virt-viewer"):
         autogen_options[pkgName] += " --with-gtk=2.0"
-    if pkgName in ("xf86-video-qxl"):
+    if pkgName in "xf86-video-qxl":
         autogen_options[pkgName] += " --disable-kms"
 
 if not tarballLocation:
@@ -122,7 +129,8 @@ if not tarballLocation:
 
     # If destination directory doesn't exist, create it
     if not os.path.exists(destDir):
-        print "Creating directory %s for git repo %s" % (destDir, git_repo[pkgName])
+        print "Creating directory %s for git repo %s" % (destDir,
+                                                         git_repo[pkgName])
         os.makedirs(destDir)
 
     # Switch to the directory
@@ -130,14 +138,17 @@ if not tarballLocation:
 
     # If git repo already exists, reset. If not, initialize
     if os.path.exists('.git'):
-        print "Resetting previously existing git repo at %s for receiving git repo %s" % (destDir, git_repo[pkgName])
+        print ("Resetting previously existing git repo at %s for receiving "
+               "git repo %s" % (destDir, git_repo[pkgName]))
         subprocess.check_call("git reset --hard".split())
     else:
-        print "Initializing new git repo at %s for receiving git repo %s" % (destDir, git_repo[pkgName])
+        print ("Initializing new git repo at %s for receiving git repo %s" %
+               (destDir, git_repo[pkgName]))
         subprocess.check_call("git init".split())
 
     # Fetch the contents of the repo
-    print "Fetching git [REP '%s' BRANCH '%s'] -> %s" % (git_repo[pkgName], branch, destDir)
+    print "Fetching git [REP '%s' BRANCH '%s'] -> %s" % (git_repo[pkgName],
+                                                         branch, destDir)
     subprocess.check_call(("git fetch -q -f -u -t %s %s:%s" %
                            (git_repo[pkgName], branch, branch)).split())
 
@@ -192,11 +203,12 @@ if pkgName in prefix_defaults.keys() and options.prefix is None:
 # prefix's PKG_CONFIG_PATH
 if prefix is None:
     env_vars = ("PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/share/pkgconfig:"
-                "/usr/local/lib:/usr/local/lib/pkgconfig:/usr/local/lib/pkg-config:")
+                "/usr/local/lib:/usr/local/lib/pkgconfig:"
+                "/usr/local/lib/pkg-config:")
 else:
     env_vars = ("PKG_CONFIG_PATH=$PKG_CONFIG_PATH:%s/share/pkgconfig:%s/lib:"
-                "/usr/local/share/pkgconfig:%s/lib/pkgconfig:%s/lib/pkg-config:"
-                % (prefix, prefix, prefix, prefix))
+                "/usr/local/share/pkgconfig:%s/lib/pkgconfig:"
+                "%s/lib/pkg-config:" % (prefix, prefix, prefix, prefix))
 
 # Running autogen.sh with prefix and any other options
 # Using os.system because subprocess.Popen would not work
@@ -223,8 +235,10 @@ if ret != 0:
 
 # Temporary workaround for building spice-vdagent
 if pkgName == "spice-vd-agent":
-    os.system("sed -i '/^src_spice_vdagent_CFLAGS/ s/$/  -fno-strict-aliasing/g' Makefile.am")
-    os.system("sed -i '/(PCIACCESS_CFLAGS)/ s/$/  -fno-strict-aliasing/g' Makefile.am")
+    os.system("sed -i '/^src_spice_vdagent_CFLAGS/ s/$/  "
+              "-fno-strict-aliasing/g' Makefile.am")
+    os.system("sed -i '/(PCIACCESS_CFLAGS)/ s/$/  "
+              "-fno-strict-aliasing/g' Makefile.am")
 
 # Running 'make' to build and using os.system again
 cmd = "make"

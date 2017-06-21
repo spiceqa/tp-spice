@@ -35,14 +35,14 @@ class UserHomePageModel(page_base.PageModel):
     sign_out_link = elements.PageElement(by.By.ID, 'HeaderView_logoutLink')
     guide_link = elements.PageElement(by.By.ID, 'HeaderView_guideLink')
     about_link = elements.PageElement(by.By.ID, 'HeaderView_aboutLink')
-    basic_tab = elements.PageElement(by.By.CSS_SELECTOR, 'a[href=\#basic]')
+    basic_tab = elements.PageElement(by.By.CSS_SELECTOR, r'a[href=\#basic]')
     extended_tab = elements.PageElement(by.By.CSS_SELECTOR,
-                                        'a[href=\#extended-vm]')
+                                        r'a[href=\#extended-vm]')
 
 
 class UserAboutDlgModel(page_base.PageModel):
-    close_btn = elements.Button(by.By.XPATH,
-                                '//div[@role="button"][starts-with(., "Close")]')
+    close_btn = elements.Button(by.By.XPATH, '//div[@role="button"]'
+                                '[starts-with(., "Close")]')
     title = elements.PageElement(
         by.By.XPATH,
         '//div[starts-with(@class, "gwt-DialogBox")]'
@@ -112,7 +112,7 @@ class UserHomePage(page_base.PageObject):
             Page object.
         """
         self._model.about_link.click()
-        return AboutDialog(self.driver)  # pylint- undefined AboutDialog
+        return AboutDialog(self.driver)  # undefined AboutDialog pylint: disable=E0602
 
     def go_to_basic_tab(self):
         """Go to the Basic tab by clicking on 'Basic' tab label.

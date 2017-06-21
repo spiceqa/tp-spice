@@ -24,7 +24,7 @@
 
 import os
 import logging
-from spice.lib import rv_ssn
+from spice.lib import rv_ssn  # pylint: disable=E0611
 from spice.lib import stest
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,8 @@ def run(vt_test, test_params, env):
         # Script location: avocado-vt/shared/scripts/cb.py
         script_path = os.path.join(test.virtdir, "scripts", cfg.guest_script)
         test.vm_g.copy_files_to(script_path, cfg.dst_dir)
-        cmd = 'echo "SPICE_VDAGENTD_EXTRA_ARGS=-dd > /etc/sysconfig/spice-vdagentd'
+        cmd = ('echo "SPICE_VDAGENTD_EXTRA_ARGS=-dd > '
+               '/etc/sysconfig/spice-vdagentd')
         test.vm_g.assn_g.cmd(cmd)
         cmd_g.restart_vdagent()
         script_call = os.path.join(cfg.dst_dir, cfg.guest_script)

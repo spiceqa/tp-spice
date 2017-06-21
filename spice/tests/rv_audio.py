@@ -14,6 +14,8 @@
 """This module Plays audio playback / record on guest and detect any pauses in
 the audio stream.
 
+TEST IS UNFINISHED. AND IS USELESS NOW.
+
 =====
 Audio
 =====
@@ -46,7 +48,8 @@ Requirements to WAVE specimen
 -----------------------------
 
 - WAVE file must have persistent sound.
-- http://linguistics.berkeley.edu/plab/guestwiki/index.php?title=Sox_in_phonetic_research
+- http://linguistics.berkeley.edu/plab/guestwiki/
+                                      index.php?title=Sox_in_phonetic_research
 - To examine: $ sox sine1000.wav -n spectrogram
 
 
@@ -96,7 +99,6 @@ import struct
 import wave
 import aexpect
 from virttest import utils_misc
-from spice.lib import rv_ssn
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act
@@ -169,24 +171,21 @@ def verify_recording(path, cfg):
                 create_new_empty_chunk = False
             else:
                 # Silent sequnce continue
-                f, l = paused_sequences[-1]
-                paused_sequences[-1] = (f, l+1)
+                f, g = paused_sequences[-1]
+                paused_sequences[-1] = (f, g+1)
         cur_frame += 1
     logging.info("In total empty frames: %s, payload frames: %s", empty_frames,
                  payload_frames)
     # Do not count solitary empty frames. Let us assume that pause in recording
     # are more then 20 sequential empty frames.
-    gen = ((f, l) for f, l in paused_sequences if l > 20)
+    gen = ((f, g) for f, g in paused_sequences if g > 20)
     pauses = 0
-    for f, l in gen:
-        logging.info("Silence from %s frame, %s frames", f, l)
+    for f, g in gen:
+        logging.info("Silence from %s frame, %s frames", f, g)
         pauses += 1
     logging.info("Total pauses: %s.", pauses)
     if payload_frames == 0:
-        if cfg.disable_audio:
-            return True
-        else:
-            return False
+        return bool(cfg.disable_audio)
     return True
 
 
@@ -210,13 +209,14 @@ def run(vt_test, test_params, env):
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
     cfg = test.cfg
-    act.reset_gui(test.vmi_c)
-    act.reset_gui(test.vmi_g)
+    act.x_active(test.vmi_c)
+    act.x_active(test.vmi_g)
+    ssn_c = act.new_ssn(test.vmi_c)
     # Get default sink at the client.
     cmd = r"pacmd stat | grep 'Default sink name' | " \
         r"sed -e 's/^.*[[:space:]]//'"
     try:
-        def_sink = test.ssn_c.cmd(cmd).rstrip('\r\n')
+        def_sink = ssn_c.cmd(cmd).rstrip('\r\n')
     except aexpect.ShellCmdError as excp:
         raise utils.SpiceTestFail(test, "Test failed: %s" % str(excp))
     logging.info("Default sink at client is: %s", def_sink)
@@ -224,10 +224,7 @@ def run(vt_test, test_params, env):
     env = {}
     if cfg.rv_record:
         env["PULSE_SOURCE"] = "%s.monitor" % def_sink
-    try:
-        rv_ssn.connect(test, env=env)
-    except rv_ssn.RVSessionError as excp:
-        raise utils.SpiceTestFail(test, str(excp))
+    act.rv_connect(test.vmi_c, ssn_c)
     ret, out = commands.getstatusoutput(MAKE_WAV)
     if ret:
         errmsg = "Cannot generate specimen WAV file: %s" % out

@@ -76,6 +76,7 @@ class OkCancelDlg(ModalDlg):
     _model = OkCancelDlgModel
     _label = 'OK/Cancel dialog'
 
+    #pylint: disable=W0104
     def init_validation(self):
         """Initial validation - check that 'Ok' and 'Cancel' buttons are
         present.

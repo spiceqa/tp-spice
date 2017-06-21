@@ -17,11 +17,14 @@ driver = webdriver.Firefox()
 def example():
     """Address the same element in different ways.
     """
-    a = driver.find_element(
-        By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]')
-    b = driver.find_element(
-        By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[2]')
-    c = driver.find_element(
-        By.CSS_SELECTOR, 'div[id$=MainTabVirtualMachineView_table_ConsoleConnectCommand] div div:nth-child(3)').click()
+    a = driver.find_element(By.XPATH, '//div[starts-with(@id, '
+                            '"MainTabVirtualMachineView_table_'
+                            'ConsoleConnectCommand")]')
+    b = driver.find_element(By.XPATH, '//div[starts-with(@id, '
+                            '"MainTabVirtualMachineView_table_'
+                            'ConsoleConnectCommand")]/div/div[2]')
+    c = driver.find_element(By.CSS_SELECTOR, 'div[id$=MainTabVirtualMachine'
+                            'View_table_ConsoleConnectCommand] div '
+                            'div:nth-child(3)').click()
     a.click()
     b.get_attribute('innerHTML')

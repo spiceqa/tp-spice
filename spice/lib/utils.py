@@ -28,7 +28,9 @@ import os
 import re
 import time
 import pipes
-from distutils import util
+import socket
+
+from distutils import util  # virtualenv problem pylint: disable=E0611
 from virttest import qemu_vm
 from virttest import asset
 from virttest import utils_net
@@ -103,7 +105,7 @@ def vm_is_linux(self):
     return False
 
 
-def quote(self, arg):
+def quote(arg):
     """Quote one argument. After quotation shell receives argument that cannot
     be treated in any way. No variables, no back-slashes.
 
@@ -443,3 +445,25 @@ def set_ticket(test):
         logger.info("Set guest ticket: set_password spice %s", cfg.ticket_set)
         cmd = "set_password spice %s" % cfg.ticket_set
         test.vm_g.monitor.cmd(cmd)
+
+
+def URL_parse(url, def_port=None):
+    """Parses URL to IP address and port
+
+    Parameters
+    ----------
+    url : URL string to parse
+    def_port : default port value
+
+    :return: (IP address, port)
+    """
+    parse = url.split('//')[-1]
+    if ']:' in parse or '.' in parse and ':' in parse:
+        # port is specified in parse
+        ip, _, port = parse.rpartition(':')
+    else:
+        ip, port = parse, def_port
+    ip = ip.strip('[]')
+    if ip.split('.')[-1].isalpha():
+        ip = socket.gethostbyname(ip)
+    return ip, port

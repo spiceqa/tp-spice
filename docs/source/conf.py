@@ -21,10 +21,12 @@ import os
 import commands
 from mock import MagicMock
 
+
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
         return Mock()
+
 
 MOCK_MODULES = ['virttest', 'avocado', 'avocado.core', 'aexpect']
 MOCK_MODULES += ['virttest.staging']
@@ -139,8 +141,10 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     except ImportError:
         html_theme = 'default'
 
+
 class DocBuildError(Exception):
     pass
+
 
 # Call 'make rst' in 'docs' dir
 docs_dir = os.path.abspath(os.path.join("..", "..", "docs"))
@@ -226,14 +230,14 @@ htmlhelp_basename = 'tp-spicedoc'
 # -- Options for LaTeX output --------------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

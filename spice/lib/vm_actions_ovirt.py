@@ -21,6 +21,7 @@ from spice.lib import ios
 logger = logging.getLogger(__name__)
 
 
+#pylint: disable=W0613
 @reg.add_action(req=[ios.IOvirt4, ios.ILinux])
 def new_ssn(vmi, admin=False):
     utils.debug(vmi, "Yahooooooooooooo!")
@@ -39,6 +40,7 @@ def new_ssn(vmi, admin=False):
     #return ssn
 
 
+#pylint: disable=C0301
 @reg.add_action(req=[ios.IOvirt4])
 def get_ip(vmi):
     """Get IP for VM.

@@ -37,7 +37,6 @@ def run(vt_test, test_params, env):
 
     """
     test = stest.ClientGuestTest(vt_test, test_params, env)
-    cfg = test.cfg
     act.reset_gui(test.vmi_c)
     act.reset_gui(test.vmi_g)
     with act.new_ssn_context(test.vmi_c, name="Remote Viewer") as ssn:

@@ -37,8 +37,8 @@ logger = logging.getLogger(__name__)
 #def test_leds_migration(client_vm, guest_vm, guest_session, params):
 #    """
 #    Check LEDS after migration.
-#    Function sets LEDS (caps, num) to ON and send scancodes of "a" and "1 (num)"
-#    and expected to get keycodes of "A" and "1" after migration.
+#    Function sets LEDS (caps, num) to ON and send scancodes of "a" and
+#    "1 (num)" and expected to get keycodes of "A" and "1" after migration.
 #
 #    Parameters
 #    ----------
@@ -86,9 +86,9 @@ def test_seq(test, send_keys, expected_keysyms):
     for i in send_keys:
         test.vm_c.send_key(i)
     logged_keys = act.klogger_stop(test.vmi_g, ssn)
-    keysyms = map(lambda (ignore, keysym): keysym, logged_keys)
+    keysyms = [key[1] for key in logged_keys]
     assert keysyms == expected_keysyms
-    ssn.close
+    ssn.close()
 
 
 def run(vt_test, test_params, env):
@@ -118,8 +118,7 @@ def run(vt_test, test_params, env):
         keycodes = range(1, 69)
         # Skip Ctrl, RSH, LSH, PtScr, Alt, CpsLk
         skip = [29, 42, 54, 55, 56, 58]
-        send_keys = filter(lambda k: k not in skip, keycodes)
-        send_keys = map(lambda k: str(hex(k)), send_keys)
+        send_keys = [hex(k) for k in keycodes if k not in skip]
         expected_keysyms = [65307, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 45,
                             61, 65288, 65289, 113, 119, 101, 114, 116, 121,
                             117, 105, 111, 112, 91, 93, 65293, 97, 115, 100,
@@ -174,9 +173,10 @@ def run(vt_test, test_params, env):
         for i in keys2:
             test.vm_c.send_key(i)
         logged_keys = act.klogger_stop(test.vmi_g, ssn)
-        ssn.close
-        keysyms = map(lambda (ignore, keysym): keysym, logged_keys)
+        ssn.close()
+        keysyms = [key[1] for key in logged_keys]
         assert keysyms == expected_keysyms
+
 
 """ Useful links
 

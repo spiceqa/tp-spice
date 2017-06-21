@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#pylint: disable=W0104
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -42,10 +44,14 @@ class VMPopupModel(dialogs.OkCancelDlgModel):
     advanced_opts_btn = elements.Button(
         by.By.CSS_SELECTOR, '*[id$=PopupView_OnAdvanced]')
 
-    general_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath % 'General')
-    system_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath % 'System')
-    init_run_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath % 'Initial Run')
-    console_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath % 'Console')
+    general_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath %
+                                       'General')
+    system_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath %
+                                      'System')
+    init_run_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath %
+                                        'Initial Run')
+    console_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath %
+                                       'Console')
     host_tab = elements.PageElement(by.By.XPATH, __tab_label_xpath % 'Host')
     high_avail_tab = elements.PageElement(
         by.By.XPATH, __tab_label_xpath % 'High Availability')
@@ -206,7 +212,8 @@ class VMPopupBootOptsTabModel(page_base.PageModel):
 
 class VMPopupCustPropsTabModel(page_base.PageModel):
     """ VM popup - 'Custom Properties' tab. """
-    custom_props = elements.Select(by.By.CSS_SELECTOR, 'div[id$=PopupWidget] select')
+    custom_props = elements.Select(by.By.CSS_SELECTOR,
+                                   'div[id$=PopupWidget] select')
 
 
 class NewTemplateDlgModel(dialogs.OkCancelDlgModel):
@@ -260,8 +267,10 @@ class CloneVmDlgModel(dialogs.OkCancelDlgModel):
 
 
 class GuestAgentIsNotResponsiveDlgModel(dialogs.OkCancelDlgModel):
-    cancel_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_SpiceWithoutAgentCancel')
-    ok_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_SpiceWithoutAgentOK')
+    cancel_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_'
+                                 'SpiceWithoutAgentCancel')
+    ok_btn = elements.Button(by.By.ID, 'DefaultConfirmationPopupView_'
+                             'SpiceWithoutAgentOK')
 
 
 class GuestAgentIsNotResponsiveDlg(dialogs.OkCancelDlg):
@@ -273,7 +282,7 @@ class GuestAgentIsNotResponsiveDlg(dialogs.OkCancelDlg):
         try:
             no_agent_dialog = cls(drv, timeout=0.1)
             no_agent_dialog._model.ok_btn.click()
-        except excepts.InitPageValidationError as e:
+        except excepts.InitPageValidationError:
             logger.info("Guest Agent dialog does not exist.")
 
 
@@ -458,6 +467,9 @@ class VMPopupGeneralTab(page_base.PageObject):
             """
             self._model.network = network
 
+        def init_validation(self):
+            raise NotImplementedError
+
     def init_validation(self):
         """ Initial validation - check for some element from the side-tab. """
         self._model.name
@@ -482,7 +494,7 @@ class VMPopupGeneralTab(page_base.PageObject):
         self._model.is_run_and_pause = is_run_and_pause
         self._model.is_delete_protected = is_delete_protected
         nic_networks = nic_networks or []
-        for nic, net in map(lambda item: item.split(':'), nic_networks):
+        for nic, net in (item.split(':') for item in nic_networks):
             nic = self.VMNIC(self.driver, name=nic)
             nic.assign_network(net)
 
@@ -808,9 +820,11 @@ class CloneVmDlg(dialogs.OkCancelDlg):
 
 class EditConsoleOptionsModel(dialogs.OkCancelDlgModel):
     """ Edit console options dialog """
-    spice_console = elements.Radio(by.By.ID, "ConsolePopupView_spiceRadioButton")
+    spice_console = elements.Radio(by.By.ID,
+                                   "ConsolePopupView_spiceRadioButton")
     vnc_console = elements.Radio(by.By.ID, "ConsolePopupView_vncRadioButton")
-    rd_console = elements.Radio(by.By.ID, "ConsolePopupView_remoteDesktopRadioButton")
+    rd_console = elements.Radio(by.By.ID,
+                                "ConsolePopupView_remoteDesktopRadioButton")
     auto_console_inv = elements.Radio(
         by.By.ID, "ConsolePopupView_spiceAutoImplRadioButton")
     native_client_console_inv = elements.Radio(
@@ -979,9 +993,9 @@ class EditConsoleOptions(dialogs.OkCancelDlg):
 
 def mk_pool_regex(pool_name):
     if '?' in pool_name:
-        regex = pool_name.replace('?', '\d')  # Matches any decimal digit.
+        regex = pool_name.replace('?', r'\d')  # Matches any decimal digit.
     else:
-        regex = pool_name + '\d'
+        regex = pool_name + r'\d'
     regex = regex + '$'
     logger.info("Use pool_name: %s, use regex: %s.", pool_name, regex)
     return regex

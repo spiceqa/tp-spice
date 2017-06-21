@@ -20,8 +20,8 @@
 """Test.
 """
 
-import driver
-from user_portal import user_login
+from lib4x import driver
+from lib4x.user_portal import user_login
 
 drv = driver.DriverFactory("Firefox", "astepano-ws", "4444")
 drv.maximize_window()
@@ -56,7 +56,7 @@ console.select_spice()
 print "Spice console is selected: %s" % console.spice_is_selected
 console.cancel()
 
-from user_portal import extendedtab
+from lib4x.user_portal import extendedtab
 
 tab_controller = home_page.go_to_extended_tab()
 vm = tab_controller.get_vm(name)

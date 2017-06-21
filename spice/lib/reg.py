@@ -38,7 +38,7 @@ Example
 """
 
 import logging
-from zope import interface
+from zope import interface  # pylint: disable=F0401
 from zope.interface import adapter
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ logger.info("Create a new Zope registry.")
 registry = adapter.AdapterRegistry()
 
 
-# pylint: disable=E0211
+# pylint: disable=E0239,E0211,W0222
 class IVmAction(interface.Interface):
     def __call__():  # Zope Interfaces are defined without 'self'
         """Run some command on VM."""

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#pylint: disable=W0104
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -15,9 +17,9 @@
 import time
 import logging
 import re
-import regex
-import excepts
 
+#TODO: pages(wrong import):
+#pylint: disable=F0401
 from raut.lib.selenium.ui.webadmin import pages
 from selenium import common
 from selenium.webdriver.common import by
@@ -27,6 +29,7 @@ from .. import support
 from .. import elements
 from .. import vms_base
 from .. import page_base
+from .. import excepts
 
 TIME_HOME_PAGE = 45
 
@@ -420,9 +423,10 @@ class VmsTabCtrl(object):
             If there are to much VMs they are not shown all at once. Instead,
             XX per page.
         """
-        marker = '//div[starts-with(@id, "MainTabVirtualMachineView_table_content_col2_row")]'
+        marker = ('//div[starts-with(@id, '
+                  '"MainTabVirtualMachineView_table_content_col2_row")]')
         vms = self.driver.find_elements(by.By.XPATH, marker)
-        vms_names = map(lambda x: getattr(x, 'text'), vms)
+        vms_names = [getattr(x, 'text') for x in vms]
         return set(vms_names)
 
     def get_vm_from_pool(self, pool_name):
@@ -446,6 +450,8 @@ class VmsTabCtrl(object):
                     pool_name)
         return self.start_vm_from_pool(pool_name)
 
+    #TODO: define regex
+    #pylint: disable=E0602
     def start_vm_from_pool(self, pool_name):
         search_panel = SearchPanel(self.driver)
         search_string = ("Vms: pool={0} and status=down" . format(pool_name))
@@ -505,10 +511,12 @@ class VMsTabMenuBarModel(page_base.PageModel):
         by.By.ID, 'MainTabVirtualMachineView_table_Migrate')
     # Activate console.
     console_btn = elements.Button(
-        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[1]')
+        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_'
+        'ConsoleConnectCommand")]/div/div[1]')
     # Navigate to console options.
     console_opts = elements.Button(
-        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_ConsoleConnectCommand")]/div/div[2]')
+        by.By.XPATH, '//div[starts-with(@id, "MainTabVirtualMachineView_table_'
+        'ConsoleConnectCommand")]/div/div[2]')
     # "Console Options".
     console_opts_btn = elements.Button(by.By.CLASS_NAME,
                                        'actionPanelPopupMenuBar')
@@ -681,8 +689,6 @@ class VMsTabMenuBar(page_base.PageObject):
         """
         self._model.console_btn.click()
         time.sleep(3)  # Pause to save .vv file or auto-open it.
-
-
 
 
 # VMS_subtab

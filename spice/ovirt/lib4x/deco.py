@@ -27,7 +27,6 @@
 import time
 import functools
 import logging
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,8 @@ def exc_handler(tries_remaining, exception, delay):
     tries_remaining: The number of tries remaining.
     exception: The exception instance which was raised.
     """
-    logger.info("Caught '%s', %d tries remaining, sleeping for %s seconds", exception, tries_remaining, delay)
+    logger.info("Caught '%s', %d tries remaining, sleeping for %s seconds",
+                exception, tries_remaining, delay)
     if tries_remaining == 0:
         seconds = 60 * 60 * 10
         logger.error("Test has failed. Do nothing for %s seconds.", seconds)
@@ -102,18 +102,18 @@ def log(level=logging.DEBUG, name=None, message=None):
     '''
     def decorate(func):
         logname = name if name else func.__module__
-        logger = logging.getLogger(logname)
+        logger_dec = logging.getLogger(logname)
         logmsg = message if message else func.__name__
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            logger.info('Entering {}'.format(logmsg))
+            logger_dec.info('Entering %s', logmsg)
             start = time.time()
             f_result = func(*args, **kwargs)
             end = time.time()
-            logger.info('Exiting {}'.format(logmsg))
-            logger.log(level, func.__name__, "time ", end-start)
-            logger.log(level, logmsg)
+            logger_dec.info('Exiting %s', logmsg)
+            logger_dec.log(level, func.__name__, "time ", end-start)
+            logger_dec.log(level, logmsg)
             return f_result
         return wrapper
     return decorate

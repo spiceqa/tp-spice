@@ -23,13 +23,14 @@
 """
 
 
+import argparse
 import os
 import sys
 import logging
-from distutils import util
+from distutils import util  # virtualenv problem pylint: disable=E0611
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+
 import rv
-import argparse
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

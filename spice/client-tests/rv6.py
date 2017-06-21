@@ -31,15 +31,15 @@ Notes
 """
 
 import os
+import time
 import sys
 import logging
+import platform
 from dogtail import utils
 utils.enableA11y()
 from dogtail import tree
 from dogtail import predicate
 from dogtail import rawinput
-import platform
-import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import retries
@@ -164,8 +164,8 @@ class Display(object):
         #node = app.child(roleName='label', name=label_name, retry=retry)
         if not node:
             # except tree.SearchError:
-            # Fail back to case where spice-vdagent is absent, and exists only one
-            # display.
+            # Fail back to case where spice-vdagent is absent,
+            # and exists only one display.
             if str(num) != str(1):
                 raise GeneralError('Cannot find display %s.' % num)
             role = 'unknown'
@@ -253,7 +253,7 @@ class Display(object):
     def vm_sendkey(self, key):
         raise NotImplementedError()
 
-    def screenshot(self, save_as):
+    def screenshot(self, filename):
         raise NotImplementedError()
 
     def closeabout(self):
@@ -365,7 +365,8 @@ class DisplayMouse(Display):
         n = file_chooser.button('Save')
         do_click(n)
         if isChild(self.app, roleName='alert', name='Question'):
-            n = self.app.child(roleName='alert', name='Question').button('Replace')
+            n = self.app.child(roleName='alert', name='Question'
+                              ).button('Replace')
             do_click(n)
 
     def fullscreen_on(self):
@@ -435,7 +436,8 @@ class DisplayMouse(Display):
                 predicate.GenericPredicate(roleName='push button'))[1]
             do_click(n)
             # There are two different clones of menu. Operate on second.
-            n = self.app.child(roleName='window').child(roleName='menu').menuItem(key)
+            n = self.app.child(roleName='window').child(roleName='menu'
+                                                       ).menuItem(key)
             do_click(n)
         else:
             raise NotImplementedError()
@@ -448,7 +450,8 @@ class DisplayMouse(Display):
         do_click(n)
         n = self.dsp.menu('Help').menuItem('About')
         do_click(n)
-        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
+        about = self.app.child("About Virtual Machine Viewer",
+                               roleName="dialog")
         ver = about.child(roleName='label').text.split()[-1]
         return ver
 
@@ -487,9 +490,10 @@ class DisplayAccessKey(Display):
     def is_for(cls, method):
         return method == 'access_key'
 
-    def __init__(self, app, num, kmap={}):
+    def __init__(self, app, num, kmap=None):
         super(DisplayAccessKey, self).__init__(app, num)
-        self.kmap = {}
+        if not kmap:
+            self.kmap = {}
         self.kmap.update(DisplayAccessKey.def_key_mapping)
         self.kmap.update(kmap)
 
@@ -526,7 +530,8 @@ class DisplayAccessKey(Display):
 
     def help_version(self):
         self.menu('Help', ['Help|About'])
-        about = self.app.child("About Virtual Machine Viewer", roleName="dialog")
+        about = self.app.child("About Virtual Machine Viewer",
+                               roleName="dialog")
         # Dirty hack, it is because of:
         # [panel | ]
         # [filler | ]
@@ -553,7 +558,8 @@ class DisplayAccessKey(Display):
         n = file_chooser.button('Save')
         do_click(n)
         if self.app.isChild(roleName='alert', name='Question'):
-            n = self.app.child(roleName='alert', name='Question').button('Replace')
+            n = self.app.child(roleName='alert',
+                               name='Question').button('Replace')
             do_click(n)
 
 
@@ -568,9 +574,10 @@ class DisplayHotKey(Display):
         'Ctrl+Alt+Del': '<Control><Alt>End',
     }
 
-    def __init__(self, app, num, kmap={}):
+    def __init__(self, app, num, kmap=None):
         super(DisplayHotKey, self).__init__(app, num)
-        self.kmap = {}
+        if not kmap:
+            self.kmap = {}
         self.kmap.update(DisplayHotKey.def_key_mapping)
         self.kmap.update(kmap)
 
@@ -605,9 +612,10 @@ class DisplayWMKey(Display):
     def is_for(cls, method):
         return method == 'wm_key'
 
-    def __init__(self, app, num, kmap={}):
+    def __init__(self, app, num, kmap=None):
         super(DisplayWMKey, self).__init__(app, num)
-        self.kmap = {}
+        if not kmap:
+            self.kmap = {}
         self.kmap.update(DisplayWMKey.def_key_mapping)
         self.kmap.update(kmap)
 
@@ -724,8 +732,8 @@ class Application(object):
         try:
             assert rv_instances == 1
         except AssertionError:
-            err_msg = "This kind of tests support exactly one instance of RV, " \
-                "found %s" % rv_instances
+            err_msg = ("This kind of tests support exactly one instance of RV,"
+                       " found %s" % rv_instances)
             raise GeneralError(err_msg)
         return apps[0]
 

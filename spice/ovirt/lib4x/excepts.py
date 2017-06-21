@@ -24,6 +24,7 @@ class GeneralException(Exception):
     message = "General Exception"
 
     def __init__(self, *value):
+        super(GeneralException, self).__init__(*value)
         self.value = value
 
     def __str__(self):

@@ -77,5 +77,3 @@ def run(vt_test, test_params, env):
 
     if cfg.negative and success or not cfg.negative and not success:
         raise utils.SpiceTestFail(test, "Test failed.")
-
-    pass

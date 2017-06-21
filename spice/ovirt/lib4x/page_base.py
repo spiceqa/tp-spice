@@ -246,6 +246,7 @@ class PageModel(PageModelBase):
     <PageElement> instances or its direct descendants.
     """
 
+    #pylint: disable=W0235
     def __init__(self, driver):
         """Save the webdriver instance to attribute.
 
