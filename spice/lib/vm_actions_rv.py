@@ -364,8 +364,8 @@ def rv_chk_con(vmi):
     else:
         remote_ip = utils.get_host_ip(test)
     rv_binary = os.path.basename(cfg.rv_binary)
-    cmd1 = utils.Cmd("netstat", "-p", "-n", "--wide")
-    grep_regex = "^tcp.*:.*%s.*ESTABLISHED.*%s.*" % (remote_ip, rv_binary)
+    cmd1 = utils.Cmd("ss", "-n", "-p", "-t", "state", "established")
+    grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
     time.sleep(7)  # Wait all RV Spice links raise up.
