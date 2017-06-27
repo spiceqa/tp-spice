@@ -364,28 +364,28 @@ def rv_chk_con(vmi):
     else:
         remote_ip = utils.get_host_ip(test)
     rv_binary = os.path.basename(cfg.rv_binary)
-    cmd1 = utils.Cmd("ss", "-n", "-p", "-t", "state", "established")
+    cmd1 = utils.Cmd("ss", "-n", "-p", "-t", "state", "all")
     grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
     time.sleep(7)  # Wait all RV Spice links raise up.
-    status, netstat_out = act.rstatus(vmi, cmd, admin=True)
+    status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
     if cfg.spice_proxy:
-        proxy_port_count = netstat_out.count(proxy_port)
+        proxy_port_count = ss_out.count(proxy_port)
         test.vm_g.info("Active proxy ports %s: %s", proxy_port, proxy_port_count)
     port = test.kvm_g.spice_port
     tls_port = test.kvm_g.spice_tls_port
     if port == 'no':
         port_count = 0
     else:
-        port_count = netstat_out.count(port)
+        port_count = ss_out.count(port)
     test.vm_g.info("Active ports %s: %s", port, port_count)
     tls_port_count = 0
     if tls_port:
-        tls_port_count = netstat_out.count(tls_port)
+        tls_port_count = ss_out.count(tls_port)
     test.vm_g.info("Active TLS ports %s: %s", tls_port, tls_port_count)
     opened_ports = port_count + tls_port_count + proxy_port_count
     if opened_ports < 4:
@@ -404,9 +404,9 @@ def rv_chk_con(vmi):
             msg = "Plaintext links per session is less then expected. %s (%s)" % (
                 port_count, plaintext_port_expected)
             raise RVSessionConnect(test, msg)
-    for line in netstat_out.split('\n'):
+    for line in ss_out.split('\n'):
         for p in port, tls_port, proxy_port:
-            if p and p in line and "ESTABLISHED" not in line:
+            if p and p in line and "ESTAB" not in line:
                 raise RVSessionConnect(test, "Missing active link at port %s",
                                        p)
     output = test.vm_g.monitor.cmd("info spice")
