@@ -368,7 +368,7 @@ def rv_chk_con(vmi):
     grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
-    time.sleep(7)  # Wait all RV Spice links raise up.
+    time.sleep(25)  # Wait all RV Spice links raise up.
     status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         logger.info("ss output: s%", ss_out)
