@@ -371,6 +371,7 @@ def rv_chk_con(vmi):
     time.sleep(7)  # Wait all RV Spice links raise up.
     status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
+        logger.info("ss output: s%", ss_out)
         raise utils.SpiceUtilsError("No active RV connections.")
     proxy_port_count = 0
     if cfg.spice_proxy:
