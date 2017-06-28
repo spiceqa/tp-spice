@@ -18,8 +18,22 @@ import time
 import logging
 from autotest.client.shared import error
 
+from spice.lib import deco
+
 logger = logging.getLogger(__name__)
 
+
+@deco.retry(8, exceptions=(AssertionError,))
+def chk_all_alive(vms):
+    assert all([vm.is_alive() for vm in vms])
+
+@deco.retry(8, exceptions=(AssertionError,))
+def down_all_vms(vms):
+    alive_vms = [vm for vm in vms if vm.is_alive()]
+    for vm in alive_vms:
+        logger.info("Powerdown %s vm.", vm.name)
+        vm.monitor.system_powerdown()
+    assert not alive_vms
 
 @error.context_aware
 def run(test, params, env):
@@ -36,14 +50,5 @@ def run(test, params, env):
 
     """
     vms = env.get_all_vms()
-
-    while not all([vm.is_alive() for vm in vms]):
-        logger.info("Wait VMs to up.")
-        time.sleep(5)
-
-    i = 0
-    while any([vm.is_alive() for vm in vms]):
-        if i % 100 == 0:
-            logger.info("Found active VM continue sleep %s.", i)
-        time.sleep(5)
-        i = i + 1
+    chk_all_alive(vms)
+    down_all_vms(vms)
