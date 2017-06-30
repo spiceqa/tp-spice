@@ -35,10 +35,10 @@
 # https://wiki.python.org/moin/PythonDecoratorLibrary
 
 
+import sys
 import time
-import functools
 import logging
-import time
+import functools
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +89,12 @@ def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
                 try:
                     return func(*args, **kwargs)
                 except exceptions as e:
+                    type_, value_, traceback_ = sys.exc_info()
                     if tries_remaining > 0:
                         if hook is not None:
                             hook(tries_remaining, e, mydelay)
+                        logger.info("\"%s(...)\" had exception %s. Retry #%s.",
+                                func.__name__, type_, max_tries-tries_remaining)
                         time.sleep(mydelay)
                         mydelay = mydelay * backoff
                     else:

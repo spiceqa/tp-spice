@@ -48,7 +48,9 @@ import logging
 import socket
 import time
 import aexpect
+
 from spice.lib import utils
+from spice.lib import deco
 from spice.lib import act
 from spice.lib import reg
 from spice.lib import ios
@@ -324,7 +326,8 @@ def rv_run(vmi, rcmd, ssn, env={}):
                      "of remote-viewer later")
 
 
-@reg.add_action(req=[ios.ILinux])
+@reg.add_action(req=[ios.ILinux], name="rv_chk_con")
+@deco.retry(8, exceptions=(utils.SpiceUtilsError, RVSessionConnect,))
 def rv_chk_con(vmi):
     """Tests if connection is active.
 
@@ -368,7 +371,6 @@ def rv_chk_con(vmi):
     grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd = utils.combine(cmd1, "|", cmd2)
-    time.sleep(25)  # Wait all RV Spice links raise up.
     status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         logger.info("ss output: s%", ss_out)
