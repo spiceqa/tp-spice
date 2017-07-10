@@ -60,7 +60,8 @@ def install_req_pkgs(pkgsRequired, vm_root_session, params):
             rpm = params.get(re.sub("-", "_", pkgName) + "_url")
             logging.info("Installing %s", pkgName)
             try:
-                vm_root_session.cmd("yum -y localinstall %s" % rpm, timeout=300)
+                vm_root_session.cmd("yum -y localinstall %s" % rpm,
+                                    timeout=300)
             except ShellCmdError:
                 logging.info("Could not install %s", pkgName)
 
@@ -212,7 +213,8 @@ def run_rv_build_install(test, params, env):
     # Get root session for the VM
     (vm, vm_root_session) = connect_to_vm(vm_name, env, params)
 
-    # The following is to copy build_install.py script to the VM and do the test
+    # The following is to copy build_install.py script to the VM and do the
+    # test
     scriptdir = os.path.join("deps", script)
 
     # location of the script on the host

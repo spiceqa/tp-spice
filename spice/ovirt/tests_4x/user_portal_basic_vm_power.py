@@ -60,5 +60,6 @@ def run(vt_test, test_params, env):
                                           domain=cfg.ovirt_profile,
                                           autoconnect=False)
         tab_controller = home_page.go_to_basic_tab()
-        tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name, timeout=None)
+        tab_controller.run_vm_and_wait_until_up(cfg.ovirt_vm_name,
+                                                timeout=None)
         home_page.sign_out_user()

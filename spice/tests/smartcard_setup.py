@@ -26,7 +26,6 @@ from autotest.client.shared import error
 #TODO: needs rewrite.... ?
 
 
-#pylint: disable=W0613
 def run_smartcard_setup(test, params, env):
     """
     Simple setup test to create certs on the client to be passed to VM's

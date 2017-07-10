@@ -63,8 +63,8 @@ def run(vt_test, test_params, env):
                 logging.info("Guest terminated as expected: %s", emsg.output)
                 return
             else:
-                raise error.TestFail("Guest creation failed, bad error message:"
-                                     " %s and/or exit status: %s" %
+                raise error.TestFail("Guest creation failed, bad error"
+                                     "message: %s and/or exit status: %s" %
                                      (emsg.output, emsg.status))
         finally:
             process.safe_kill(nc_process_pid, signal.SIGKILL)

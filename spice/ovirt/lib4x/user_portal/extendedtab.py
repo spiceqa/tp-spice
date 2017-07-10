@@ -1016,7 +1016,6 @@ class RunOnce(dialogs.OkCancelDlg):
         self._model.initrd_path = initrd_path
         self._model.kernel_params = kernel_params
 
-    #pylint: disable=W0613
     def _fill_initial_run(
             self, vm_hostname, time_zone, root_passwd,
             ssh_authorized_keys, regenerate_ssh_keys, dns_servers,

@@ -42,8 +42,8 @@ class FreshWebElement(object):
     --------
 
         console._model.rd_console._elem.is_displayed, is_enabled, ...
-        console._model.rd_console._elem.click() == (console._model.
-                                                    rd_console.click())
+        console._model.rd_console._elem.click() == \
+            console._model.rd_console.click()
 
     """
 
@@ -308,7 +308,6 @@ class Remote(WebDriverExtension, webdriver.Remote):
         finally:
             self.set_page_load_timeout(self.PAGE_LOAD_TIMEOUT)
 
-    #pylint: disable=W0221
     def get(self, *args, **kwargs):
         """Overridden method. Loads a URL and automatically confirms possible
         HTTPS certificate error warning (for IE only).

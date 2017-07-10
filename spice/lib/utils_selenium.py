@@ -44,7 +44,8 @@
 #            firefox -CreateProfile <profile name>
 #
 #        """
-#        selenium = download_asset("selenium", section=self.cfg_vm.selenium_ver)
+#        selenium = download_asset("selenium",
+#                                  section=self.cfg_vm.selenium_ver)
 #        fname = os.path.basename(selenium)
 #        dst_fname = os.path.join(self.workdir(), fname)
 #        self.vm.copy_files_to(selenium, dst_fname)
