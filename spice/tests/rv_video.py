@@ -33,7 +33,7 @@ Requirements for GuestOS
 import logging
 import os
 from virttest import utils_misc
-from distutils import util
+from distutils import util  # virtualenv problem pylint: disable=E0611
 from autotest.client.shared import error
 
 
@@ -81,7 +81,8 @@ def deploy_video_file(test, vm_obj, params):
     """
     video_dir = os.path.join("deps", session.cfg.source_video_file)
     video_path = utils_misc.get_path(test.virtdir, video_dir)
-    session.guest_vm.copy_files_to(video_path, session.cfg.destination_video_file_path)
+    session.guest_vm.copy_files_to(video_path,
+                                   session.cfg.destination_video_file_path)
 
 
 def run_rv_video(test, params, env):
@@ -112,7 +113,7 @@ def run_rv_video(test, params, env):
     # Verify remote-viewer is running
     try:
         session.is_connected()
-    except:
+    except Exception:
         raise error.TestFail("Failed to establish connection")
 
     deploy_video_file(test, guest_vm, params)

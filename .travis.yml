@@ -16,8 +16,10 @@ branches:
 sudo: false
 
 install:
+    - pip install "Sphinx==1.3b1"
     - pip install -r requirements-travis.txt
 
 script:
-    - inspekt lint
-    - inspekt indent
+    - inspekt --exclude=.git lint --disable C0103,C0111,C0302,C0325,C0411,C0413,E0012,E0401,E1002,E1101,I0011,I0013,R0901,R0902,R0903,R0904,R0913,R0914,R0915,R0921,R0922,W0104,W0105,W0141,W0142,W0212,W0223,W0232,W0403,W0511,W0612,W0613,W0703,W0710
+    - inspekt --exclude=.git indent
+    - inspekt --exclude=.git style --disable E124,E501,E265,W503,W601,E402,E722

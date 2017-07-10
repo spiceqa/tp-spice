@@ -17,10 +17,10 @@
 import os
 import sys
 import logging
-sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
-import rv
 import argparse
 import time
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+import rv
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -40,7 +40,8 @@ group.add_argument("-w", "--windowmanager", help="Use window manager.",
                    action="store_const", const="wm_key", dest="method")
 parser.add_argument("-r", "--repeat", help="Repeat zooming.", default=0,
                     dest="repeat", type=int)
-parser.add_argument("-R", "--reset", help="Reset to normal size afterwards.", action="store_true")
+parser.add_argument("-R", "--reset", help="Reset to normal size afterwards.",
+                    action="store_true")
 args = parser.parse_args()
 
 app = rv.Application(method=args.method)
@@ -48,13 +49,14 @@ app = rv.Application(method=args.method)
 assert app.dsp_count() == 1
 app.dsp1.key_combo('<Super_L>Down')
 time.sleep(1)
-logger.info("Dislay #%s extents before %s zoom: %s", app.dsp1.num,
-            args.direction, app.dsp1.dsp.extents)
+logger.info("Dislay #%s extents before %s zoom: %s",
+            app.dsp1.num, args.direction, app.dsp1.dsp.extents)
 _, _, w1, h1 = app.dsp1.dsp.extents
 for i in range(args.repeat + 1):
     app.dsp1.zoom(args.direction)
     _, _, w2, h2 = app.dsp1.dsp.extents
-    logger.info("Dislay #%s extents after %s zoom: %s", app.dsp1.num, args.direction, app.dsp1.dsp.extents)
+    logger.info("Dislay #%s extents after %s zoom: %s",
+                app.dsp1.num, args.direction, app.dsp1.dsp.extents)
     if args.direction == "in":
         assert w2 >= w1
         assert h2 >= h1
@@ -65,6 +67,7 @@ if args.direction == "normal" or args.reset:
     if args.reset:
         app.dsp1.zoom()
     _, _, w2, h2 = app.dsp1.dsp.extents
-    logger.info("Dislay #%s extents after %s zoom: %s", app.dsp1.num, args.direction, app.dsp1.dsp.extents)
+    logger.info("Dislay #%s extents after %s zoom: %s",
+                app.dsp1.num, args.direction, app.dsp1.dsp.extents)
     assert w2 == w1
     assert h2 == h1

@@ -31,7 +31,7 @@ import logging
 import os
 import aexpect
 from virttest import utils_misc
-from spice.lib import utils_spice
+from virttest import utils_spice
 
 
 def deploy_tests_linux(vm, cfg):
@@ -69,7 +69,8 @@ def deploy_tests_linux(vm, cfg):
                 params.get("test_script_tgt"))
     if test.vm_c.is_rhel7():
         logging.info("Enabling accessibility on client.")
-        cmd = "gsettings set org.gnome.desktop.interface toolkit-accessibility true"
+        cmd = ("gsettings set org.gnome.desktop.interface "
+               "toolkit-accessibility true")
         ssn_c.cmd(cmd)
 
 
@@ -87,7 +88,6 @@ def setup_gui_linux(vm, params, env):
     self.guest_session = self.guest_vm.wait_for_login(timeout=timeout)
     session = vm.wait_for_login()
     arch = vm.params.get("vm_arch_name")
-    fedoraurl = params.get("fedoraurl")
     wmctrl_64rpm = params.get("wmctrl_64rpm")
     wmctrl_32rpm = params.get("wmctrl_32rpm")
     dogtailrpm = params.get("dogtail_rpm")
@@ -104,7 +104,7 @@ def setup_gui_linux(vm, params, env):
 
 def setup_vm_linux(test, params, env, vm):
     setup_type = params.get("setup_type", None)
-    logging.info("Setup type: %s" % setup_type)
+    logging.info("Setup type: %s", setup_type)
     if vm.params.get("display", None) == "vnc":
         logging.info("Display of VM is VNC; assuming it is client")
         if setup_type == "gui":
@@ -120,7 +120,7 @@ def setup_vm_linux(test, params, env, vm):
 
 def setup_vm_windows(test, params, env, vm):
     setup_type = vm.params.get("setup_type", None)
-    logging.info("Setup type: %s" % setup_type)
+    logging.info("Setup type: %s", setup_type)
 
     if vm.params.get("display", None) == "vnc":
         logging.info("Display of VM is VNC; assuming it is client")
@@ -130,7 +130,8 @@ def setup_vm_windows(test, params, env, vm):
 
     if setup_type == "guest_tools":
         logging.info("Installing Windows guest tools")
-        session = vm.wait_for_login(timeout=int(params.get("login_timeout", 360)))
+        session = vm.wait_for_login(timeout=int(params.get("login_timeout",
+                                                           360)))
         winqxl = params.get("winqxl")
         winvdagent = params.get("winvdagent")
         vioserial = params.get("vioserial")
@@ -163,7 +164,8 @@ def setup_vm_windows(test, params, env, vm):
             output = session.cmd('sc queryex type= service state= all' +
                                  ' | FIND "vdservice"')
         except aexpect.ShellCmdError:
-            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\wvdagent.zip -oC:\\')
+            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e'
+                               ' C:\\wvdagent.zip -oC:\\')
             utils_spice.wait_timeout(2)
             session.cmd_status("C:\\vdservice.exe install")
             # wait for vdservice to come up
@@ -175,20 +177,22 @@ def setup_vm_windows(test, params, env, vm):
         # Note pnputil only works win 7+, need to find a way for win xp Verify
         # if virtio serial is already installed
         output = session.cmd(pnputil + " /e")
-        if("System devices" in output):
+        if "System devices" in output:
             logging.info("Virtio Serial already installed")
         else:
-            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\vioserial.zip -oC:\\')
+            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e '
+                               'C:\\vioserial.zip -oC:\\')
             output = session.cmd(pnputil + " -i -a C:\\vioser.inf")
             logging.info("Virtio Serial status: " + output)
             # Make sure virtio install is complete
             utils_spice.wait_timeout(5)
         output = session.cmd(pnputil + " /e")
-        if("Display adapters" in output):
+        if "Display adapters" in output:
             logging.info("QXL already installed")
         else:
             # winqxl
-            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e C:\\wqxl.zip -oC:\\')
+            session.cmd_status('"C:\\Program Files\\7-Zip\\7z.exe" e'
+                               ' C:\\wqxl.zip -oC:\\')
             output = session.cmd(pnputil + " -i -a C:\\qxl.inf")
             logging.info("Win QXL status: " + output)
             # Make sure qxl install is complete

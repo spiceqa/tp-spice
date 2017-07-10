@@ -39,7 +39,7 @@ def connect_to_vm(vm_name, env, params):
     vm_root_session = vm.wait_for_login(
         timeout=int(params.get("login_timeout", 360)),
         username="root", password="123456")
-    logging.info("VM %s is up and running" % vm_name)
+    logging.info("VM %s is up and running", vm_name)
     return (vm, vm_root_session)
 
 
@@ -53,16 +53,16 @@ def install_req_pkgs(pkgsRequired, vm_root_session, params):
     """
 
     for pkgName in pkgsRequired:
-        logging.info("Checking to see if %s is installed" % pkgName)
+        logging.info("Checking to see if %s is installed", pkgName)
         try:
             vm_root_session.cmd("rpm -q %s" % pkgName)
         except ShellCmdError:
             rpm = params.get(re.sub("-", "_", pkgName) + "_url")
-            logging.info("Installing %s" % pkgName)
+            logging.info("Installing %s", pkgName)
             try:
                 vm_root_session.cmd("yum -y localinstall %s" % rpm, timeout=300)
             except ShellCmdError:
-                logging.info("Could not install %s" % pkgName)
+                logging.info("Could not install %s", pkgName)
 
 
 def build_install_qxl(vm_root_session, vm_script_path, params):

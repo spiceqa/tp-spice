@@ -26,6 +26,7 @@ from autotest.client.shared import error
 #TODO: needs rewrite.... ?
 
 
+#pylint: disable=W0613
 def run_smartcard_setup(test, params, env):
     """
     Simple setup test to create certs on the client to be passed to VM's
@@ -84,7 +85,7 @@ def run_smartcard_setup(test, params, env):
 
     # Verify that all the certs have been generated on the client
     for cert in cert_list:
-        if not(cert in output):
+        if not (cert in output):
             raise error.TestFail("Certificate %s not found" % cert)
 
     client_session.close()

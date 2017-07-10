@@ -20,13 +20,17 @@
 """
 
 
-import pygtk
-pygtk.require('2.0')
-import gtk
 import sys
 import os
 import logging
 import argparse
+# Unable to import pygtk and gtk in virtualenv,
+# nevertheless deps scripts wont be run in virtualenv.
+#pylint: disable=F0401
+import pygtk
+pygtk.require('2.0')
+import gtk
+
 from PIL import Image, ImageDraw
 
 
@@ -67,9 +71,8 @@ args = parser.parse_args()
 clipboard = gtk.clipboard_get()
 
 if args.clear:
-    """We can clear only owned clipboard. Before clear clipboard we must own
-    it. .clear() method can be called only on owned clipboard.
-    """
+    # We can clear only owned clipboard. Before clear clipboard we must own
+    # it. .clear() method can be called only on owned clipboard.
     clipboard.set_text("Anything.")  # Grab clipboard. Become owner of it.
     clipboard.store()                # Apply
     clipboard.clear()                # Now we can clear it.
@@ -119,7 +122,6 @@ elif args.kbytes2cb:
     clipboard.store()
     logger.info("Put in clipboard text %s kbytes.", args.kbytes2cb)
 elif args.cb2img:
-    logger.info
     if clipboard.wait_is_image_available():
         image = clipboard.wait_for_image()
         _, extension = os.path.splitext(args.cb2img)
@@ -142,7 +144,7 @@ elif args.cb2stdout:
         selectiondata = clipboard.wait_for_contents('image/png')
         pixbuf = selectiondata.get_pixbuf()
         if pixbuf:
-            def pixbuf_save_func(buf, data=None):
+            def pixbuf_save_func(buf):
                 sys.stdout.write(buf)
             pixbuf.save_to_callback(pixbuf_save_func, "png")
     elif 'STRING' in targets:

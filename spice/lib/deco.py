@@ -94,7 +94,8 @@ def retry(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):
                         if hook is not None:
                             hook(tries_remaining, e, mydelay)
                         logger.info("\"%s(...)\" had exception %s. Retry #%s.",
-                                func.__name__, type_, max_tries-tries_remaining)
+                                    func.__name__, type_,
+                                    max_tries-tries_remaining)
                         time.sleep(mydelay)
                         mydelay = mydelay * backoff
                     else:
@@ -117,18 +118,18 @@ def log(level=logging.DEBUG, name=None, message=None):
     '''
     def decorate(func):
         logname = name if name else func.__module__
-        logger = logging.getLogger(logname)
+        logger_dst = logging.getLogger(logname)
         logmsg = message if message else func.__name__
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            logger.info('Entering {}'.format(logmsg))
+            logger_dst.info("Entering %s", logmsg)
             start = time.time()
             f_result = func(*args, **kwargs)
             end = time.time()
-            logger.info('Exiting {}'.format(logmsg))
-            logger.log(level, func.__name__, "time ", end-start)
-            logger.log(level, logmsg)
+            logger_dst.info("Exiting %s", logmsg)
+            logger_dst.log(level, func.__name__, "time ", end-start)
+            logger_dst.log(level, logmsg)
             return f_result
         return wrapper
     return decorate

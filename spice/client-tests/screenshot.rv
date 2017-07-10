@@ -17,9 +17,9 @@
 import os
 import sys
 import logging
+import argparse
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import rv
-import argparse
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ group.add_argument("-w", "--windowmanager", help="Use window manager.",
 args = parser.parse_args()
 
 app = rv.Application(method=args.method)
-logger.info('Take screenshot of VM on display: %s.' % args.displaynumber)
+logger.info('Take screenshot of VM on display: %s.', args.displaynumber)
 display = 'dsp%s' % args.displaynumber
 #disp = getattr(app, display)
 disp = app.dsp(args.displaynumber)

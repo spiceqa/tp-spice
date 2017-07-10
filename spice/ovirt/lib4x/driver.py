@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# pylint: disable=R0201,W0235
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -40,7 +42,8 @@ class FreshWebElement(object):
     --------
 
         console._model.rd_console._elem.is_displayed, is_enabled, ...
-        console._model.rd_console._elem.click() == console._model.rd_console.click()
+        console._model.rd_console._elem.click() == (console._model.
+                                                    rd_console.click())
 
     """
 
@@ -305,6 +308,7 @@ class Remote(WebDriverExtension, webdriver.Remote):
         finally:
             self.set_page_load_timeout(self.PAGE_LOAD_TIMEOUT)
 
+    #pylint: disable=W0221
     def get(self, *args, **kwargs):
         """Overridden method. Loads a URL and automatically confirms possible
         HTTPS certificate error warning (for IE only).
@@ -326,8 +330,10 @@ class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
         self.set_preference("browser.download.folderList", 2)
         self.set_preference("browser.download.manager.showWhenStarting", False)
         self.set_preference("browser.download.dir", "~/")
-        #self.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-virt-viewer")
-        self.set_preference("browser.helperApps.neverAsk.openFile", "application/x-virt-viewer")
+        #self.set_preference("browser.helperApps.neverAsk.saveToDisk",
+        #                    "application/x-virt-viewer")
+        self.set_preference("browser.helperApps.neverAsk.openFile",
+                            "application/x-virt-viewer")
 
 
 class DriverFactory(object):
@@ -399,12 +405,9 @@ class DriverFactory(object):
         try:
             capabilities = cls.__desired_capabilities_map[browser_name].copy()
         except KeyError:
-            raise KeyError(
-                "unknown browser: '%s' (valid browsers: %s)"
-                % (browser_name,
-                   ', '.join(cls.__desired_capabilities_map.keys())
-                   )
-            )
+            raise KeyError("unknown browser: '%s' (valid browsers: %s)" %
+                           (browser_name,
+                            ', '.join(cls.__desired_capabilities_map.keys())))
         if desired_capabilities:
             capabilities.update(desired_capabilities)
 
@@ -431,12 +434,9 @@ class DriverFactory(object):
         try:
             driver_cls = cls.__driver_map_local[browser_name]
         except KeyError:
-            raise KeyError(
-                "unknown browser: '%s' (valid browsers: %s)"
-                % (browser_name,
-                   ', '.join(cls.__driver_map_local.keys())
-                   )
-            )
+            raise KeyError("unknown browser: '%s' (valid browsers: %s)" %
+                           (browser_name,
+                            ', '.join(cls.__driver_map_local.keys())))
         return driver_cls(**kwargs)
 
 #
@@ -490,10 +490,6 @@ class DriverFactory(object):
 #
 # __patch_element_click()
 #
-
-
-
-
 
 
 # import base64

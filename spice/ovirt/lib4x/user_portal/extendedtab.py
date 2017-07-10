@@ -35,9 +35,10 @@ TIMEOUT_TABLE_ROW = 10
 
 
 class SideTabModel(page_base.PageModel):
-    vms_link = elements.PageElement(by.By.CSS_SELECTOR, 'a[href=\#extended-vm]')
+    vms_link = elements.PageElement(by.By.CSS_SELECTOR,
+                                    r'a[href=\#extended-vm]')
     templates_link = elements.PageElement(
-        by.By.CSS_SELECTOR, 'a[href=\#extended-template]')
+        by.By.CSS_SELECTOR, r'a[href=\#extended-template]')
 
 
 class VMsTabMenuBarModel(page_base.PageModel):
@@ -120,19 +121,24 @@ class RunOnceModel(dialogs.OkCancelDlgModel):
     system = elements.PageElement(
         by.By.CSS_SELECTOR, "#VmRunOncePopupWidget_systemPanel a")
 
-    attach_floppy = elements.Checkbox(by.By.ID, "VmRunOncePopupWidget_attachFloppy")
+    attach_floppy = elements.Checkbox(by.By.ID,
+                                      "VmRunOncePopupWidget_attachFloppy")
     attach_floppy_select = elements.Select(by.By.ID,
-                                       "VmRunOncePopupWidget_floppyImage")
+                                           "VmRunOncePopupWidget_floppyImage")
     attach_cd = elements.Checkbox(by.By.ID, "VmRunOncePopupWidget_attachIso")
-    attach_cd_select = elements.Select(by.By.ID, "VmRunOncePopupWidget_isoImage")
-    run_stateless = elements.Checkbox(by.By.ID, "VmRunOncePopupWidget_runAsStateless")
+    attach_cd_select = elements.Select(by.By.ID,
+                                       "VmRunOncePopupWidget_isoImage")
+    run_stateless = elements.Checkbox(by.By.ID,
+                                      "VmRunOncePopupWidget_runAsStateless")
     start_in_pause_mode = elements.Checkbox(by.By.ID,
-                                        "VmRunOncePopupWidget_runAndPause")
+                                            "VmRunOncePopupWidget_runAndPause")
 
-    kernel_path = elements.TextInput(by.By.ID, "VmRunOncePopupWidget_kernelPath")
-    initrd_path = elements.TextInput(by.By.ID, "VmRunOncePopupWidget_initrdPath")
+    kernel_path = elements.TextInput(by.By.ID,
+                                     "VmRunOncePopupWidget_kernelPath")
+    initrd_path = elements.TextInput(by.By.ID,
+                                     "VmRunOncePopupWidget_initrdPath")
     kernel_params = elements.TextInput(by.By.ID,
-                                   "VmRunOncePopupWidget_kernelParameters")
+                                       "VmRunOncePopupWidget_kernelParameters")
 
     use_cloud_init = elements.Checkbox(
         by.By.ID, "VmRunOncePopupWidget_cloudInitEnabledEditor")
@@ -514,7 +520,6 @@ class ExtendedTabCtrl(object):
         vm = self._get_vm_inst(name)
         return vm.shutdown()
 
-
     def power_off(self, name):
         """Power off VM.
 
@@ -613,7 +618,7 @@ class ExtendedTabCtrl(object):
             w.status(status_prop)
         except common.exceptions.TimeoutException:
             prop_val = getattr(vm, status_prop)
-            msg = "%s.%s is: %s" % (vm.name, status_prop, attr_val)
+            msg = "%s.%s is: %s" % (vm.name, status_prop, prop_val)
             raise excepts.WaitTimeoutError(msg)
 
     def wait_until_vm_is_up(self, name, timeout=None):
@@ -684,13 +689,12 @@ class ExtendedTabCtrl(object):
         """
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
-
     def get_vms_names(self):
-        marker = '//span[starts-with(@id, "SideTabExtendedVirtualMachineView_table_content_col2_row")]'
+        marker = ('//span[starts-with(@id, "SideTabExtendedVirtualMachineView'
+                  '_table_content_col2_row")]')
         vms = self.driver.find_elements(by.By.XPATH, marker)
-        vms_names = map(lambda x : getattr(x, 'text'), vms)
+        vms_names = [getattr(x, 'text') for x in vms]
         return set(vms_names)
-
 
     def get_vm_from_pool(self, pool_name):
         regex = vms_base.mk_pool_regex(pool_name)
@@ -705,8 +709,7 @@ class ExtendedTabCtrl(object):
                     return vm
         logger.info("Did not found active vm from pool: %s. Start a new one.",
                     pool_name)
-        return self.start_vm_from_pool(self, pool_name)
-
+        return self.start_vm_from_pool(pool_name)
 
     def start_vm_from_pool(self, pool_name):
         vms_before = self.get_vms_names()
@@ -739,7 +742,6 @@ class TemplateTabMenuBar(page_base.PageObject):
     _label = "Templates menu bar"
     _model = TemplateTabMenuBarModel
     _timeout = TIMEOUT_MAIN_TAB
-
 
     def init_validation(self):
         """ Initial validation - check that menu bar is present """
@@ -785,6 +787,7 @@ class Template(page_base.DynamicPageObject):
                 "cannot select %s; reason: %s" % (self, ex))
 
 ###########
+
 
 class VMsTabMenuBar(page_base.PageObject):
     """ VMs tab abstraction class. """
@@ -906,7 +909,8 @@ class VM(page_base.DynamicPageObject):
         Return: `VMsSubTab` instance
         """
         self._model.name.click()
-        return vms_subtab.VMsSubTab(self.driver)
+        raise NotImplementedError
+        #return vms_subtab.VMsSubTab(self.driver)
 
     def run(self):
         """ Hit the run icon button if the VM state is valid.
@@ -1012,6 +1016,7 @@ class RunOnce(dialogs.OkCancelDlg):
         self._model.initrd_path = initrd_path
         self._model.kernel_params = kernel_params
 
+    #pylint: disable=W0613
     def _fill_initial_run(
             self, vm_hostname, time_zone, root_passwd,
             ssh_authorized_keys, regenerate_ssh_keys, dns_servers,
@@ -1133,7 +1138,6 @@ class ChangeCD(dialogs.OkCancelDlg):
           - cd (str): name of cd
         """
         self._model.pick_cd = cd
-
 
 
 ###########

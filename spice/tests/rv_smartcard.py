@@ -1,3 +1,5 @@
+#pylint: skip-file
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -12,6 +14,8 @@
 """
 rv_smartcard.py - Testing software smartcards using remote-viewer
 
+TEST IS UNFINISHED. AND IS USELESS NOW.
+
 Requires: connected binaries remote-viewer, Xorg, gnome session
 
 The test also assumes that the guest is setup with the correct
@@ -21,7 +25,7 @@ options to handle smartcards.
 import logging
 import aexpect
 from autotest.client.shared import error
-from spice.tests.rv_session import *
+from spice.tests.rv_session import *  # pylint: disable=E0611
 
 
 def run_rv_smartcard(test, params, env):
@@ -43,7 +47,7 @@ def run_rv_smartcard(test, params, env):
     certcheck1 = params.get("certcheck3")
     certcheck2 = params.get("certcheck4")
 
-    session = RvSession(params, env)
+    session = RvSession(params, env)  # pylint: disable=E0602
     session.clear_interface_all()
 
     guest_vm = session.guest_vm
@@ -59,7 +63,7 @@ def run_rv_smartcard(test, params, env):
     # Verify remote-viewer is running
     try:
         session.is_connected()
-    except:
+    except Exception:
         raise error.TestFail("Failed to establish connection")
 
     # verify the smart card reader can be seen
@@ -80,7 +84,7 @@ def run_rv_smartcard(test, params, env):
             try:
                 # Send a carriage return for PIN for token
                 listcerts_output = guest_session.cmd("")
-            except:
+            except Exception:
                 raise error.TestFail("Test failed trying to get the output"
                                      " of pkcs11_listcerts")
 
@@ -96,8 +100,8 @@ def run_rv_smartcard(test, params, env):
                 raise error.TestFail("Certificate %s was not found as a listed"
                                      " cert in the guest" % subj_string)
     elif smartcard_testtype == "pklogin_finder":
-               # pkcs11_listcerts not installed until
-               # Smart Card Support is installed
+            # pkcs11_listcerts not installed until
+            # Smart Card Support is installed
         try:
             certsinfo_output = guest_session.cmd("pklogin_finder debug")
         except aexpect.ShellTimeoutError:
@@ -106,7 +110,7 @@ def run_rv_smartcard(test, params, env):
             try:
                 # Send a carriage return for PIN for token
                 certsinfo_output = guest_session.cmd("", ok_status=[0, 1])
-            except:
+            except Exception:
                 raise error.TestFail("Test failed trying to get the output"
                                      " of pklogin_finder")
         testindex = certsinfo_output.find(searchstr)

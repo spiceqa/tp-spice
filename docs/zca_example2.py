@@ -3,13 +3,14 @@
 # This file shows Zope interfaces in work.
 # This approach is not used in tp-spice.
 
-import zope
-from zope import interface
+import zope  # pylint: disable=F0401
+from zope import interface  # pylint: disable=F0401
 from zope.interface import adapter
 
 registry = adapter.AdapterRegistry()
 
 
+# pylint: disable=E0213,E1002
 class MetaMarker(zope.interface.interface.InterfaceClass):
     def __init__(cls, name, bases, attrs):
         key = 'marker'
@@ -23,6 +24,7 @@ class MetaMarker(zope.interface.interface.InterfaceClass):
         super(MetaMarker, cls).__init__(name, bases, attrs)
 
 
+# pylint: disable=E1139,E0239
 class IOSInfo(interface.Interface):
     # If this technique fails sometime due to Python incompabity you always
     # can use next call just in place IClass definition:

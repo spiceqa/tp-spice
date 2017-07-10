@@ -60,21 +60,17 @@ def run(vt_test, test_params, env):
                 s_port = env.get_vm(vmname).spice_port
                 error_s = error_s % (test_params['spice_addr'], s_port)
             if error_s in emsg.output and emsg.status == 1:
-                logging.info("Guest terminated as expected: %s" % emsg.output)
+                logging.info("Guest terminated as expected: %s", emsg.output)
                 return
             else:
                 raise error.TestFail("Guest creation failed, bad error message:"
                                      " %s and/or exit status: %s" %
                                      (emsg.output, emsg.status))
         finally:
-            try:
-                process.safe_kill(nc_process_pid, signal.SIGKILL)
-            except:
-                pass
+            process.safe_kill(nc_process_pid, signal.SIGKILL)
         raise error.TestFail("Guest start normally, didn't quit as expected.")
     else:
         test = stest.GuestTest(vt_test, test_params, env)
-        cfg = test.cfg
         vmi = test.vmi
         act.x_active(vmi)
         act.verify_listen(vmi)

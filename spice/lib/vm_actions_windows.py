@@ -115,8 +115,4 @@ def proc_is_active(vmi, pname):
     cmd = ['tasklist', '/FI']
     cmd.append("IMAGENAME eq %s.exe" % pname)
     output = act.run_cmd(vmi, cmd)
-    if pname in output:
-        res = True
-    else:
-        res = False
-    return res
+    return bool(pname in output)

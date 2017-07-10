@@ -30,4 +30,5 @@ class RunAction(object):
         from spice.lib import act2  # There is no namespace for this module.
         return act2.Action(key)
 
+
 sys.modules[__name__] = RunAction()

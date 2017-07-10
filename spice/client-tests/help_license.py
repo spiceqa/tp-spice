@@ -29,6 +29,6 @@ app = rv.Application(method="mouse")
 
 # Test assumes there is only one virtual display.
 assert app.dsp_count() == 1
-license = app.dsp1.help_license()
-logger.info('Got license: %s', license)
-assert expected in license
+h_license = app.dsp1.help_license()
+logger.info('Got license: %s', h_license)
+assert expected in h_license

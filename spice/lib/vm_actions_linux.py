@@ -20,9 +20,9 @@
 
 import os
 import re
-import aexpect
 import time
 import subprocess
+import aexpect
 
 from virttest import asset
 from virttest import remote
@@ -82,19 +82,19 @@ def workdir(vmi):
 
 @reg.add_action(req=[ios.ILinux])
 def dst_dir(vmi):
-    dst_dir = vmi.cfg.dst_dir
-    if dst_dir:
-        return dst_dir
+    dst_dirpath = vmi.cfg.dst_dir
+    if dst_dirpath:
+        return dst_dirpath
     cmd1 = utils.Cmd("getent", "passwd", vmi.cfg.username)
     cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
     out = act.run(vmi, cmd)
     home_dir = out.rstrip('\r\n')
-    dst_dir = os.path.join(home_dir, "tp-spice")
-    cmd = utils.Cmd("mkdir", "-p", dst_dir)
+    dst_dirpath = os.path.join(home_dir, "tp-spice")
+    cmd = utils.Cmd("mkdir", "-p", dst_dirpath)
     act.run(vmi, cmd)
-    vmi.cfg.dst_dir = dst_dir
-    return dst_dir
+    vmi.cfg.dst_dir = dst_dirpath
+    return dst_dirpath
 #    cmd = 'test -e %s' % dst_dir
 #    if vmi.ssn.cmd_status(cmd) != 0:
 #        cmd = 'mkdir -p "%s"' % dst_dir
@@ -252,12 +252,13 @@ def verify_virtio(vmi):
 
 
 @reg.add_action(req=[ios.ILinux], name="x_turn_off")
-@deco.retry(8, exceptions=(AssertionError, aexpect.exceptions.ShellTimeoutError))
+@deco.retry(8, exceptions=(AssertionError,
+                           aexpect.exceptions.ShellTimeoutError))
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn, timeout=600)
     srv_mng = service.Factory.create_service(run=runner.run)
-    srv_mng.set_target("multi-user.target")  # pylint: disable=no-member
+    srv_mng.set_target("multi-user.target")  # pylint: disable=E1103
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
     cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
     cmd = utils.combine(cmd1, "|", cmd2)
@@ -272,7 +273,7 @@ def x_turn_on(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn)
     srv_mng = service.Factory.create_service(run=runner.run)
-    srv_mng.set_target("graphical.target")  # pylint: disable=no-member
+    srv_mng.set_target("graphical.target")  # pylint: disable=E1103
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
     cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
     cmd = utils.combine(cmd1, "|", cmd2)
@@ -373,7 +374,7 @@ def wait_for_prog(vmi, program):
 @reg.add_action(req=[ios.ILinux])
 def proc_is_active(vmi, pname):
     try:
-        cmd = utils.Cmd("pgrep", "pname")
+        cmd = utils.Cmd("pgrep", pname)
         act.run(vmi, cmd)
         res = True
     except aexpect.ShellCmdError:
@@ -484,7 +485,7 @@ def get_connected_displays(vmi):
     cmd2 = utils.Cmd("grep", "-E", "[[:space:]]connected[[:space:]]")
     cmd = utils.combine(cmd1, "|", cmd2)
     raw = act.run(vmi, cmd)
-    displays = [a.split()[0] for a in raw.split('n') if a is not '']
+    displays = [a.split()[0] for a in raw.split('n') if a]
     return displays
 
 
@@ -501,7 +502,7 @@ def get_display_resolution(vmi):
     cmd2 = utils.Cmd("grep", "*")
     cmd = utils.combine(cmd1, "|", cmd2)
     raw = act.run(vmi, cmd)
-    res = [a.split()[0] for a in raw.split('\n') if a is not '']
+    res = [a.split()[0] for a in raw.split('\n') if a]
     return res
 
 
@@ -690,7 +691,7 @@ def get_corners(vmi, win_title):
     # Expected format:   Corners:  +470+187  -232+187  -232-13  +470-13
     raw_out = act.run(vmi, cmd)
     line = raw_out.strip()
-    corners = [tuple(re.findall("[+-]\d+", i)) for i in line.split()[1:]]
+    corners = [tuple(re.findall(r"[+-]\d+", i)) for i in line.split()[1:]]
     return corners
 
 
@@ -715,7 +716,7 @@ def get_geom(vmi, win_title):
     xinfo_cmd += " | grep geometry"
     # Expected '  -geometry 898x700+470-13'
     out = act.run(vmi, cmd)
-    res = re.findall('\d+x\d+', out)[0]
+    res = re.findall(r'\d+x\d+', out)[0]
     utils.info(vmi, "Window %s has geometry: %s", win_title, res)
     return utils.str2res(res)
 
@@ -760,34 +761,34 @@ def get_x_var(vmi, var_name):
 
 
 @reg.add_action(req=[ios.ILinux])
-def cp_deps(vmi, src, dst_dir=None):
+def cp_deps(vmi, src, dst_dirpath=None):
     provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
     src_path = os.path.join(provider_dir, "deps", src)
-    dst_dir = act.dst_dir(vmi)
-    utils.info(vmi, "Copy from deps: %s to %s", src_path, dst_dir)
-    vmi.vm.copy_files_to(src_path, dst_dir)
+    dst_dirpath = act.dst_dir(vmi)
+    utils.info(vmi, "Copy from deps: %s to %s", src_path, dst_dirpath)
+    vmi.vm.copy_files_to(src_path, dst_dirpath)
 
 
 @reg.add_action(req=[ios.ILinux])
-def cp2vm(vmi, src, dst_dir=None, dst_name=None):
-    if not dst_dir:
-        dst_dir = act.dst_dir(vmi)
+def cp2vm(vmi, src, dst_dirpath=None, dst_name=None):
+    if not dst_dirpath:
+        dst_dirpath = act.dst_dir(vmi)
     provider_dir = asset.get_test_provider_subdirs(backend="spice")[0]
     src = os.path.normpath(src)
     src_path = os.path.join(provider_dir, src)
     if not dst_name:
         dst_name = src
-    dst_path = os.path.join(dst_dir, dst_name)
+    dst_path = os.path.join(dst_dirpath, dst_name)
     utils.info(vmi, "Copy: %s to %s", src_path, dst_path)
-    vmi.vm.copy_files_to(src_path, dst_dir)
+    vmi.vm.copy_files_to(src_path, dst_dirpath)
     return dst_path
 
 
 @reg.add_action(req=[ios.ILinux])
-def chk_deps(vmi, fname, dst_dir=None):
-    if not dst_dir:
-        dst_dir = act.dst_dir(vmi)
-    dst_path = os.path.join(dst_dir, fname)
+def chk_deps(vmi, fname, dst_dirpath=None):
+    if not dst_dirpath:
+        dst_dirpath = act.dst_dir(vmi)
+    dst_path = os.path.join(dst_dirpath, fname)
     cmd = utils.Cmd("test", "-e", dst_path)
     status, _ = act.rstatus(vmi, cmd)
     if status != 0:
@@ -911,9 +912,9 @@ def klogger_stop(vmi, ssn):
     ssn.send("\003")
     output = ssn.read_up_to_prompt()
     a = re.findall(
-        'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
+        r'KeyPress.*\n.*\n.* keycode (\d*) \(keysym ([0-9A-Fa-fx]*)', output)
     act.info(vmi, "Keyboard logger out: %r", a)
-    keys = map(lambda (keycode, keysym): (int(keycode), int(keysym, base=16)), a)
+    keys = [(int(keycode), int(keysym, base=16)) for (keycode, keysym) in a]
     utils.info(vmi, "Read keys: %s" % keys)
     # Return list of pressed: (keycode, keysym)
     return keys
@@ -1044,7 +1045,7 @@ def lock_scr_off(vmi):
 def turn_firewall(vmi, state):
     utils.info(vmi, "Turn firewall: %r.", state)
     if utils.is_yes(state):
-        raise NotImplemented
+        raise NotImplementedError
     else:
         cmd = utils.Cmd("iptables", "-F")
         act.run(vmi, cmd, admin=True)

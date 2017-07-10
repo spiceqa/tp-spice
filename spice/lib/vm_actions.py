@@ -129,7 +129,8 @@ def cp_file(vmi, src_fpath, dst_fpath=None, dst_dir=None, dst_fname=None):
     if not dst_fpath:
         if not dst_dir:
             dst_dir = act.dst_dir(vmi)
-        fname = ntpath.basename(src_fpath)
-        dst_fpath = os.path.join(dst_dir, fname)
+        if not dst_fname:
+            dst_fname = ntpath.basename(src_fpath)
+        dst_fpath = os.path.join(dst_dir, dst_fname)
     vmi.vm.copy_files_to(src_fpath, dst_fpath)
     return dst_fpath

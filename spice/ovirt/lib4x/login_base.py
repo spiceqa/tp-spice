@@ -33,12 +33,13 @@ logger = logging.getLogger(__name__)
 class LoginPageBaseModel(page_base.PageModel):
     """Common page model for the login page.
     """
-    username = elements.TextInput(by=by.By.ID, locator='username')
-    password = elements.PasswordInput(by=by.By.ID, locator='password')
-    domain = elements.Select(by=by.By.ID, locator='profile')
-    login_btn = elements.Button(by=by.By.CLASS_NAME, locator='btn-lg')
+    username = elements.TextInput(byset=by.By.ID, locator='username')
+    password = elements.PasswordInput(byset=by.By.ID, locator='password')
+    domain = elements.Select(byset=by.By.ID, locator='profile')
+    login_btn = elements.Button(byset=by.By.CLASS_NAME, locator='btn-lg')
     page_body = elements.PageElement(by.By.TAG_NAME, 'body')
-    msg_login_failed = 'Login failed. Please verify your login information or contact the system administrator.'
+    msg_login_failed = ('Login failed. Please verify your login '
+                        'information or contact the system administrator.')
     msg_login_failed2 = 'The user name or password is incorrect.'
 
 
@@ -57,6 +58,8 @@ class LoginPageBase(page_base.PageObject):
     _model = LoginPageBaseModel
     _label = 'login page'
 
+    #TODO: needs revision
+    #pylint: disable=W0104
     def init_validation(self):
         """Initial validation - check that login form is loaded.
 
@@ -71,6 +74,8 @@ class LoginPageBase(page_base.PageObject):
         self._model.login_btn
         return True
 
+    #TODO: implement autoconnect
+    #pylint: disable=W0613
     def fill_form_values(self, username, password, domain=None,
                          autoconnect=None):
         """Fill in the login form and submit.

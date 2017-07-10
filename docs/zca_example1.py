@@ -2,12 +2,13 @@
 
 # This approach is used in tp-spice.
 
-from zope import interface
+from zope import interface  # pylint: disable=F0401
 from zope.interface import adapter
 
 registry = adapter.AdapterRegistry()
 
 
+#pylint: disable=E0239
 class IOSInfo(interface.Interface):
     pass
 

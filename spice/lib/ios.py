@@ -37,7 +37,7 @@ Example
 
 """
 
-from zope import interface
+from zope import interface  # pylint: disable=F0401
 from spice.lib import reg
 
 
@@ -66,6 +66,7 @@ def add_os_info(marker):
     return class_builder
 
 
+# pylint: disable=E0239
 class IOSInfo(interface.Interface):
     """Base class for all OS variety interfaces.
     """

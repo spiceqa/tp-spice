@@ -14,10 +14,9 @@
 """Boot VM.
 """
 
-import time
 import logging
-from autotest.client.shared import error
 
+from autotest.client.shared import error
 from spice.lib import deco
 
 logger = logging.getLogger(__name__)
@@ -27,6 +26,7 @@ logger = logging.getLogger(__name__)
 def chk_all_alive(vms):
     assert all([vm.is_alive() for vm in vms])
 
+
 @deco.retry(8, exceptions=(AssertionError,))
 def down_all_vms(vms):
     alive_vms = [vm for vm in vms if vm.is_alive()]
@@ -35,6 +35,8 @@ def down_all_vms(vms):
         vm.monitor.system_powerdown()
     assert not alive_vms
 
+
+#pylint: disable=W0613
 @error.context_aware
 def run(test, params, env):
     """Boot VM.

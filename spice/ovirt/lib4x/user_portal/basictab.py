@@ -37,9 +37,12 @@ class VMInstModel(page_base.TableRowModel):
     _NAME_CELL_XPATH = ('//div[starts-with(@id, "MainTabBasicListView_vm")]'
                         '[contains(@id, "_name")]'
                         '[text() = "%s"]')
-    name = elements.DynamicPageElement(by.By.ID, 'MainTabBasicListView_vm%s_name')
-    status = elements.DynamicPageElement(by.By.ID, 'MainTabBasicListView_vm%s_status')
-    run_btn = elements.DynamicButton(by.By.ID, 'MainTabBasicListView_vm%s_runButton')
+    name = elements.DynamicPageElement(by.By.ID,
+                                       'MainTabBasicListView_vm%s_name')
+    status = elements.DynamicPageElement(by.By.ID,
+                                         'MainTabBasicListView_vm%s_status')
+    run_btn = elements.DynamicButton(by.By.ID,
+                                     'MainTabBasicListView_vm%s_runButton')
     shutdown_btn = elements.DynamicButton(
         by.By.ID, 'MainTabBasicListView_vm%s_shutdownButton')
     suspend_btn = elements.DynamicButton(
@@ -56,12 +59,16 @@ class VMDetailsModel(page_base.PageModel):
     """VM details view model.
     """
     name = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_name')
-    description = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_description')
+    description = elements.PageElement(by.By.ID,
+                                       'MainTabBasicDetailsView_description')
     os = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_os')
     memory = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_memory')
-    cores = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_numberOfCores')
-    console = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_protocol')
-    connect = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_consoleConnectAnchor')
+    cores = elements.PageElement(by.By.ID,
+                                 'MainTabBasicDetailsView_numberOfCores')
+    console = elements.PageElement(by.By.ID,
+                                   'MainTabBasicDetailsView_protocol')
+    connect = elements.PageElement(by.By.ID, 'MainTabBasicDetailsView_'
+                                   'consoleConnectAnchor')
     console_edit = elements.PageElement(
         by.By.ID, 'MainTabBasicDetailsView_editProtocolLink')
 
@@ -638,9 +645,10 @@ class BasicTabCtrl(object):
         return self._wait_for_vm_status(name, 'is_booting', timeout)
 
     def get_vms_names(self):
-        marker = '//div[starts-with(@id, "MainTabBasicListView_vm")][contains(@id, "_name")]'
+        marker = ('//div[starts-with(@id, '
+                  '"MainTabBasicListView_vm")][contains(@id, "_name")]')
         vms = self.driver.find_elements(by.By.XPATH, marker)
-        vms_names = map(lambda x: getattr(x, 'text'), vms)
+        vms_names = [getattr(x, 'text') for x in vms]
         return set(vms_names)
 
     def get_vm_from_pool(self, pool_name):
