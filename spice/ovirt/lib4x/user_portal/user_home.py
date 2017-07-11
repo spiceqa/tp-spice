@@ -74,7 +74,8 @@ class UserHomePage(page_base.PageObject):
         -------
             LoginPage page object.
         """
-        # Lazy import - required to avoid circular import with loginpage module.
+        # Lazy import - required to avoid circular import with loginpage
+        # module.
         from . import user_login
         self._model.username.click()
         self._model.sign_out_link.click()
@@ -112,7 +113,8 @@ class UserHomePage(page_base.PageObject):
             Page object.
         """
         self._model.about_link.click()
-        return AboutDialog(self.driver)  # undefined AboutDialog pylint: disable=E0602
+        # undefined AboutDialog pylint: disable=E0602
+        return AboutDialog(self.driver)
 
     def go_to_basic_tab(self):
         """Go to the Basic tab by clicking on 'Basic' tab label.

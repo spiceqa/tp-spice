@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#pylint: disable=W0104
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -135,7 +134,8 @@ class AdminHomePage(page_base.PageObject):
         """
         Sign out from RHEVM.
         """
-        # Lazy import - required to avoid circular import with loginpage module.
+        # Lazy import - required to avoid circular import with loginpage
+        # module.
         from . import admin_login
         self._model.logged_user.click()
         self._model.sign_out_link.click()
@@ -722,7 +722,6 @@ class VMsTabMenuBar(page_base.PageObject):
 #    disk_type_image = form.Radio(
 #        By.XPATH, '(//input[@name="diskTypeView"])[2]')
 #    disk_type_lun = form.Radio(By.XPATH, '(//input[@name="diskTypeView"])[3]')
-#
 #
 #class VDiskImgInst(tables.TableRowModel):
 #    """ Virtual disk page model """

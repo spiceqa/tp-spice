@@ -934,8 +934,8 @@ def turn_accessibility(vmi, on=True):
         val = 'true'
     else:
         val = 'false'
-    cmd = utils.Cmd("gsettings", "set",
-                    "org.gnome.desktop.interface", "toolkit-accessibility", val)
+    cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.interface",
+                    "toolkit-accessibility", val)
     act.run(vmi, cmd)
 
 
@@ -951,7 +951,8 @@ def lock_scr_off(vmi):
         $ dconf dump /
     """
     utils.info(vmi, "Disable lock screen.")
-    # The number of seconds of inactivity before the session is considered idle.
+    # The number of seconds of inactivity before the session is considered
+    # idle.
     cmd = utils.Cmd("gsettings", "set", "org.gnome.desktop.session",
                     "idle-delay", "0")
     act.run(vmi, cmd)

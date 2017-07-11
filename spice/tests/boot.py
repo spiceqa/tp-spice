@@ -36,7 +36,6 @@ def down_all_vms(vms):
     assert not alive_vms
 
 
-#pylint: disable=W0613
 @error.context_aware
 def run(test, params, env):
     """Boot VM.

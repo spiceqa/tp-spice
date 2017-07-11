@@ -59,7 +59,6 @@ class LoginPageBase(page_base.PageObject):
     _label = 'login page'
 
     #TODO: needs revision
-    #pylint: disable=W0104
     def init_validation(self):
         """Initial validation - check that login form is loaded.
 
@@ -75,7 +74,6 @@ class LoginPageBase(page_base.PageObject):
         return True
 
     #TODO: implement autoconnect
-    #pylint: disable=W0613
     def fill_form_values(self, username, password, domain=None,
                          autoconnect=None):
         """Fill in the login form and submit.

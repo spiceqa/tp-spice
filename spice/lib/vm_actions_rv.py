@@ -89,7 +89,6 @@ class RVSessionConnect(RVSessionError):
     """
 
 
-#pylint: disable=W0613
 #TODO: pass env variables
 @reg.add_action(req=[ios.IOSystem])
 def rv_connect(vmi, ssn, env=None):
@@ -133,7 +132,6 @@ def rv_connect(vmi, ssn, env=None):
         raise RVSessionConnect(vmi.test, "Wrong connect method.")
 
 
-#pylint: disable=W0613
 #TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_cmd(vmi, ssn, env):
@@ -147,7 +145,6 @@ def rv_connect_cmd(vmi, ssn, env):
     act.rv_auth(vmi)
 
 
-#pylint: disable=W0613
 #TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_menu(vmi, ssn, env):

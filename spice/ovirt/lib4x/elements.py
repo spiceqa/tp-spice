@@ -180,7 +180,6 @@ class RootPageElement(property):
         self._locator = locator
         super(RootPageElement, self).__init__(self._get, self._set)
 
-    #pylint: disable=W0212
     def _get(self, model):
         """Property getter method.  The return value is what is returned, when
         a <*PageModel> attribute is accessed.
@@ -255,7 +254,6 @@ class PageElement(RootPageElement):
             raise ValueError("List of page elements cannot be set as dynamic.")
         self._as_list = as_list
 
-    #pylint: disable=W0212
     def _get(self, model):
         """Property getter method.
         The return value is what is returned, when a <*PageModel> attribute
@@ -309,7 +307,6 @@ class PageElement(RootPageElement):
             webelement = self._get(model)
             self.set_value(webelement, value)
 
-    #pylint: disable=W0613,R0201
     def set_value(self, element, value):
         """User-defined setter method.
         Implement it in a child class only if you want to set a value

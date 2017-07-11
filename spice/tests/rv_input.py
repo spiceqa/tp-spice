@@ -86,7 +86,7 @@ def test_seq(test, send_keys, expected_keysyms):
     for i in send_keys:
         test.vm_c.send_key(i)
     logged_keys = act.klogger_stop(test.vmi_g, ssn)
-    keysyms = [key[1] for key in logged_keys]
+    keysyms = map(lambda (_, keysym): keysym, logged_keys)
     assert keysyms == expected_keysyms
     ssn.close()
 

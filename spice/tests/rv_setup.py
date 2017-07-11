@@ -159,7 +159,8 @@ def setup_vm_windows(test, params, env, vm):
         vm.copy_files_to(guest_sr_path, "C:\\")
         vm.copy_files_to(md5sumwin_path, "C:\\")
 
-        # extract winvdagent zip and start service if vdservice is not installed
+        # extract winvdagent zip and start service if vdservice is not
+        # installed
         try:
             output = session.cmd('sc queryex type= service state= all' +
                                  ' | FIND "vdservice"')

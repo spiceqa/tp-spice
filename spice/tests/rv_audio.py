@@ -48,8 +48,7 @@ Requirements to WAVE specimen
 -----------------------------
 
 - WAVE file must have persistent sound.
-- http://linguistics.berkeley.edu/plab/guestwiki/
-                                      index.php?title=Sox_in_phonetic_research
+- http://linguistics.berkeley.edu/plab/guestwiki/index.php?title=Sox_in_phonetic_research
 - To examine: $ sox sine1000.wav -n spectrogram
 
 

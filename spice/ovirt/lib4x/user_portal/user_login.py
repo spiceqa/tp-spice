@@ -39,7 +39,6 @@ class UserLoginPage(login_base.LoginPageBase):
     """
     _location = location
 
-    #pylint: disable=W0221
     def login_user(self, username, password, domain=None, autoconnect=None):
         """Login user - fill in the credentials and submit form.
 

@@ -105,7 +105,7 @@ print "OS: %s" % rhelVersion
 if re.findall("release 6", rhelVersion):
     if pkgName in ("spice-gtk", "virt-viewer"):
         autogen_options[pkgName] += " --with-gtk=2.0"
-    if pkgName in "xf86-video-qxl":
+    if pkgName in ("xf86-video-qxl", ):
         autogen_options[pkgName] += " --disable-kms"
 
 if not tarballLocation:
@@ -235,10 +235,9 @@ if ret != 0:
 
 # Temporary workaround for building spice-vdagent
 if pkgName == "spice-vd-agent":
-    os.system("sed -i '/^src_spice_vdagent_CFLAGS/ s/$/  "
-              "-fno-strict-aliasing/g' Makefile.am")
-    os.system("sed -i '/(PCIACCESS_CFLAGS)/ s/$/  "
-              "-fno-strict-aliasing/g' Makefile.am")
+    cmd = "sed -i '/%s/ s/$/  -fno-strict-aliasing/g' Makefile.am"
+    os.system(cmd % '^src_spice_vdagent_CFLAGS')
+    os.system(cmd % '(PCIACCESS_CFLAGS)')
 
 # Running 'make' to build and using os.system again
 cmd = "make"

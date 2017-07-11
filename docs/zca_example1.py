@@ -2,6 +2,8 @@
 
 # This approach is used in tp-spice.
 
+import pprint
+
 from zope import interface  # pylint: disable=F0401
 from zope.interface import adapter
 
@@ -19,7 +21,6 @@ class IOSystem(IOSInfo):
     pass
 
 
-import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
 

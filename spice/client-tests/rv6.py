@@ -156,8 +156,8 @@ class Display(object):
         label_name = 'Waiting for display %s...' % num
         retry = True
         if str(num) == str(1):
-            # Do not retry search in case Display#1 is requrested. As it be done
-            # further.
+            # Do not retry search in case Display#1 is requrested. As it be
+            # done further.
             retry = False
         node = isChild(app, roleName='label', name=label_name, retry=retry)
         #node = app.child(roleName='label', name=label_name)
