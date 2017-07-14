@@ -15,6 +15,7 @@ vdagent daemon.
 """
 
 import os
+import aexpect
 
 from spice.lib import stest
 from spice.lib import utils
@@ -53,27 +54,42 @@ def run(vt_test, test_params, env):
     success = False
     if cfg.copy_text:
         act.text2cb(src, cfg.text)
-        text = act.cb2text(dst)
-        if cfg.text in text:
-            success = True
+        try:
+            text = act.cb2text(dst)
+        except aexpect.exceptions.ShellCmdError:
+            # Cannot paste from buffer.
+            pass
+        else:
+            if cfg.text in text:
+                success = True
     elif cfg.copy_text_big:
         act.gen_text2cb(src, cfg.kbytes)
         act.cb2file(src, cfg.dump_file)
         md5src = act.md5sum(src, cfg.dump_file)
-        act.cb2file(dst, cfg.dump_file)
-        md5dst = act.md5sum(dst, cfg.dump_file)
-        if md5src == md5dst:
-            success = True
+        try:
+            act.cb2file(dst, cfg.dump_file)
+        except aexpect.exceptions.ShellCmdError:
+            # Cannot paste from buffer.
+            pass
+        else:
+            md5dst = act.md5sum(dst, cfg.dump_file)
+            if md5src == md5dst:
+                success = True
     elif cfg.copy_img:
         dst_img = os.path.join(act.dst_dir(src), cfg.test_image)
         act.imggen(src, dst_img, cfg.test_image_size)
         act.img2cb(src, dst_img)
         act.cb2img(src, cfg.dump_img)
-        act.cb2img(dst, cfg.dump_img)
-        md5src = act.md5sum(src, cfg.dump_img)
-        md5dst = act.md5sum(dst, cfg.dump_img)
-        if md5src == md5dst:
-            success = True
+        try:
+            act.cb2img(dst, cfg.dump_img)
+        except aexpect.exceptions.ShellCmdError:
+            # Cannot paste from buffer.
+            pass
+        else:
+            md5src = act.md5sum(src, cfg.dump_img)
+            md5dst = act.md5sum(dst, cfg.dump_img)
+            if md5src == md5dst:
+                success = True
 
     if cfg.negative and success or not cfg.negative and not success:
         raise utils.SpiceTestFail(test, "Test failed.")
