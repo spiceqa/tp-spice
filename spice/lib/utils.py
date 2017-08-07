@@ -386,7 +386,11 @@ def get_host_ip(test):
     if not ip_ver:
         ip_ver = "ipv4"
     try:
-        ip = utils_net.get_host_ip_address(test.cfg, ip_ver)
+        if test.cfg.spice_proxy:
+            def_gate = utils_net.get_host_default_gateway(iface_name=True)
+            ip = utils_net.get_ip_address_by_interface(def_gate, ip_ver)
+        else:
+            ip = utils_net.get_host_ip_address(test.cfg, ip_ver)
     except utils_net.NetError:
         ips = utils_net.get_all_ips()
         ip = ips[0]
