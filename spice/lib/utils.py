@@ -222,6 +222,7 @@ class SpiceUtilsUnknownVmType(SpiceUtilsError):
 
 class SpiceUtilsBadVmType(SpiceUtilsError):
     """Bad VM type."""
+
     def __init__(self, vm_name, *args, **kwargs):
         super(SpiceUtilsBadVmType, self).__init__(args, kwargs)
         self.vm_name = vm_name
@@ -233,6 +234,7 @@ class SpiceUtilsBadVmType(SpiceUtilsError):
 # ..todo:: or aexpect.xxx ???
 class SpiceUtilsCmdRun(SpiceUtilsError):
     """Fail to run cmd on VM."""
+
     def __init__(self, vm_name, cmd, output, *args, **kwargs):
         super(SpiceUtilsCmdRun, self).__init__(args, kwargs)
         self.vm_name = vm_name
