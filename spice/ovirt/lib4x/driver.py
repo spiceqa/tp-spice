@@ -324,6 +324,7 @@ class SpiceQEFirefoxProfile(webdriver.FirefoxProfile):
         ~/.mozilla/firefox/<profile_name>/mimeTypes.rdf
         application/x-virt-viewer
     """
+
     def __init__(self, *args, **kwargs):
         super(SpiceQEFirefoxProfile, self).__init__(*args, **kwargs)
         self.set_preference("browser.download.folderList", 2)

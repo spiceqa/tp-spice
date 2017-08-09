@@ -123,6 +123,7 @@ class SpiceTest(object):
         utils.SpiceTestFail
             Something is not good.
     """
+
     def __init__(self, test, parameters, env):
         # Change log level here from info to debug:
         logging.getLogger().setLevel(logging.INFO)
@@ -175,6 +176,7 @@ class SpiceTest(object):
 class ClientGuestTest(SpiceTest):
     """Class for tests with guest & client vms.
     """
+
     def __init__(self, test, parameters, env):
         super(ClientGuestTest, self).__init__(test, parameters, env)
         name_c = self.cfg.client_vm
@@ -199,6 +201,7 @@ class OneVMTest(SpiceTest):
     If name == None, then use a name of the first VM.
 
     """
+
     def __init__(self, test, parameters, env, name=None):
         super(OneVMTest, self).__init__(test, parameters, env)
         if not name:
@@ -213,6 +216,7 @@ class OneVMTest(SpiceTest):
 class ClientTest(OneVMTest):
     """Alias to OneVMTest.
     """
+
     def __init__(self, test, parameters, env):
         vm_name = parameters.get("client_vm", None)
         super(ClientTest, self).__init__(test, parameters, env, name=vm_name)
@@ -221,6 +225,7 @@ class ClientTest(OneVMTest):
 class GuestTest(OneVMTest):
     """Alias to OneVMTest.
     """
+
     def __init__(self, test, parameters, env):
         vm_name = parameters.get("guest_vm", None)
         super(GuestTest, self).__init__(test, parameters, env, name=vm_name)
@@ -229,6 +234,7 @@ class GuestTest(OneVMTest):
 class ClientGuestOvirtTest(SpiceTest):
     """Guest is running at Ovirt portal. No running avocado-vt KVM for guest.
     """
+
     def __init__(self, test, parameters, env):
         super(ClientGuestOvirtTest, self).__init__(test, parameters, env)
         name_c = self.cfg.client_vm

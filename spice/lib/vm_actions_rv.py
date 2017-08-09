@@ -69,6 +69,7 @@ RV_WM_CLASS = "remote-viewer"
 class RVSessionError(Exception):
     """Exception for remote-viewer session. Root exception for the RV Sessiov.
     """
+
     def __init__(self, test, *args, **kwargs):
         super(RVSessionError, self).__init__(args, kwargs)
         if test.cfg.pause_on_fail or test.cfg.pause_on_end:

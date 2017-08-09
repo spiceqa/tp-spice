@@ -392,7 +392,7 @@ class DisplayMouse(Display):
             do_click(n)
             # There are two different clones of menu. Operate on second.
             n = self.app.child(roleName='window').child(roleName='menu'
-                                                       ).menuItem(key)
+                                                        ).menuItem(key)
             do_click(n)
         else:
             raise NotImplementedError()
@@ -699,6 +699,7 @@ class Application(object):
     """XXX.
 
     """
+
     def __init__(self, app=None, method='mouse'):
         self.app = app
         self.method = method

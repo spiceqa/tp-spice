@@ -365,8 +365,8 @@ class DisplayMouse(Display):
         n = file_chooser.button('Save')
         do_click(n)
         if isChild(self.app, roleName='alert', name='Question'):
-            n = self.app.child(roleName='alert', name='Question'
-                              ).button('Replace')
+            n = self.app.child(roleName='alert',
+                               name='Question').button('Replace')
             do_click(n)
 
     def fullscreen_on(self):
@@ -437,7 +437,7 @@ class DisplayMouse(Display):
             do_click(n)
             # There are two different clones of menu. Operate on second.
             n = self.app.child(roleName='window').child(roleName='menu'
-                                                       ).menuItem(key)
+                                                        ).menuItem(key)
             do_click(n)
         else:
             raise NotImplementedError()
@@ -717,6 +717,7 @@ class Application(object):
     """XXX.
 
     """
+
     def __init__(self, app=None, method='mouse'):
         self.app = app
         self.method = method
