@@ -20,5 +20,4 @@ install:
     - pip install -r requirements-travis.txt
 
 script:
-    # If exclude is specified, it is necesssary to list all default extensions
-    - inspekt checkall --exclude=.git
+    - inspekt checkall --exclude=.git --no-license-check
