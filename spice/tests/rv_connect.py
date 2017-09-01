@@ -14,13 +14,8 @@
 """Connect with remote-viewer from client VM to guest VM.
 """
 
-import logging
-
 from spice.lib import stest
 from spice.lib import act
-
-
-logger = logging.getLogger(__name__)
 
 
 def run(vt_test, test_params, env):
