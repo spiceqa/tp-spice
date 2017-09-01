@@ -15,11 +15,15 @@ vdagent daemon.
 """
 
 import os
+import logging
 import aexpect
 
 from spice.lib import stest
 from spice.lib import utils
 from spice.lib import act
+
+
+logger = logging.getLogger(__name__)
 
 
 def run(vt_test, test_params, env):
@@ -57,8 +61,7 @@ def run(vt_test, test_params, env):
         try:
             text = act.cb2text(dst)
         except aexpect.exceptions.ShellCmdError:
-            # Cannot paste from buffer.
-            pass
+            logger.info('Cannot paste from buffer.')
         else:
             if cfg.text in text:
                 success = True
@@ -69,8 +72,7 @@ def run(vt_test, test_params, env):
         try:
             act.cb2file(dst, cfg.dump_file)
         except aexpect.exceptions.ShellCmdError:
-            # Cannot paste from buffer.
-            pass
+            logger.info('Cannot paste from buffer.')
         else:
             md5dst = act.md5sum(dst, cfg.dump_file)
             if md5src == md5dst:
@@ -83,8 +85,7 @@ def run(vt_test, test_params, env):
         try:
             act.cb2img(dst, cfg.dump_img)
         except aexpect.exceptions.ShellCmdError:
-            # Cannot paste from buffer.
-            pass
+            logger.info('Cannot paste from buffer.')
         else:
             md5src = act.md5sum(src, cfg.dump_img)
             md5dst = act.md5sum(dst, cfg.dump_img)
