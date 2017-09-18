@@ -721,6 +721,46 @@ def get_geom(vmi, win_title):
     return utils.str2res(res)
 
 
+# pylint: disable=E0102
+@reg.add_action(req=[ios.ILinux, ios.IVersionMajor7, ios.IVersionMinorDevel])
+def get_x_var(vmi, var_name):
+    """Gets the env variable value by its name from X session.
+
+    Info
+    ----
+    It is no straight way to get variable value from X session. If you try to
+    read var value from SSH session it could be different from X session var or
+    absent. The strategy used in this function is:
+
+        1. Find nautilus process.
+        2. Read its /proc/$PID/environ
+
+    Parameters
+    ----------
+    var_name : str
+        Spice test object.
+
+    Returns
+    -------
+    str
+        Env variable value.
+
+    """
+    pattern = "(?<=(?:^{0}=|(?<=\n){0}=))[^\n]+".format(var_name)
+    pids = act.wait_for_prog(vmi, "nautilus-desktop")
+    ret = ""
+    for pid in pids:
+        cmd1 = utils.Cmd("cat", "/proc/%s/environ" % pid)
+        cmd2 = utils.Cmd("xargs", "-n", "1", "-0", "echo")
+        cmd = utils.combine(cmd1, "|", cmd2)
+        out = act.run(vmi, cmd)
+        val = re.findall(pattern, out)
+        if val:
+            ret = val[0]
+    utils.info(vmi, "export %s=%s", var_name, ret)
+    return ret
+
+
 @reg.add_action(req=[ios.ILinux])
 def get_x_var(vmi, var_name):
     """Gets the env variable value by its name from X session.

@@ -223,3 +223,8 @@ class IVersionMinor9(IVersionMinor):
 @add_os_info(marker='10')
 class IVersionMinor10(IVersionMinor):
     pass
+
+
+@add_os_info(marker='devel')
+class IVersionMinorDevel(IVersionMinor):
+    pass

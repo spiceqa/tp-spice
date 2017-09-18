@@ -46,6 +46,7 @@ def run(vt_test, test_params, env):
     vmname = test_params['main_vm']
     if test_params['start_vm'] == "no":
         test_params['start_vm'] = "yes"
+        nc_process_pid = None
         if test_params['spice_port_closed'] == "yes":
             cmd = "nc -l %s" % test_params['spice_port']
             nc_process_cl = process.get_sub_process_klass(cmd)
