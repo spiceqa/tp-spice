@@ -493,7 +493,8 @@ class DisplayAccessKey(Display):
     def __init__(self, app, num, kmap=None):
         super(DisplayAccessKey, self).__init__(app, num)
         if not kmap:
-            self.kmap = {}
+            kmap = {}
+        self.kmap = {}
         self.kmap.update(DisplayAccessKey.def_key_mapping)
         self.kmap.update(kmap)
 
@@ -577,7 +578,8 @@ class DisplayHotKey(Display):
     def __init__(self, app, num, kmap=None):
         super(DisplayHotKey, self).__init__(app, num)
         if not kmap:
-            self.kmap = {}
+            kmap = {}
+        self.kmap = {}
         self.kmap.update(DisplayHotKey.def_key_mapping)
         self.kmap.update(kmap)
 
@@ -615,7 +617,8 @@ class DisplayWMKey(Display):
     def __init__(self, app, num, kmap=None):
         super(DisplayWMKey, self).__init__(app, num)
         if not kmap:
-            self.kmap = {}
+            kmap = {}
+        self.kmap = {}
         self.kmap.update(DisplayWMKey.def_key_mapping)
         self.kmap.update(kmap)
 
