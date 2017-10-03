@@ -320,7 +320,7 @@ class DisplayMouse(Display):
         n = self.dsp.menu('File').menuItem('Screenshot')
         do_click(n)
         file_chooser = self.app.child(roleName='file chooser')
-        file_chooser.childLabelled('Name:').text = filename
+        file_chooser.childLabelled('Name').text = filename
         n = file_chooser.button('Save')
         do_click(n)
         if self.app.isChild(roleName='alert', name='Question'):
@@ -529,7 +529,7 @@ class DisplayAccessKey(Display):
     def screenshot(self, filename):
         self.menu('File', ['File|Screenshot'])
         file_chooser = self.app.child(roleName='file chooser')
-        file_chooser.childLabelled('Name:').text = filename
+        file_chooser.childLabelled('Name').text = filename
         n = file_chooser.button('Save')
         do_click(n)
         if self.app.isChild(roleName='alert', name='Question'):
