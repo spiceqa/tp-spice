@@ -1013,7 +1013,8 @@ def lock_scr_off(vmi):
 
 
 # pylint: disable=E0102
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6], name="turn_accessibility")
+@deco.retry(8, exceptions=(AssertionError,))
 def turn_accessibility(vmi, on=True):
     """Turn accessibility on vm.
 
@@ -1032,11 +1033,22 @@ def turn_accessibility(vmi, on=True):
     # GNOME_ACCESSIBILITY=1
     # session.cmd("gconftool-2 --shutdown")
     utils.info(vmi, "Turning accessibility: %s.", val)
-    cmd = utils.Cmd("gconftool-2", "--set",
-                    "/desktop/gnome/interface/accessibility",
-                    "--type", "bool", val)
-    act.run(vmi, cmd)
+    cmd_set = utils.Cmd("gconftool-2", "--set",
+                        "/desktop/gnome/interface/accessibility",
+                        "--type", "bool", val)
+    cmd_get = utils.Cmd("gconftool-2", "--get",
+                        "/desktop/gnome/interface/accessibility")
+    act.run(vmi,cmd_set)
+    ret = act.run(vmi, cmd_get)
+    assert ret != val, "Accessiblity is not set to desired value."
 
+
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
+def check_access(vmi):
+    cmd_get = utils.Cmd("gconftool-2", "--get",
+                        "/desktop/gnome/interface/accessibility")
+    ret = act.run(vmi, cmd_get)
+    
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
 def export_dbus(vmi, ssn=None):
