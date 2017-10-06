@@ -356,7 +356,7 @@ class DisplayMouse(Display):
         do_click(n)
         about = self.app.child("About Virtual Machine Viewer",
                                roleName="dialog")
-        n = about.child(name="License", roleName="radio button")
+        n = about.child(name="Licence", roleName="radio button")
         do_click(n)
         licence_txt = about.child(roleName='text')
         return licence_txt.text
