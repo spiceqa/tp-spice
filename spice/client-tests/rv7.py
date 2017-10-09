@@ -41,6 +41,7 @@ from dogtail import utils
 utils.enableA11y()
 from dogtail import tree
 from dogtail import predicate
+from dogtail import rawinput
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
 import retries
@@ -342,6 +343,8 @@ class DisplayMouse(Display):
     def fullscreen_off(self):
         assert self.is_fullscreen()
         self.push_front()
+        x = self.drawing_area.size[0]
+        rawinput.absoluteMotion(x/2, 0)
         n = self.dsp.button('Leave fullscreen')
         do_click(n)
         assert self.is_window()
@@ -605,6 +608,8 @@ class DisplayWMKey(Display):
         if self.is_fullscreen():
             # remote-viewer intercepts _all_ keys. It is necessary to point to
             # some RV widget.
+            x = self.drawing_area.size[0]
+            rawinput.absoluteMotion(x/2, 0)
             n = self.dsp.button('Leave fullscreen')
             point_and_pointed(n)
         else:
