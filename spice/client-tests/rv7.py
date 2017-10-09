@@ -105,8 +105,10 @@ def is_showing(node):
 @retries.retries(5, exceptions=(AssertionError,))
 def click_and_focused(node):
     node.click()
-    assert _is_focused(node), \
-        "Click for node [%s | %s]: failed." % (node.roleName, node.name)
+    if not _is_focused(node):
+        logger.info("Click for node [%s | %s]: node is not focused.", node.roleName, node.name)
+        assert node.isChecked, \
+            "Node is checked [%s | %s]: failed." % (node.roleName, node.name)
     logger.info("Click for node [%s | %s]: success.", node.roleName, node.name)
 
 
@@ -354,7 +356,7 @@ class DisplayMouse(Display):
         do_click(n)
         about = self.app.child("About Virtual Machine Viewer",
                                roleName="dialog")
-        n = about.child(name="License", roleName="radio button")
+        n = about.child(name="Licence", roleName="radio button")
         do_click(n)
         licence_txt = about.child(roleName='text')
         return licence_txt.text
