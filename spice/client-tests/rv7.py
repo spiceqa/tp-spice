@@ -657,8 +657,7 @@ class Connect(object):
         scroll_pane = app.child(roleName='scroll pane')
         scroll_pane.grabFocus()
         is_focused(scroll_pane)
-        pred = predicate.IsADialogNamed(dialogName='Connection details')
-        win = scroll_pane.findAncestor(pred)
+        win = app.child(name='Connection details')
         return win
 
     @staticmethod
@@ -688,6 +687,8 @@ class ConnectMouse(Connect):
             passw = dialog.child(roleName='password text')
             passw.typeText(ticket)
             passw.keyCombo('enter')
+        # waiting for connection
+        time.sleep(2)
         # Checks
         assert not self.app.isChild(name='Authentication required',
                                     roleName='dialog', retry=False), \
