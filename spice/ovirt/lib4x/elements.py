@@ -368,7 +368,7 @@ class DynamicPageElement(PageElement):
         locator:
             Element locator value.
         """
-        super(DynamicPageElement, self).__init__(by=byset, locator=locator,
+        super(DynamicPageElement, self).__init__(byset=byset, locator=locator,
                                                  as_list=False)
 
 
