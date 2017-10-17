@@ -1038,17 +1038,10 @@ def turn_accessibility(vmi, on=True):
                         "--type", "bool", val)
     cmd_get = utils.Cmd("gconftool-2", "--get",
                         "/desktop/gnome/interface/accessibility")
-    act.run(vmi,cmd_set)
+    act.run(vmi, cmd_set)
     ret = act.run(vmi, cmd_get)
     assert ret != val, "Accessiblity is not set to desired value."
 
-
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
-def check_access(vmi):
-    cmd_get = utils.Cmd("gconftool-2", "--get",
-                        "/desktop/gnome/interface/accessibility")
-    ret = act.run(vmi, cmd_get)
-    
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor6])
 def export_dbus(vmi, ssn=None):
