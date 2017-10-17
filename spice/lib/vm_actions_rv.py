@@ -370,7 +370,8 @@ def rv_chk_con(vmi):
     cmd1 = utils.Cmd("ss", "-n", "-p", "-t", "state", "all")
     grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
-    cmd = utils.combine(cmd1, "|", cmd2)
+    cmd3 = utils.Cmd("grep", "-v", "CLOSE-WAIT")
+    cmd = utils.combine(cmd1, "|", cmd2, "|", cmd3)
     status, ss_out = act.rstatus(vmi, cmd, admin=True)
     if status:
         logger.info("ss output: %s", ss_out)
