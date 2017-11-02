@@ -554,11 +554,11 @@ class DisplayAccessKey(Display):
 
     def screenshot(self, filename):
         self.menu('File', ['File|Screenshot'])
-        file_chooser = self.app.child(roleName='file chooser')
+        file_chooser = self.app.child(roleName='dialog')
         file_chooser.childLabelled('Name:').text = filename
         n = file_chooser.button('Save')
         do_click(n)
-        if self.app.isChild(roleName='alert', name='Question'):
+        if isChild(self.app, roleName='alert', name='Question'):
             n = self.app.child(roleName='alert',
                                name='Question').button('Replace')
             do_click(n)

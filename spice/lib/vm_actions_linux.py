@@ -355,7 +355,7 @@ def install_rpm(vmi, rpm):
         return
     if utils.url_regex.match(rpm):
         utils.info(vmi, "Download RPM: %s.", rpm)
-        cmd = utils.Cmd("curl", "-s", "-O", rpm)
+        cmd = utils.Cmd("curl", "-O", "-k", rpm)
         act.run(vmi, cmd, admin=True, timeout=500)
         rpm = os.path.split(rpm)[1]
     act.run(vmi, "yes | yum -y install %s" % rpm, admin=True, timeout=500)
