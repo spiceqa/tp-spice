@@ -27,7 +27,7 @@ def run(helper):
     logging.info("Dbus: %s.", str(dbus))
     os.environ['DBUS_SESSION_BUS_ADDRESS'] = dbus
     os.environ['DISPLAY'] = ":0.0"
-    cdir = os.path.join(os.path.dirname(__file__))
+    cdir = os.path.dirname(__file__)
     script = cfg["script"]
     cmd = os.path.join(cdir, script)
     logging.info("Running: %s.", cmd)

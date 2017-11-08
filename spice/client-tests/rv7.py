@@ -720,8 +720,8 @@ class Application(object):
     @staticmethod
     @retries.retries(2, exceptions=(GeneralError,))
     def get():
-        pred = predicate.IsAnApplicationNamed('remote-viewer')
-        apps = tree.root.findChildren(pred, recursive=False)
+        apps = tree.root.findChildren(lambda x: x.name == 'remote-viewer',
+                                      recursive=False)
         rv_instances = len(apps)
         try:
             assert rv_instances == 1

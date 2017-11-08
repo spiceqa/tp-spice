@@ -120,7 +120,8 @@ def run(vt_test, test_params, env):
     # act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
     if utils.vm_is_rhel6(vm_c):
-        act.reset_gui(vmi_c)  # Activate accessibility for rhel6, BZ#1340160 for rhel7
+        # Activate accessibility for rhel6, BZ#1340160 for rhel7
+        act.reset_gui(vmi_c)
     # act.reset_gui(vmi_g)  # disabled because BZ#1340160
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
@@ -133,9 +134,9 @@ def run(vt_test, test_params, env):
         act.x_active(vmi_g)
         ssn = act.new_ssn(vmi_c)
         act.rv_connect(vmi_c, ssn)
-        act.rv_chk_con(vmi_c)
-        is_connected = True
-    errors = 0
+        if not cfg.negative:
+            act.rv_chk_con(vmi_c)
+            is_connected = True
     logging.getLogger().setLevel(logging.DEBUG)
     try:
         ddir = act.dst_dir(vmi_c)
@@ -155,7 +156,7 @@ def run(vt_test, test_params, env):
         cmd = commander.manage.python_file_run_with_helper(tpath)
     except Exception as e:
         a = traceback.format_exc()
-        logger.info("Exceptio: %s: %s.", repr(e), a)
+        logger.info("Exception: %s: %s.", repr(e), a)
     result = cmd.results
     logger.info("Test %s finished with result: %s", cfg.ctest, result)
     if cfg.make_rv_connect:
