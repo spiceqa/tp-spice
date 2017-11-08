@@ -294,6 +294,16 @@ def gen_vv_file(vmi):
         rv_file.write("fullscreen=1\n")
     if cfg.spice_proxy:
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)
+    if cfg.min_ver:
+        if cfg.min_ver == "higher":
+            real_ver = act.rpm_version(vmi, "virt-viewer")
+            v, rev = real_ver.split('.')
+            ver = v + '.' + str(int(rev)+1)
+        else:
+            ver = cfg.min_ver
+        rv_file.write("versions=%s:%s\n" % (cfg.os_variant, ver))
+    if cfg.new_ver:
+        rv_file.write("newer-version-url=%s\n" % cfg.new_ver)
     if cfg.rv_debug:
         """TODO"""
         # rv_cmd.append("--spice-debug")  ..todo:: XXX TODO

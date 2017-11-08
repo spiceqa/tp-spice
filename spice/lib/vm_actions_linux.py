@@ -909,6 +909,19 @@ def clear_cb(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
+def rpm_version(vmi, rpm_name):
+    """
+    Returns version of a package.
+    :param rpm_name: name of the package
+    """
+    cmd = utils.Cmd("rpm", "-q", rpm_name, "--queryformat", "%{VERSION}\r")
+    out_raw = act.run(vmi, cmd)
+    out = re.findall(r'\S+', out_raw)[-1]
+    utils.info(vmi, "%s package is of %s version", rpm_name, out)
+    return out
+
+
+@reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
     script = vmi.cfg.helper_cb
     dst_script = act.chk_deps(vmi, script)
