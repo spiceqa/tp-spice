@@ -296,7 +296,7 @@ def gen_vv_file(vmi):
         rv_file.write("proxy=%s\n" % cfg.spice_proxy)
     if cfg.min_ver:
         if cfg.min_ver == "higher":
-            real_ver = act.rpm_version(vmi, "virt-viewer")
+            real_ver = act.rpm_version(vmi, "virt-viewer")[0]
             v, rev = real_ver.split('.')
             ver = v + '.' + str(int(rev)+1)
         else:

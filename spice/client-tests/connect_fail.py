@@ -50,7 +50,7 @@ def run(helper):
         ver_line = [l for l in ver_lines if 'versions' in l][0]
         ver = ver_line.split(':')[-1].strip()
     error_message = cfg["error_msg"] % ver
-    if cfg["new_ver"]:
+    if cfg.has_key("new_ver"):
         error_message += ', see %s for details' % cfg["new_ver"]
     try:
         rv_app.app.childNamed(error_message)
