@@ -911,13 +911,15 @@ def clear_cb(vmi):
 @reg.add_action(req=[ios.ILinux])
 def rpm_version(vmi, rpm_name):
     """
-    Returns version of a package.
+    Returns version, release and arch of a package.
     :param rpm_name: name of the package
     """
-    cmd = utils.Cmd("rpm", "-q", rpm_name, "--queryformat", "%{VERSION}\r")
+    cmd = utils.Cmd("rpm", "-q", rpm_name, "--queryformat",
+                    "%{VERSION}/%{RELEASE}/%{ARCH}\r")
     out_raw = act.run(vmi, cmd)
-    out = re.findall(r'\S+', out_raw)[-1]
-    utils.info(vmi, "%s package is of %s version", rpm_name, out)
+    out = re.findall(r'\S+', out_raw)[-1].split('/')
+    utils.info(vmi, "%s package is of %s version %s release and %s arch",
+               rpm_name, out[0], out[1], out[2])
     return out
 
 
