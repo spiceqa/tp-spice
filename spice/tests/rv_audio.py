@@ -14,8 +14,6 @@
 """This module Plays audio playback / record on guest and detect any pauses in
 the audio stream.
 
-TEST IS UNFINISHED. AND IS USELESS NOW.
-
 =====
 Audio
 =====
@@ -108,7 +106,7 @@ SPECIMEN_FILE = "specimen.wav"
 RECORDED_FILE = "recorded.wav"
 """Recorded audio."""
 
-MAKE_WAV = "sox -b 16 -r 44100 --null -c 1 %s synth '02:00.00' sine 800" %\
+MAKE_WAV = "sox -b 16 -r 44100 --null -c 1 %s synth '02:20.00' sine 800" %\
     SPECIMEN_FILE
 """Command to generate WAV file."""
 
@@ -262,4 +260,14 @@ def run(vt_test, test_params, env):
     vm_recorder.copy_files_from(cfg.audio_rec, RECORDED_FILE)
     if not verify_recording(RECORDED_FILE, cfg):
         raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
+    if cfg.rv_reconnect:
+        act.rv_disconnect(test.vmi_c)
+        act.rv_connect(test.vmi_c, ssn)
+        try:
+            recorder.cmd(rec_cmd, timeout=500)
+        except aexpect.ShellCmdError as excp:
+            raise utils.SpiceTestFail(test, str(excp))
+        vm_recorder.copy_files_from(cfg.audio_rec, RECORDED_FILE)
+        if not verify_recording(RECORDED_FILE, cfg):
+            raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
     # Test pass

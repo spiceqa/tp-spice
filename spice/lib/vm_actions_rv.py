@@ -27,7 +27,6 @@ TODO
     Other properties:
 
     - username
-    - version
     - title
     - toggle-fullscreen (key combo)
     - release-cursor (key combo)
@@ -106,7 +105,7 @@ def rv_connect(vmi, ssn, env=None):
 
     Parameters
     ----------
-    test : VmInfo
+    vmi : VmInfo
         VM that runs RV.
     ssn : xxx
         Session object, as a exec-layer to VM.
@@ -439,14 +438,15 @@ def rv_chk_con(vmi):
     logger.debug("RV connection checking pass")
 
 
-def rv_disconnect(test):
+@reg.add_action(req=[ios.ILinux])
+def rv_disconnect(vmi):
     """Terminates connection by killing remote-viewer.
 
     Parameters
     ----------
-    test : SpiceTest
-        Spice test object.
+    vmi : VmInfo
+        VM that runs RV.
 
     :return: None
     """
-    act.kill_by_name(test.vmi_c, test.cfg.rv_binary)
+    act.kill_by_name(vmi, vmi.cfg.rv_binary)
