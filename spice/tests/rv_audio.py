@@ -14,8 +14,6 @@
 """This module Plays audio playback / record on guest and detect any pauses in
 the audio stream.
 
-TEST IS UNFINISHED. AND IS USELESS NOW.
-
 =====
 Audio
 =====
@@ -108,7 +106,7 @@ SPECIMEN_FILE = "specimen.wav"
 RECORDED_FILE = "recorded.wav"
 """Recorded audio."""
 
-MAKE_WAV = "sox -b 16 -r 44100 --null -c 1 %s synth '06:40.00' sine 800" %\
+MAKE_WAV = "sox -b 16 -r 44100 --null -c 1 %s synth '02:20.00' sine 800" %\
     SPECIMEN_FILE
 """Command to generate WAV file."""
 
@@ -211,6 +209,7 @@ def run(vt_test, test_params, env):
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
     ssn_c = act.new_ssn(test.vmi_c)
+    ssn_g = act.new_ssn(test.vmi_g)
     # Get default sink at the client.
     cmd = r"pacmd stat | grep 'Default sink name' | " \
         r"sed -e 's/^.*[[:space:]]//'"
@@ -223,7 +222,8 @@ def run(vt_test, test_params, env):
     env = {}
     if cfg.rv_record:
         env["PULSE_SOURCE"] = "%s.monitor" % def_sink
-    act.rv_connect(test.vmi_c, ssn_c)
+    ssn = act.new_ssn(test.vmi_c)
+    act.rv_connect(test.vmi_c, ssn)
     ret, out = commands.getstatusoutput(MAKE_WAV)
     if ret:
         errmsg = "Cannot generate specimen WAV file: %s" % out
@@ -234,16 +234,16 @@ def run(vt_test, test_params, env):
     # Check test type
     if cfg.rv_record:
         logging.info("Recording test. Player is client. Recorder is guest.")
-        player = test.ssn_c
-        recorder = test.ssn_g
+        player = ssn_c
+        recorder = ssn_g
         vm_recorder = test.vm_g
         vm_player = test.vm_c
     else:
         logging.info("Playback test. Player is guest. Recorder is client.")
         env_var = "PULSE_SOURCE=%s.monitor" % def_sink
         rec_cmd = env_var + " " + rec_cmd
-        player = test.ssn_g
-        recorder = test.ssn_c
+        player = ssn_g
+        recorder = ssn_c
         vm_recorder = test.vm_c
         vm_player = test.vm_g
     vm_player.copy_files_to(SPECIMEN_FILE, cfg.audio_tgt)
@@ -260,5 +260,14 @@ def run(vt_test, test_params, env):
     vm_recorder.copy_files_from(cfg.audio_rec, RECORDED_FILE)
     if not verify_recording(RECORDED_FILE, cfg):
         raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
+    if cfg.rv_reconnect:
+        act.rv_disconnect(test.vmi_c)
+        act.rv_connect(test.vmi_c, ssn)
+        try:
+            recorder.cmd(rec_cmd, timeout=500)
+        except aexpect.ShellCmdError as excp:
+            raise utils.SpiceTestFail(test, str(excp))
+        vm_recorder.copy_files_from(cfg.audio_rec, RECORDED_FILE)
+        if not verify_recording(RECORDED_FILE, cfg):
+            raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
     # Test pass
-    utils.finish_test(test)
