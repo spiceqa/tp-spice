@@ -95,6 +95,7 @@ import commands
 import struct
 import wave
 import aexpect
+import subprocess
 from virttest import utils_misc
 from spice.lib import stest
 from spice.lib import utils
@@ -271,3 +272,5 @@ def run(vt_test, test_params, env):
         if not verify_recording(RECORDED_FILE, cfg):
             raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
     # Test pass
+    # clean up
+    subprocess.check_call(["rm", "-f", SPECIMEN_FILE, RECORDED_FILE])
