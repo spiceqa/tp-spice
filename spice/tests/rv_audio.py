@@ -183,11 +183,11 @@ def verify_recording(path, cfg):
         pauses += 1
     logging.info("Total pauses: %s.", pauses)
     if payload_frames == 0:
-        return bool(cfg.disable_audio)
+        return bool(cfg.disable_audo)
     return True
 
 
-def run(vt_test, test_params, env):
+def test(vt_test, test_params, env):
     """Playback of audio stream tests for remote-viewer.
 
     Parameters
@@ -272,5 +272,11 @@ def run(vt_test, test_params, env):
         if not verify_recording(RECORDED_FILE, cfg):
             raise utils.SpiceTestFail(test, "Cannot verify recorded file.")
     # Test pass
-    # clean up
-    subprocess.check_call(["rm", "-f", SPECIMEN_FILE, RECORDED_FILE])
+
+
+def run(vt_test, test_params, env):
+    try:
+        test(vt_test, test_params, env)
+    finally:
+        # clean up
+        subprocess.check_call(["rm", "-f", SPECIMEN_FILE, RECORDED_FILE])
