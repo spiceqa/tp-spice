@@ -47,6 +47,7 @@ args = parser.parse_args()
 app = rv.Application(method=args.method)
 # Test assumes there is only one virtual display.
 assert app.dsp_count() == 1
+app.dsp1.push_front()
 app.dsp1.key_combo('<Super_L>Down')
 time.sleep(1)
 logger.info("Dislay #%s extents before %s zoom: %s",

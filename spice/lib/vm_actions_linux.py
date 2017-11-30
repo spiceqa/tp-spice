@@ -81,16 +81,21 @@ def workdir(vmi):
 
 
 @reg.add_action(req=[ios.ILinux])
-def dst_dir(vmi):
-    dst_dirpath = vmi.cfg.dst_dir
-    if dst_dirpath:
-        return dst_dirpath
+def home_dir(vmi):
     cmd1 = utils.Cmd("getent", "passwd", vmi.cfg.username)
     cmd2 = utils.Cmd("cut", "-d:", "-f6")
     cmd = utils.combine(cmd1, "|", cmd2)
     out = act.run(vmi, cmd)
-    home_dir = out.rstrip('\r\n')
-    dst_dirpath = os.path.join(home_dir, "tp-spice")
+    return out.rstrip('\r\n')
+
+
+@reg.add_action(req=[ios.ILinux])
+def dst_dir(vmi):
+    dst_dirpath = vmi.cfg.dst_dir
+    if dst_dirpath:
+        return dst_dirpath
+    _home_dir = home_dir(vmi)
+    dst_dirpath = os.path.join(_home_dir, "tp-spice")
     cmd = utils.Cmd("mkdir", "-p", dst_dirpath)
     act.run(vmi, cmd)
     vmi.cfg.dst_dir = dst_dirpath
@@ -840,7 +845,7 @@ def chk_deps(vmi, fname, dst_dirpath=None):
 def imggen(vmi, img, size):
     """Generate an image file.
     """
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--genimg", size, img)
     utils.info(vmi, "Generate an %s image of %s size %s.", img, size)
@@ -851,7 +856,7 @@ def imggen(vmi, img, size):
 def img2cb(vmi, img):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
@@ -868,7 +873,7 @@ def cb2img(vmi, img):
         Where to save img.
 
     """
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
@@ -879,9 +884,8 @@ def cb2img(vmi, img):
 def text2cb(vmi, text):
     """Use the clipboard script to copy an image into the clipboard.
     """
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
-    params = "--txt2cb"
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
     utils.info(vmi, "Put in clipboard: %s", text)
     act.run(vmi, cmd)
@@ -889,7 +893,7 @@ def text2cb(vmi, text):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2text(vmi):
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
     text = act.run(vmi, cmd)
@@ -901,7 +905,7 @@ def cb2text(vmi):
 def clear_cb(vmi):
     """Use the script to clear clipboard.
     """
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--clear")
     utils.info(vmi, "Clear clipboard.")
@@ -925,7 +929,7 @@ def rpm_version(vmi, rpm_name):
 
 @reg.add_action(req=[ios.ILinux])
 def gen_text2cb(vmi, kbytes):
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", kbytes)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
@@ -934,7 +938,7 @@ def gen_text2cb(vmi, kbytes):
 
 @reg.add_action(req=[ios.ILinux])
 def cb2file(vmi, fname):
-    script = vmi.cfg.helper_cb
+    script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     utils.info(vmi, "Dump clipboard to file.", fname)

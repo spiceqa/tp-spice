@@ -125,7 +125,6 @@ def run(vt_test, test_params, env):
     # act.reset_gui(vmi_g)  # disabled because BZ#1340160
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
-    act.install_rpm(vmi_c, test.cfg_c.wmctrl_rpm)
     act.install_rpm(vmi_c, "xdotool")
     # Copy tests to client VM.
     # Some tests could require established RV session, some of them, don't.
