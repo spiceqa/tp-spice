@@ -955,6 +955,17 @@ def md5sum(vmi, fpath):
 
 
 @reg.add_action(req=[ios.ILinux])
+def gen_rnd_file(vmi, name, size_kb):
+    """
+    Generate file with random content
+    """
+    cmd = utils.Cmd("dd", "if=/dev/urandom", "of=%s" % name, "bs=1024",
+                    "count=%s" % size_kb)
+    act.run(vmi, cmd)
+    utils.info(vmi, "File %s of size %s kb was generated.", name, size_kb)
+
+
+@reg.add_action(req=[ios.ILinux])
 def klogger_start(vmi):
     ssn = act.new_ssn(vmi)
     cmd = utils.Cmd("xev", "-event", "keyboard", "-name", "klogger")
