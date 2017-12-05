@@ -32,7 +32,8 @@ parser.add_argument("file_n", nargs='?', metavar='FILE', default="test.png",
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-g", "--genimg", metavar='INT', nargs='?', type=int,
                    help="Generate an image of side size INT pixels.")
-
+group.add_argument("-p", "--progress", help="Check progress bar visibility.",
+                   action='store_true')
 args = parser.parse_args()
 
 if args.genimg:
@@ -47,9 +48,11 @@ if args.genimg:
                  fill='red')
     with open(args.file_n, 'w') as fd:
         img.save(fd, args.file_n.split(".")[-1])
+    logger.info('Image file of size %s generated and saved as %s', size_img,
+                args.file_n)
 else:
     app_nau = tree.root.application('nautilus')[0]
-    app_rv = tree.root.application('remote-viewer')[0]
+    app_rv = tree.root.application('remote-viewer')
     time.sleep(0.6)
     keyCombo('<Super_L>Left')
     time.sleep(0.6)
@@ -57,10 +60,14 @@ else:
     src_position = (srcf.position[0] + srcf.size[0] / 2,
                     srcf.position[1] + srcf.size[1] / 2)
     press(*src_position)
-    trgt = app_rv.findChildren(lambda x: x.roleName == "drawing area")[0]
+    trgt = app_rv[0].findChildren(lambda x: x.roleName == "drawing area")[0]
     dest_position = (trgt.position[0] + (3 * trgt.size[0]) / 4,
                      trgt.position[1] + trgt.size[1] / 2)
     absoluteMotion(*dest_position)
     # magic in dogtail
     absoluteMotion(*dest_position)
     release(*dest_position)
+    logger.info('File transferred from client to guest.')
+    if args.progress:
+        app_rv.findChild(lambda x: x.name == 'File Transfers' and x.roleName == 'dialog')
+        logger.info('Progress bar detected.')

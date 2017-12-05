@@ -62,7 +62,10 @@ def run(vt_test, test_params, env):
     else:
         act.gen_rnd_file(vmi_c, cfg.test_xfer_file, cfg.xfer_kbytes)
     act.run(vmi_c, "nautilus &")
-    cmd = utils.Cmd(dst_script, ''.join([cfg.xfer_args, cfg.test_xfer_file]))
+    if cfg.xfer_args:
+        cmd = utils.Cmd(dst_script, cfg.xfer_args, cfg.test_xfer_file)
+    else:
+        cmd = utils.Cmd(dst_script, cfg.test_xfer_file)
     logger.info('Sending command to client: %s', cmd)
     try:
         act.run(vmi_c, cmd)
