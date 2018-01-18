@@ -62,6 +62,15 @@ def run(vt_test, test_params, env):
     act.set_resolution(vmi_c, "1280x1024")
     act.install_rpm(vmi_c, vmi_c.cfg.dogtail_rpm)
     dst_script = act.chk_deps(vmi_c, cfg.helper_c)
+    if cfg.locked:
+        # enable screen lock
+        cmd = utils.Cmd('rm', '-I', '/etc/dconf/db/local.d/screensaver')
+        act.run(vmi_g, cmd, admin=True)
+        cmd = utils.Cmd('dconf', 'update')
+        act.run(vmi_g, cmd, admin=True)
+        cmd = utils.Cmd('loginctl', 'lock-sessions')
+        act.run(vmi_g, cmd, admin=True)
+        logging.info('Locking gnome session on guest')
     if 'generate' in cfg.test_xfer_file:
         if cfg.copy_img:
             test_xfer_file = 'test.png'
@@ -83,12 +92,26 @@ def run(vt_test, test_params, env):
     try:
         act.run(vmi_c, cmd)
     except aexpect.exceptions.ShellCmdError:
-        logger.info('Cannot paste from buffer.')
+        logger.info('Cannot transfer a file.')
         utils.SpiceTestFail(test, "Test failed.")
     md5src = act.md5sum(vmi_c, test_xfer_file)
-    md5dst = act.md5sum(vmi_g, os.path.join(homedir_g, 'Downloads',
-                                            test_xfer_file))
+    try:
+        md5dst = act.md5sum(vmi_g, os.path.join(homedir_g, 'Downloads',
+                                                test_xfer_file))
+    except aexpect.exceptions.ShellCmdError:
+        logger.info('File is not transferred.')
+        md5dst = None
     if md5src == md5dst:
+        logger.info('%s transferred to guest VM', test_xfer_file)
+        cmd1 = utils.Cmd('lsof')
+        cmd2 = utils.Cmd('grep', '-q', '-s', test_xfer_file)
+        cmd = utils.combine(cmd1, '|', cmd2)
+        status, _ = act.rstatus(vmi_g, cmd)
+        if status:
+            logger.info('Transferred file %s is closed.', test_xfer_file)
+            success = True
+    elif cfg.xfer_args == '--negative':
+        logger.info('File %s was not transferred.', test_xfer_file)
         success = True
     if not success:
         raise utils.SpiceTestFail(test, "Test failed.")
