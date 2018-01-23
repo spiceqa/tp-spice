@@ -118,7 +118,7 @@ Start a job
 
 #. Fill in form
 
-   * Qcow2 images are stored on 10.34.73.3 server in the path nfs/iso/avocado/templates/. You can choose from them or create your own image by following `Make guest VM image`_ 
+   * Qcow2 images are stored on 10.37.175.3 server in the path nfs/iso/avocado/templates/. You can choose from them or create your own image by following `Make guest VM image`_ 
 
    * If image of desired guest/client VM already exists, choose `use-template` from radio-button menu. Then run ``# avocado run --vt-type  spice -- use-template`` on beaker machine.
 
