@@ -34,6 +34,9 @@ group.add_argument("-g", "--genimg", metavar='INT', nargs='?', type=int,
                    help="Generate an image of side size INT pixels.")
 group.add_argument("-p", "--progress", help="Check progress bar visibility.",
                    action='store_true')
+group.add_argument("-n", "--negative", help="Negative test, check for error "
+                   "message dialog.", action='store_true')
+
 args = parser.parse_args()
 
 if args.genimg:
@@ -67,7 +70,12 @@ else:
     # magic in dogtail
     absoluteMotion(*dest_position)
     release(*dest_position)
-    logger.info('File transferred from client to guest.')
+    # checking the results:
     if args.progress:
-        app_rv.findChild(lambda x: x.name == 'File Transfers' and x.roleName == 'dialog')
+        app_rv.findChild(lambda x: x.name == 'File Transfers' and
+                         x.roleName == 'dialog')
         logger.info('Progress bar detected.')
+    if args.negative:
+        err_msg = 'An error caused the following file transfers to fail:\n%s'
+        app_rv.findChildren(lambda x: x.text == err_msg % args.file_n)
+        logger.info('Error message detected.')
