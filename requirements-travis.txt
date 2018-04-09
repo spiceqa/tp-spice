@@ -1,7 +1,8 @@
 # All pip installable requirements pinned for Travis CI
 inspektor
 pep8
-autopep8
+autopep8; python_version >= '2.7'
+autopep8==1.3.4; python_version < '2.7'
 dogtail
 avocado-framework
 git+git://github.com/avocado-framework/avocado-vt#egg=avocado-plugins-vt
