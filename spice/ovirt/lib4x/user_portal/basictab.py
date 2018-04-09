@@ -264,7 +264,7 @@ class VMDetailsView(page_base.PageObject):
         return self._model.cores.text
 
     @property
-    def console(self):
+    def console_text(self):
         """VM console protocol.
         """
         return self._model.console.text
