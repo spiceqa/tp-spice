@@ -70,8 +70,7 @@ def run(vt_test, test_params, env):
             pass
     elif test.cfg.shutdown_qemu:
         test.vm_g.info("Shutting down from qemu monitor.")
-        cmd = test.cfg.cmd_qemu_shutdown
-        test.vm_g.monitor.cmd(cmd)
+        test.vm_g.monitor.system_powerdown()
     else:
         raise utils.SpiceTestFail(test, "Bad config.")
     # Test: guest VM is dead.

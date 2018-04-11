@@ -423,7 +423,7 @@ def rv_chk_con(vmi):
             if p and p in line and "ESTAB" not in line:
                 raise RVSessionConnect(test, "Missing active link at port %s",
                                        p)
-    output = test.vm_g.monitor.cmd("info spice")
+    output = test.vm_g.monitor.info("spice")
     logger.info(output)
     # Check to see if ipv6 address is reported back from qemu monitor
     if cfg.spice_info == "ipv6":

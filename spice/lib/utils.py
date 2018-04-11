@@ -446,7 +446,7 @@ def set_ticket(test):
     if cfg.ticket_set:
         logger.info("Set guest ticket: set_password spice %s", cfg.ticket_set)
         cmd = "set_password spice %s" % cfg.ticket_set
-        test.vm_g.monitor.cmd(cmd)
+        test.vm_g.monitor.human_monitor_cmd(cmd)
 
 
 def URL_parse(url, def_port=None):
