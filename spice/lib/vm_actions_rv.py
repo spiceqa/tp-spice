@@ -429,7 +429,8 @@ def rv_chk_con(vmi):
     if cfg.spice_info == "ipv6":
         # Remove brackets from ipv6 host ip
         host_ip = utils.get_host_ip(test)
-        if host_ip[1:len(host_ip) - 1] in output:
+        logger.info('host ip = %s', host_ip)
+        if host_ip[1:len(host_ip) - 1] in str(output):
             logger.info(
                 "Reported ipv6 address found in output from 'info spice'")
         else:
