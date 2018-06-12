@@ -860,7 +860,7 @@ def img2cb(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
-    act.run(vmi, cmd, timeout=60)
+    act.run(vmi, cmd, timeout=120)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -877,7 +877,7 @@ def cb2img(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
-    act.run(vmi, cmd, timeout=60)
+    act.run(vmi, cmd, timeout=120)
 
 
 @reg.add_action(req=[ios.ILinux])
