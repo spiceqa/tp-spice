@@ -183,7 +183,7 @@ def verify_recording(path, cfg):
         pauses += 1
     logging.info("Total pauses: %s.", pauses)
     if payload_frames == 0:
-        return bool(cfg.disable_audo)
+        return bool(cfg.disable_audio)
     return True
 
 
@@ -220,7 +220,7 @@ def test(vt_test, test_params, env):
         raise utils.SpiceTestFail(test, "Test failed: %s" % str(excp))
     logging.info("Default sink at client is: %s", def_sink)
     # Create RV session
-    env = {}
+    # env = {}
     if cfg.rv_record:
         env["PULSE_SOURCE"] = "%s.monitor" % def_sink
     ssn = act.new_ssn(test.vmi_c)
