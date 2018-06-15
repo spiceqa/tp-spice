@@ -24,9 +24,13 @@ import time
 import subprocess
 import aexpect
 
+try:
+    from avocado.utils import service
+except ImportError:
+    from virttest.staging import service
+
 from virttest import asset
 from virttest import remote
-from virttest.staging import service
 from virttest import utils_net
 
 from spice.lib import utils
@@ -68,8 +72,7 @@ def service_vdagent(vmi, action):
     """
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn)
-    vdagentd = service.Factory.create_specific_service("spice-vdagentd",
-                                                       run=runner.run)
+    vdagentd = service.specific_service_manager("spice-vdagentd", run=runner.run)
     func = getattr(vdagentd, action)
     utils.info(vmi, "spice-vdagent: %s", action)
     return func()
@@ -262,7 +265,7 @@ def verify_virtio(vmi):
 def x_turn_off(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn, timeout=600)
-    srv_mng = service.Factory.create_service(run=runner.run)
+    srv_mng = service.service_manager(run=runner.run)
     srv_mng.set_target("multi-user.target")  # pylint: disable=E1103
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
     cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
@@ -277,7 +280,7 @@ def x_turn_off(vmi):
 def x_turn_on(vmi):
     ssn = act.new_admin_ssn(vmi)
     runner = remote.RemoteRunner(session=ssn)
-    srv_mng = service.Factory.create_service(run=runner.run)
+    srv_mng = service.service_manager(run=runner.run)
     srv_mng.set_target("graphical.target")  # pylint: disable=E1103
     cmd1 = utils.Cmd("ss", "-x", "src", "*X11-unix*")
     cmd2 = utils.Cmd("grep", "-q", "-s", "X11")
