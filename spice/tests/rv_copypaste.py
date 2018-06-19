@@ -48,6 +48,8 @@ def run(vt_test, test_params, env):
     act.clear_cb(test.vmi_g)
     act.clear_cb(test.vmi_c)
     if cfg.vdagent_action:
+        if cfg.vdagent_action == "stop":
+            act.service_vdagent(test.vmi_g, "mask")
         act.service_vdagent(test.vmi_g, cfg.vdagent_action)
     if cfg.guest2client:
         src = test.vmi_g
