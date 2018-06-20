@@ -740,7 +740,7 @@ def get_x_var(vmi, var_name):
     read var value from SSH session it could be different from X session var or
     absent. The strategy used in this function is:
 
-        1. Find nautilus process.
+        1. Find gnome-shell process.
         2. Read its /proc/$PID/environ
 
     Parameters
@@ -755,7 +755,7 @@ def get_x_var(vmi, var_name):
 
     """
     pattern = "(?<=(?:^{0}=|(?<=\n){0}=))[^\n]+".format(var_name)
-    pids = act.wait_for_prog(vmi, "nautilus-desktop")
+    pids = act.wait_for_prog(vmi, "gnome-shell")
     ret = ""
     for pid in pids:
         cmd1 = utils.Cmd("cat", "/proc/%s/environ" % pid)
