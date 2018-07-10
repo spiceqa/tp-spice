@@ -48,7 +48,11 @@ def run(vt_test, test_params, env):
 
     if cfg.ttype == "start":
         if active:
+            # spice-vdagentd.service must be masked before stopping, otherwise 
+            # is immediatelly started by spice-vdagentd.socket
+            act.service_vdagent(vmi, "mask")
             act.service_vdagent(vmi, "stop")
+            act.service_vdagent(vmi, "unmask")
             active = act.service_vdagent(vmi, "status")
         assert not active
         act.service_vdagent(vmi, "start")
@@ -59,7 +63,9 @@ def run(vt_test, test_params, env):
             act.service_vdagent(vmi, "start")
             active = act.service_vdagent(act, "status")
         assert active
+        act.service_vdagent(vmi, "mask")
         act.service_vdagent(vmi, "stop")
+        act.service_vdagent(vmi, "unmask")
         active = act.service_vdagent(vmi, "status")
         assert not active
     elif cfg.ttype == "restart_running":
@@ -72,7 +78,9 @@ def run(vt_test, test_params, env):
         assert active
     elif cfg.ttype == "restart_stopped":
         if active:
+            act.service_vdagent(vmi, "mask")
             act.service_vdagent(vmi, "stop")
+            act.service_vdagent(vmi, "unmask")
             active = act.service_vdagent(vmi, "status")
         assert not active
         act.service_vdagent(vmi, "restart")

@@ -75,7 +75,7 @@ def service_vdagent(vmi, action):
     vdagentd = service.specific_service_manager("spice-vdagentd", run=runner.run)
     func = getattr(vdagentd, action)
     utils.info(vmi, "spice-vdagent: %s", action)
-    return func()
+    return func(ignore_status=True)
 
 
 @reg.add_action(req=[ios.ILinux])
