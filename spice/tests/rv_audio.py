@@ -92,6 +92,7 @@ Recording test::
 
 import logging
 import commands
+import time
 import struct
 import wave
 import aexpect
@@ -220,18 +221,17 @@ def test(vt_test, test_params, env):
         raise utils.SpiceTestFail(test, "Test failed: %s" % str(excp))
     logging.info("Default sink at client is: %s", def_sink)
     # Create RV session
-    # env = {}
+    env_local = {}
     if cfg.rv_record:
-        env["PULSE_SOURCE"] = "%s.monitor" % def_sink
+        env_local["PULSE_SOURCE"] = "%s.monitor" % def_sink
     ssn = act.new_ssn(test.vmi_c)
-    act.rv_connect(test.vmi_c, ssn)
+    act.rv_connect(test.vmi_c, ssn, env=env_local)
     ret, out = commands.getstatusoutput(MAKE_WAV)
     if ret:
         errmsg = "Cannot generate specimen WAV file: %s" % out
         raise utils.SpiceTestFail(test, errmsg)
     play_cmd = "aplay %s &> /dev/null &" % cfg.audio_tgt
-    rec_cmd = "arecord -d %s -f cd %s" % (cfg.audio_time,
-                                          cfg.audio_rec)
+    rec_cmd = "arecord -d %s -f cd %s" % (cfg.audio_time, cfg.audio_rec)
     # Check test type
     if cfg.rv_record:
         logging.info("Recording test. Player is client. Recorder is guest.")
@@ -248,6 +248,7 @@ def test(vt_test, test_params, env):
         vm_recorder = test.vm_c
         vm_player = test.vm_g
     vm_player.copy_files_to(SPECIMEN_FILE, cfg.audio_tgt)
+    time.sleep(2)  # wait till everything is set up
     player.cmd(play_cmd)
     if cfg.config_test == "migration":
         bguest = utils_misc.InterruptedThread(test.vm_g.migrate, kwargs={})
