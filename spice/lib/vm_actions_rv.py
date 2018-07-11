@@ -89,7 +89,6 @@ class RVSessionConnect(RVSessionError):
     """
 
 
-#TODO: pass env variables
 @reg.add_action(req=[ios.IOSystem])
 def rv_connect(vmi, ssn, env=None):
     """Establish connection between client and guest based on test parameters
@@ -132,7 +131,6 @@ def rv_connect(vmi, ssn, env=None):
         raise RVSessionConnect(vmi.test, "Wrong connect method.")
 
 
-#TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_cmd(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
@@ -141,18 +139,17 @@ def rv_connect_cmd(vmi, ssn, env):
     cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", cmd)
     utils.set_ticket(vmi.test)
-    act.rv_run(vmi, cmd, ssn)
+    act.rv_run(vmi, cmd, ssn, env)
     act.rv_auth(vmi)
 
 
-#TODO: pass env variables
 @reg.add_action(req=[ios.ILinux])
 def rv_connect_menu(vmi, ssn, env):
     cmd = act.rv_basic_opts(vmi)
     utils.set_ticket(vmi.test)
     cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", cmd)
-    act.rv_run(vmi, cmd, ssn)
+    act.rv_run(vmi, cmd, ssn, env)
     url = act.rv_url(vmi)
     act.str_input(vmi, url)
     act.rv_auth(vmi)
@@ -170,7 +167,7 @@ def rv_connect_file(vmi, ssn, env):
     utils.set_ticket(vmi.test)
     cmd = utils.combine(cmd, "2>&1")
     act.info(vmi, "Final RV command: %s", cmd)
-    act.rv_run(vmi, cmd, ssn)
+    act.rv_run(vmi, cmd, ssn, env)
 
 
 @reg.add_action(req=[ios.ILinux])
