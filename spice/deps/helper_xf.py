@@ -56,6 +56,7 @@ if args.genimg:
 else:
     app_nau = tree.root.application('nautilus')[0]
     app_rv = tree.root.application('remote-viewer')
+    app_nau.click()
     time.sleep(0.6)
     keyCombo('<Super_L>Left')
     time.sleep(0.6)

@@ -172,7 +172,7 @@ def x_active(vmi):
     """Test if X session is active. Do nothing is X active. Othrerwise
     throw exception.
     """
-    cmd = utils.Cmd("gnome-terminal", "-e", "/bin/true")
+    cmd = utils.Cmd("gnome-terminal", "--", "/bin/true")
     status, _ = act.rstatus(vmi, cmd)
     if status:
         raise utils.SpiceUtilsError("X session is not present.")
