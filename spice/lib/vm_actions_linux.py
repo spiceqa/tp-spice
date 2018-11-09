@@ -431,7 +431,6 @@ def wait_for_win(vmi, pattern, prop="_NET_WM_NAME"):
     is_active()
 
 
-# TODO rewrite me
 @reg.add_action(req=[ios.ILinux])
 def deploy_epel_repo(vmi):
     """Deploy epel repository to RHEL VM.
@@ -441,23 +440,17 @@ def deploy_epel_repo(vmi):
     cmd = utils.Cmd("test", "-f", "/etc/yum.repos.d/epel.repo")
     status, _ = act.rstatus(vmi, cmd)
     if status:
-        arch = vmi.ssn.cmd("arch")
-        if "i686" in arch:
-            arch = "i386"
-        else:
-            arch = arch[:-1]
-        if "release 5" in vmi.ssn.cmd("cat /etc/redhat-release"):
-            cmd = ("yum -y localinstall http://download.fedoraproject.org/"
-                   "pub/epel/5/%s/epel-release-5-4.noarch.rpm 2>&1" % arch)
-            utils.info(vmi, "Installing EPEL repository.")
-            vmi.ssn.cmd(cmd)
-        elif "release 6" in vmi.ssn.cmd("cat /etc/redhat-release"):
-            cmd = ("yum -y localinstall http://download.fedoraproject.org/"
-                   "pub/epel/6/%s/epel-release-6-8.noarch.rpm 2>&1" % arch)
-            utils.info(vmi, "Installing EPEL repository.")
-            vmi.ssn.cmd(cmd)
+        version = vmi.ssn.cmd("cat /etc/redhat-release")
+        if "release 6" in version:
+            version = "6"
+        elif "release 7" in version:
+            version = "7"
         else:
             raise Exception("Unsupported RHEL guest")
+        cmd = ("yum -y install http://dl.fedoraproject.org/"
+               "pub/epel/epel-release-latest-%s.noarch.rpm 2>&1" % version)
+        utils.info(vmi, "Installing EPEL repository.")
+        vmi.ssn.cmd(cmd)
 
 
 @reg.add_action(req=[ios.ILinux])
