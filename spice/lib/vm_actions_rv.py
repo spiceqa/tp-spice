@@ -374,7 +374,7 @@ def rv_chk_con(vmi):
         remote_ip = utils.get_host_ip(test)
     rv_binary = os.path.basename(cfg.rv_binary)
     cmd1 = utils.Cmd("ss", "-n", "-p", "-t", "state", "all")
-    grep_regex = "%s:.*%s" % (remote_ip, rv_binary)
+    grep_regex = "%s.*%s" % (remote_ip, rv_binary)
     cmd2 = utils.Cmd("grep", "-e", grep_regex)
     cmd3 = utils.Cmd("grep", "-v", "CLOSE-WAIT")
     cmd = utils.combine(cmd1, "|", cmd2, "|", cmd3)
