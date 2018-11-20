@@ -120,9 +120,10 @@ def run(vt_test, test_params, env):
     # act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
     if utils.vm_is_rhel6(vm_c):
-        # Activate accessibility for rhel6, BZ#1340160 for rhel7
+        # Activate accessibility for rhel6
         act.reset_gui(vmi_c)
-    # act.reset_gui(vmi_g)  # disabled because BZ#1340160
+    act.x_active(vmi_c)
+    act.x_active(vmi_g)
     act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
     act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
     act.install_rpm(vmi_c, "xdotool")
@@ -130,7 +131,6 @@ def run(vt_test, test_params, env):
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
     if cfg.make_rv_connect:
-        act.x_active(vmi_g)
         ssn = act.new_ssn(vmi_c)
         act.rv_connect(vmi_c, ssn)
         if not cfg.negative:
