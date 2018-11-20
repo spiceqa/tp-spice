@@ -83,7 +83,7 @@ def run(vt_test, test_params, env):
         act.run(vmi_c, cmd)
         test_xfer_file = os.path.basename(cfg.test_xfer_file)
         logger.info('Downloading %s', test_xfer_file)
-    act.run(vmi_c, "nautilus &")
+    act.run(vmi_c, "nautilus 2>/dev/null &")
     if cfg.xfer_args:
         cmd = utils.Cmd(dst_script, cfg.xfer_args, test_xfer_file)
     else:

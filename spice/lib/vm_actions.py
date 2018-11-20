@@ -73,7 +73,7 @@ def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
     kwargs = {}
     if timeout:
         kwargs['timeout'] = timeout
-    status, out = ssn.cmd_status_output(cmdline)
+    status, out = ssn.cmd_status_output(cmdline, **kwargs)
     act.info(vmi, "cmd: %s, status: %s, output: %s", cmdline, status, out)
     return (status, out)
 
