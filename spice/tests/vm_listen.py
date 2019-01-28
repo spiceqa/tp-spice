@@ -68,7 +68,8 @@ def run(vt_test, test_params, env):
                                      "message: %s and/or exit status: %s" %
                                      (emsg.output, emsg.status))
         finally:
-            process.safe_kill(nc_process_pid, signal.SIGKILL)
+            if nc_process_pid is not None:
+                process.safe_kill(nc_process_pid, signal.SIGKILL)
         raise error.TestFail("Guest start normally, didn't quit as expected.")
     else:
         test = stest.GuestTest(vt_test, test_params, env)
