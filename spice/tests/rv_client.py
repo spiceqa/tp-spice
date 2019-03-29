@@ -14,16 +14,10 @@
 """Tests for SPICE remote-viewer client side.
 """
 import logging
-import signal
 from spice.lib import act
 from spice.lib import stest
 
 from autotest.client.shared import error
-
-from virttest import env_process
-from virttest import virt_vm
-
-from avocado.utils import process
 
 logger = logging.getLogger(__name__)
 
