@@ -56,7 +56,7 @@ def run(vmi, cmd, ssn=None, admin=False, timeout=None):
 
 
 @reg.add_action(req=[ios.IOSystem])
-def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
+def rstatus(vmi, cmd, ssn=None, admin=False, dogtail_ssn=False, timeout=None):
     """
     Raises
     ------
@@ -68,7 +68,7 @@ def rstatus(vmi, cmd, ssn=None, admin=False, timeout=None):
         Command output + exit status.
     """
     if not ssn:
-        ssn = act.new_ssn(vmi, admin)
+        ssn = act.new_ssn(vmi, admin, dogtail_ssn)
     cmdline = str(cmd)
     kwargs = {}
     if timeout:
@@ -85,8 +85,8 @@ def new_admin_ssn(vmi):
 
 @reg.add_action(req=[ios.IOSystem], name="new_ssn_context")
 @contextlib.contextmanager
-def new_ssn_context(vmi, admin=False, name=""):
-    ssn = act.new_ssn(vmi, admin)
+def new_ssn_context(vmi, admin=False, dogtail_ssn=False, name=""):
+    ssn = act.new_ssn(vmi, admin, dogtail_ssn)
     try:
         yield ssn
     finally:
@@ -96,7 +96,7 @@ def new_ssn_context(vmi, admin=False, name=""):
 
 
 @reg.add_action(req=[ios.IOSystem])
-def new_ssn(vmi, admin=False):
+def new_ssn(vmi, admin=False, dogtail_ssn=False):
     if admin:
         username = vmi.cfg.rootuser
         password = vmi.cfg.rootpassword
@@ -108,6 +108,10 @@ def new_ssn(vmi, admin=False):
     ssn = vmi.vm.wait_for_login(username=username,
                                 password=password,
                                 timeout=int(vmi.cfg.login_timeout))
+    if dogtail_ssn:
+        dogtail_cmd = utils.Cmd("dogtail-run-headless-next", "--dont-start",
+                                "--dont-kill", "/bin/bash")
+        act.run(vmi, dogtail_cmd, ssn=ssn)
     act.export_vars(vmi, ssn)
     return ssn
 
