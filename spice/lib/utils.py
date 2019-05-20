@@ -122,6 +122,14 @@ def quote(arg):
     return pipes.quote(arg)
 
 
+def vm_is_rhel8(self):
+    """Extention to qemu.VM(virt_vm.BaseVM) class.
+    """
+    if self.params.get("os_variant") == "rhel8":
+        return True
+    return False
+
+
 def vm_is_rhel7(self):
     """Extention to qemu.VM(virt_vm.BaseVM) class.
     """
@@ -169,6 +177,7 @@ def extend_api_vm():
     qemu_vm.VM.is_win = vm_is_win
     qemu_vm.VM.is_rhel7 = vm_is_rhel7
     qemu_vm.VM.is_rhel6 = vm_is_rhel6
+    qemu_vm.VM.is_rhel8 = vm_is_rhel8
     qemu_vm.VM.info = vm_info
     qemu_vm.VM.error = vm_error
 

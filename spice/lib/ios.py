@@ -165,6 +165,11 @@ class IVersionMajor7(IVersionMajor):
     pass
 
 
+@add_os_info(marker='8')
+class IVersionMajor8(IVersionMajor):
+    pass
+
+
 @add_os_info(marker='25')
 class IVersionMajor25(IVersionMajor):
     pass

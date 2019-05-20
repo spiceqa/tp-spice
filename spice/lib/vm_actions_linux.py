@@ -169,11 +169,17 @@ def add_usb_policy(vmi):
 @reg.add_action(req=[ios.ILinux], name="x_active")
 @deco.retry(8, exceptions=(utils.SpiceUtilsError,))
 def x_active(vmi):
-    """Test if X session is active. Do nothing is X active. Othrerwise
+    """Test if X session is active. Do nothing is X active. Otherwise
     throw exception.
     """
-    cmd = utils.Cmd("gnome-terminal", "--", "/bin/true")
+    cmd1 = utils.Cmd('ps', '-u', vmi.cfg.username)
+    cmd2 = utils.Cmd('grep', '-q', 'spice-vdagent')
+    cmd = utils.combine(cmd1, "|", cmd2)
     status, _ = act.rstatus(vmi, cmd)
+    if status:
+        raise utils.SpiceUtilsError("X session is not loaded.")
+    cmd = utils.Cmd("gnome-terminal", "--", "/bin/true")
+    status, _ = act.rstatus(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
     if status:
         raise utils.SpiceUtilsError("X session is not present.")
     utils.info(vmi, "X session is present.")
