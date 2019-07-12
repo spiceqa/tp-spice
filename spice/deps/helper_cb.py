@@ -13,8 +13,8 @@
 
 """Helper to performs actions on X clipboard.
 
-    http://www.pygtk.org/pygtk2reference/class-gtkclipboard.html
-    http://www.pygtk.org/pygtk2reference/class-gdkpixbuf.html
+    http://www.pyGtk.org/pygtk2reference/class-gtkclipboard.html
+    http://www.pyGtk.org/pygtk2reference/class-gdkpixbuf.html
     https://github.com/gdw2/zim/blob/master/zim/gui/clipboard.py
 
 """
@@ -24,12 +24,12 @@ import sys
 import os
 import logging
 import argparse
-# Unable to import pygtk and gtk in virtualenv,
+# Unable to import gi and gtk in virtualenv,
 # nevertheless deps scripts wont be run in virtualenv.
 #pylint: disable=F0401
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk, GdkPixbuf
 
 from PIL import Image, ImageDraw
 
@@ -63,17 +63,17 @@ group.add_argument("-o", "--cb2stdout", action='store_true',
 group.add_argument("-g", "--genimg", metavar='INT', nargs='?', type=int,
                    help="Generate an image of side size INT pixels.")
 parser.add_argument("file_n", nargs='?', metavar='FILE', default="test.png",
-                    help="Specify file name.")
+                    type=str, help="Specify file name.")
 
 
 args = parser.parse_args()
 
-clipboard = gtk.clipboard_get()
+clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
 if args.clear:
     # We can clear only owned clipboard. Before clear clipboard we must own
     # it. .clear() method can be called only on owned clipboard.
-    clipboard.set_text("Anything.")  # Grab clipboard. Become owner of it.
+    clipboard.set_text("Anything.", -1)  # Grab clipboard. Become owner of it.
     clipboard.store()                # Apply
     clipboard.clear()                # Now we can clear it.
     logger.info("Clear clipboard.")
@@ -87,16 +87,15 @@ elif args.genimg:
         draw.line([(size_img, 0), (0, i)], fill='blue')
     draw.ellipse((0.6*size_img, 0.15*size_img, 0.8*size_img, 0.3*size_img),
                  fill='red')
-    with open(args.file_n, 'w') as fd:
-        img.save(fd, args.file_n.split(".")[-1])
+    img.save(args.file_n, args.file_n.split(".")[-1])
 elif args.txt2cb:
     clipboard.clear()
-    clipboard.set_text(args.txt2cb)
+    clipboard.set_text(args.txt2cb, -1)
     clipboard.store()
     logger.info("Put text into the clipboard. %s characters.",
                 len(args.txt2cb))
 elif args.img2cb:
-    pixbuf = gtk.gdk.pixbuf_new_from_file(args.img2cb)
+    pixbuf = GdkPixbuf.Pixbuf.new_from_file(args.img2cb)
     clipboard.clear()
     clipboard.set_image(pixbuf)
     clipboard.store()
@@ -107,18 +106,18 @@ elif args.txtf2cb:
     with open(args.txtf2cb) as fd:
         contents = fd.read()
     clipboard.clear()
-    clipboard.set_text(contents)
+    clipboard.set_text(contents, -1)
     clipboard.store()
     logger.info('Put text from %s to clipboard.', args.txtf2cb)
 elif args.kbytes2cb:
     pattern = "Hello my dear friend.\n"
     pattern_len = len(pattern)
     req_len = int(args.kbytes2cb) * 1024
-    repeat = req_len / pattern_len + 1
+    repeat = req_len // pattern_len + 1
     string = pattern * repeat
     string = string[:req_len-1]
     clipboard.clear()
-    clipboard.set_text(string)
+    clipboard.set_text(string, -1)
     clipboard.store()
     logger.info("Put in clipboard text %s kbytes.", args.kbytes2cb)
 elif args.cb2img:
@@ -126,7 +125,7 @@ elif args.cb2img:
         image = clipboard.wait_for_image()
         _, extension = os.path.splitext(args.cb2img)
         ftype = extension.lower().lstrip('.')
-        image.save(args.cb2img, ftype)
+        image.savev(args.cb2img, ftype, [], [])
         logger.info("Store image to %s.", args.cb2img)
     else:
         raise Exception("Clipboard doesn't have an image.")
@@ -137,19 +136,15 @@ elif args.cb2txtf:
         fd.write(text)
     logger.info("Dump clipboard text to file %s.", args.cb2txtf)
 elif args.cb2stdout:
-    targets = clipboard.wait_for_targets()
+    targets = clipboard.wait_for_targets().targets
+    tarlist = [i.name() for i in targets]
     if not targets:
         raise Exception("Clipboard is empty.")
-    elif 'image/png' in targets:
-        selectiondata = clipboard.wait_for_contents('image/png')
-        pixbuf = selectiondata.get_pixbuf()
-        if pixbuf:
-            def pixbuf_save_func(buf):
-                sys.stdout.write(buf)
-            pixbuf.save_to_callback(pixbuf_save_func, "png")
-    elif 'STRING' in targets:
-        selectiondata = clipboard.wait_for_contents('STRING')
-        print selectiondata.get_text()
+    elif 'image/png' in tarlist:
+        print('Image stored in clipboard.')
+    elif 'STRING' in tarlist:
+        selectiondata = clipboard.wait_for_text()
+        print(selectiondata)
 elif args.query:
     targets = clipboard.wait_for_targets()
     logger.info(targets)
