@@ -993,6 +993,7 @@ def klogger_stop(vmi, ssn):
 
 
 @reg.add_action(req=[ios.IRhel, ios.IVersionMajor7])
+@reg.add_action(req=[ios.IRhel, ios.IVersionMajor8])
 def turn_accessibility(vmi, on=True):
     """Turn accessibility on vm.
 

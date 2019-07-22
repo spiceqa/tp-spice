@@ -60,7 +60,8 @@ def run(vt_test, test_params, env):
     act.rv_connect(vmi_c, ssn)
     # Nautilus cannot be docked to side when default resolution
     act.set_resolution(vmi_c, "1280x1024")
-    act.install_rpm(vmi_c, vmi_c.cfg.dogtail_rpm)
+    if not utils.vm_is_rhel8(test.vm_c):
+        act.install_rpm(vmi_c, vmi_c.cfg.dogtail_rpm)
     dst_script = act.chk_deps(vmi_c, cfg.helper_c)
     if cfg.locked:
         # enable screen lock

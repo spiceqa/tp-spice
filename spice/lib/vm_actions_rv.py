@@ -249,7 +249,10 @@ def rv_auth(vmi):
     """
     if vmi.cfg.ticket_send:
         # Wait for remote-viewer to launch.
-        act.wait_for_win(vmi, RV_WIN_NAME_AUTH)
+        if not vmi.vm.is_rhel8():
+            act.wait_for_win(vmi, RV_WIN_NAME_AUTH)
+        else:
+            time.sleep(1)
         act.str_input(vmi, vmi.cfg.ticket_send)
 
 
