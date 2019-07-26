@@ -45,6 +45,6 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.x_active(test.vmi)
     cmd = utils.Cmd("grep", "-i", "qxl", cfg.qxl_log)
-    exit_code, output = act.rstatus(test.vmi, cmd)
+    exit_code, output = act.rstatus(test.vmi, cmd, admin=True)
     assert exit_code == 0
     act.info(test.vmi, "Mention about qxl: %s." % output)

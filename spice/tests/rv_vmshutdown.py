@@ -58,7 +58,7 @@ def run(vt_test, test_params, env):
     cfg = test.cfg
     act.x_active(test.vmi_c)
     act.x_active(test.vmi_g)
-    ssn = act.new_ssn(test.vmi_c)
+    ssn = act.new_ssn(test.vmi_c, dogtail_ssn=test.vmi_c.vm.is_rhel8())
     act.rv_connect(test.vmi_c, ssn)
     act.rv_chk_con(test.vmi_c)
     if test.cfg.shutdown_cmdline:

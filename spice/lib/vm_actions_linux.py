@@ -969,7 +969,7 @@ def gen_rnd_file(vmi, name, size_kb):
 
 @reg.add_action(req=[ios.ILinux])
 def klogger_start(vmi):
-    ssn = act.new_ssn(vmi)
+    ssn = act.new_ssn(vmi, dogtail_ssn=vmi.vm.is_rhel8())
     cmd = utils.Cmd("xev", "-event", "keyboard", "-name", "klogger")
     utils.info(vmi, "Start key logger. Do not forget to turn it off.")
     ssn.sendline(str(cmd))
