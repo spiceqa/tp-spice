@@ -851,7 +851,7 @@ def imggen(vmi, img, size):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--genimg", size, img)
     utils.info(vmi, "Generate an %s image of %s size %s.", img, size)
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -862,7 +862,7 @@ def img2cb(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--img2cb", img)
     utils.info(vmi, "Put image %s in clipboard.", img)
-    act.run(vmi, cmd, timeout=120)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8(), timeout=120)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -879,7 +879,7 @@ def cb2img(vmi, img):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2img", img)
     utils.info(vmi, "Dump clipboard to image %s.", img)
-    act.run(vmi, cmd, timeout=120)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8(), timeout=120)
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -890,7 +890,7 @@ def text2cb(vmi, text):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--txt2cb", text)
     utils.info(vmi, "Put in clipboard: %s", text)
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -898,7 +898,7 @@ def cb2text(vmi):
     script = vmi.cfg.helper_c
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2stdout")
-    text = act.run(vmi, cmd)
+    text = act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
     utils.info(vmi, "Get from clipboard: %s", text)
     return text
 
@@ -911,7 +911,7 @@ def clear_cb(vmi):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--clear")
     utils.info(vmi, "Clear clipboard.")
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -935,7 +935,7 @@ def gen_text2cb(vmi, kbytes):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--kbytes2cb", kbytes)
     utils.info(vmi, "Put %s kbytes of text to clipboard.", kbytes)
-    act.run(vmi, cmd)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8())
 
 
 @reg.add_action(req=[ios.ILinux])
@@ -944,7 +944,7 @@ def cb2file(vmi, fname):
     dst_script = act.chk_deps(vmi, script)
     cmd = utils.Cmd(dst_script, "--cb2txtf", fname)
     utils.info(vmi, "Dump clipboard to file.", fname)
-    act.run(vmi, cmd, timeout=300)
+    act.run(vmi, cmd, dogtail_ssn=vmi.vm.is_rhel8(), timeout=300)
 
 
 @reg.add_action(req=[ios.ILinux])

@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 @reg.add_action(req=[ios.IOSystem])
-@reg.add_action(req=[ios.IRhel, ios.IVersionMajor8])
-def run(vmi, cmd, ssn=None, admin=False, timeout=None):
+def run(vmi, cmd, ssn=None, dogtail_ssn=False, admin=False, timeout=None):
     """
     Raises
     ------
@@ -46,31 +45,7 @@ def run(vmi, cmd, ssn=None, admin=False, timeout=None):
         Command output.
     """
     if not ssn:
-        ssn = act.new_ssn(vmi, admin, dogtail_ssn=True)
-    cmdline = str(cmd)
-    kwargs = {}
-    if timeout:
-        kwargs['timeout'] = timeout
-    out = ssn.cmd(cmdline, **kwargs)
-    act.info(vmi, "cmd: %s, out: %s", cmdline, out)
-    return out
-
-
-@reg.add_action(req=[ios.IOSystem])
-def run(vmi, cmd, ssn=None, admin=False, timeout=None):
-    """
-    Raises
-    ------
-        If the command's exit status is nonzero, raise an exception.
-        See: /usr/lib/python2.7/site-packages/aexpect/client.py
-
-    Returns
-    -------
-    str
-        Command output.
-    """
-    if not ssn:
-        ssn = act.new_ssn(vmi, admin)
+        ssn = act.new_ssn(vmi, admin, dogtail_ssn=dogtail_ssn)
     cmdline = str(cmd)
     kwargs = {}
     if timeout:
