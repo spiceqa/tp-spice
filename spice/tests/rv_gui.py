@@ -119,19 +119,23 @@ def run(vt_test, test_params, env):
     # SPICE-QE team (https://gitlab.cee.redhat.com/spiceqe/install-compose/ks).
     # act.lock_scr_off(vmi_c)
     act.turn_accessibility(vmi_c)
+    act.x_active(vmi_c)
+    act.x_active(vmi_g)
+    if utils.vm_is_rhel8(vm_c):
+        act.set_alt_python(vmi_c, "/usr/bin/python3")
+    else:
+        act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
+        act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
+        act.install_rpm(vmi_c, "xdotool")
     if utils.vm_is_rhel6(vm_c):
         # Activate accessibility for rhel6
         act.reset_gui(vmi_c)
-    act.x_active(vmi_c)
-    act.x_active(vmi_g)
-    act.install_rpm(vmi_c, test.cfg_c.epel_rpm)
-    act.install_rpm(vmi_c, test.cfg_c.dogtail_rpm)
-    act.install_rpm(vmi_c, "xdotool")
+
     # Copy tests to client VM.
     # Some tests could require established RV session, some of them, don't.
     is_connected = False
     if cfg.make_rv_connect:
-        ssn = act.new_ssn(vmi_c)
+        ssn = act.new_ssn(vmi_c, dogtail_ssn=vmi_c.vm.is_rhel8())
         act.rv_connect(vmi_c, ssn)
         if not cfg.negative:
             act.rv_chk_con(vmi_c)

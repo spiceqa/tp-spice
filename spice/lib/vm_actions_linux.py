@@ -1226,3 +1226,14 @@ def firefox_auto_open_vv(vmi):
     cmd = utils.combine(cmd1, ">>", cmd2)
     utils.info(vmi, "Add new line %s to Firefox profile: %s", line, user_js)
     act.run(vmi, cmd)
+
+
+@reg.add_action(req=[ios.ILinux])
+def set_alt_python(vmi, pypath):
+    """Sets alternative python version in vm
+
+    :vmi: VM instance to use
+    :pypath: python version to be set as default (e.g. /usr/bin/python3)
+    """
+    cmd = utils.Cmd("alternatives", "--set", "python", pypath)
+    act.run(vmi, cmd, admin=True)
