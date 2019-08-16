@@ -10,6 +10,9 @@ distr_ver = platform.dist()[1]
 if '7.' in distr_ver:
     logger.info("Import classes for dogtail for RHEL7.")
     from rv7 import *
+elif '8.' in distr_ver:
+    logger.info("Import classes for dogtail for RHEL8.")
+    from rv8 import *
 elif '6.' in distr_ver:
     logger.info("Import classes for dogtail for RHEL6.")
     from rv6 import *
