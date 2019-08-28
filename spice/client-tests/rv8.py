@@ -195,18 +195,7 @@ class Display(object):
     def push_front(self):
         self.drawing_area.grabFocus()
         is_focused(self.drawing_area)
-        # time.sleep(1) -- It is wrong way to do. Do it in correct way:
-        cmd = "xdotool getactivewindow getwindowpid"
-        pid_req = self.dsp.get_process_id()
-        for i in range(10):
-            status, pid = subprocess.getstatusoutput(cmd)
-            pid = int(pid.rstrip('\n'))
-            if pid_req == pid:
-                break
-            logger.info("Active PID: %s, required PID: %s. Waiting #%s.", pid,
-                        pid_req, i)
-            time.sleep(i)
-        assert pid_req == pid
+        time.sleep(1)
 
     def is_fullscreen(self):
         flag = self.dsp.menu('View').menuItem('Full screen').isChecked
@@ -587,7 +576,7 @@ class DisplayHotKey(Display):
 class DisplayWMKey(Display):
 
     def_key_mapping = {
-        'fullscreen': 'F11',
+        'fullscreen': '<Shift>F11',
         'quit': '<Alt>F4',
     }
 
