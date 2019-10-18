@@ -13,35 +13,17 @@ Local machine installation
 
 To run tests provided by tp-spice you must first install avocado, avocado-vt and all its dependencies (`Avocado installation <http://avocado-framework.readthedocs.io/en/latest/GetStartedGuide.html#installing-avocado>`_).
 
- 1. Enable repository
+ #. Install epel repository
 
-::
+        yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
-        # cat  << EOF > /etc/yum.repos.d/avocado.repo
-        [avocado]
-        name=Avocado
-        baseurl=https://repos-avocadoproject.rhcloud.com/static/epel-$releasever-noarch/
-        skip_if_unavailable=True
-        gpgkey=https://repos-avocadoproject.rhcloud.com/static/crosa_redhat_com.gpg
-        gpgcheck=1
-        enabled=1
-        enabled_metadata=1
+ #. Get avocado repo file
 
-        [avocado-lts]
-        name=Avocado LTS (Long Term Stability)
-        baseurl=https://repos-avocadoproject.rhcloud.com/static/lts/epel-$releasever-noarch/
-        skip_if_unavailable=True
-        gpgkey=https://repos-avocadoproject.rhcloud.com/static/crosa_redhat_com.gpg
-        gpgcheck=1
-        enabled=0
-        enabled_metadata=1
-        EOF
+        curl https://avocado-project.org/data/repos/avocado-el.repo -o /etc/yum.repos.d/avocado.repo
 
+ #. Install all the needed packages
 
-
-::
-
-        # yum install avocado avocado-plugins-vt
+        yum install python-avocado avocado-plugins-vt gcc git python-zope-interface autotest-framework
 
 then the program must be bootstrapped - e.g. initialized. Configuration files are created in this stage and test providers are cloned from github repositories.
 ::
